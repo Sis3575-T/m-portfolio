@@ -8,7 +8,7 @@ import './Contact.css';
 // 2. Add an Email Service (Gmail) → copy Service ID below
 // 3. Create an Email Template → copy Template ID below
 // 4. Go to Account → API Keys → copy Public Key below
-const EMAILJS_SERVICE_ID  = 'service_zytqe1w';
+const EMAILJS_SERVICE_ID  = 'service_w8l2h6v';
 const EMAILJS_TEMPLATE_ID = 'template_kj2fx4o';
 const EMAILJS_PUBLIC_KEY  = 'ovBEFSKgggx5XF6Qk';
 // ────────────────────────────────────────────────────────
