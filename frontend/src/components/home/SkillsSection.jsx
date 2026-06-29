@@ -11,7 +11,8 @@ import {
   SiNextdotjs, SiRedux, SiGraphql, SiFirebase, SiRedis, SiKubernetes, SiJenkins,
   SiTerraform, SiGo, SiRust, SiSwift, SiKotlin, SiFlutter, SiDart, SiMysql,
   SiSqlite, SiPrisma, SiOracle, SiMui, SiBootstrap, SiSass, SiJquery, SiWebpack,
-  SiBabel, SiEslint, SiPrettier, SiNginx, SiHeroku, SiNetlify
+  SiBabel, SiEslint, SiPrettier, SiNginx, SiHeroku, SiNetlify,
+  SiCsharp, SiRuby, SiRubyonrails, SiDotnet, SiSolidity
 } from 'react-icons/si';
 
 function skillIcon(name) {
@@ -67,6 +68,15 @@ function skillIcon(name) {
     'Prettier': <SiPrettier />,
     'Heroku': <SiHeroku />,
     'Netlify': <SiNetlify />,
+    'Axios': <div style={{ fontSize: '1.2rem', fontWeight: 700 }}>A</div>,
+    'C#': <SiCsharp />,
+    'Ruby': <SiRuby />,
+    '.NET': <SiDotnet />,
+    'Ruby on Rails': <SiRubyonrails />,
+    'Solidity': <SiSolidity />,
+    'Web3': <div style={{ fontSize: '1.2rem', fontWeight: 700 }}>W3</div>,
+    'CI/CD': <SiJenkins />,
+    'Containerization': <FaDocker />,
   };
   if (map[name]) return map[name];
   return <div style={{ fontSize: '1.2rem', fontWeight: 700, color: 'var(--primary-color)' }}>{name.charAt(0)}</div>;
@@ -110,6 +120,15 @@ function skillColor(name) {
     'Dart': '#0175C2',
     'Bootstrap': '#7952B3',
     'Sass': '#CC6699',
+    'Axios': '#5A29E4',
+    'C#': '#239120',
+    'Ruby': '#CC342D',
+    '.NET': '#512BD4',
+    'Ruby on Rails': '#CC0000',
+    'Solidity': '#363636',
+    'Web3': '#F16822',
+    'CI/CD': '#D24939',
+    'Containerization': '#2496ED',
   };
   return map[name] || 'var(--primary-color)';
 }

@@ -6,25 +6,31 @@ const categories = [
     icon: '🎨',
     title: 'Frontend',
     bg: '#eef2ff',
-    skills: ['HTML5', 'CSS3', 'JavaScript (ES6+)', 'React', 'Responsive Design', 'Framer Motion'],
+    skills: ['HTML5', 'CSS3', 'JavaScript (ES6+)', 'TypeScript', 'React', 'Angular', 'Next.js', 'Responsive Design', 'Framer Motion'],
   },
   {
     icon: '⚙️',
     title: 'Backend',
     bg: '#ecfeff',
-    skills: ['Node.js', 'Express.js', 'MongoDB', 'REST APIs'],
+    skills: ['Node.js', 'Express.js', 'C#', '.NET', 'Ruby', 'Ruby on Rails', 'REST APIs'],
+  },
+  {
+    icon: '📚',
+    title: 'Libraries',
+    bg: '#fef3c7',
+    skills: ['Redux', 'Axios', 'Bootstrap', 'Tailwind CSS', 'jQuery'],
   },
   {
     icon: '🛠️',
     title: 'Tools & DevOps',
     bg: '#f5f3ff',
-    skills: ['Git & GitHub', 'VS Code', 'Vite', 'Vercel', 'Render'],
+    skills: ['Git & GitHub', 'VS Code', 'Vite', 'Vercel', 'Render', 'Docker', 'CI/CD', 'Postman'],
   },
   {
-    icon: '🤖',
-    title: 'Learning',
+    icon: '🔗',
+    title: 'Blockchain & More',
     bg: '#ecfdf5',
-    skills: ['Machine Learning', 'Python Basics', 'Data Structures', 'Algorithms'],
+    skills: ['Solidity', 'Web3', 'Smart Contracts', 'dApps'],
   },
 ];
 
