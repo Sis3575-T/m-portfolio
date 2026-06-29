@@ -4,6 +4,12 @@ const heroSchema = new mongoose.Schema({
   name: { type: String, required: true, trim: true },
   title: { type: String, required: true, trim: true },
   introduction: { type: String, required: true, trim: true },
+  role: { type: String, default: '' },
+  location: { type: String, default: '' },
+  availability: {
+    status: { type: String, default: 'available' },
+    text: { type: String, default: '' },
+  },
   avatar: { type: String, default: '' },
   socialLinks: [{
     platform: { type: String, required: true },

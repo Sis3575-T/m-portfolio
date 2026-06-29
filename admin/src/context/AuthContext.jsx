@@ -1,12 +1,16 @@
 import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
-import { adminApi } from '../utils/api';
+import { adminApi } from '../services/api';
 
 const AuthContext = createContext(null);
 
 export function AuthProvider({ children }) {
   const [user, setUser] = useState(() => {
-    const stored = localStorage.getItem('admin_user');
-    return stored ? JSON.parse(stored) : null;
+    try {
+      const stored = localStorage.getItem('admin_user');
+      return stored ? JSON.parse(stored) : null;
+    } catch {
+      return null;
+    }
   });
   const [token, setToken] = useState(() => localStorage.getItem('admin_token'));
   const [loading, setLoading] = useState(true);
@@ -15,8 +19,10 @@ export function AuthProvider({ children }) {
     if (token) {
       adminApi.getMe()
         .then(({ data }) => {
-          setUser(data.user);
-          localStorage.setItem('admin_user', JSON.stringify(data.user));
+          if (data.success && data.user) {
+            setUser(data.user);
+            localStorage.setItem('admin_user', JSON.stringify(data.user));
+          }
         })
         .catch(() => {
           setUser(null);
@@ -31,23 +37,29 @@ export function AuthProvider({ children }) {
   }, [token]);
 
   const login = useCallback(async (email, password) => {
-    const { data } = await adminApi.login({ email, password });
-    localStorage.setItem('admin_token', data.token);
-    localStorage.setItem('admin_user', JSON.stringify(data.user));
-    setToken(data.token);
-    setUser(data.user);
-    return data;
+    const response = await adminApi.login(email, password);
+    const { token: newToken, user: userData } = response.data;
+    localStorage.setItem('admin_token', newToken);
+    localStorage.setItem('admin_user', JSON.stringify(userData));
+    setToken(newToken);
+    setUser(userData);
   }, []);
 
   const logout = useCallback(() => {
     localStorage.removeItem('admin_token');
     localStorage.removeItem('admin_user');
+    localStorage.removeItem('remember_me');
     setToken(null);
     setUser(null);
   }, []);
 
+  const updateUser = useCallback((updatedUser) => {
+    setUser(updatedUser);
+    localStorage.setItem('admin_user', JSON.stringify(updatedUser));
+  }, []);
+
   return (
-    <AuthContext.Provider value={{ user, token, loading, login, logout, isAuthenticated: !!token }}>
+    <AuthContext.Provider value={{ user, token, loading, login, logout, updateUser, isAuthenticated: !!token }}>
       {children}
     </AuthContext.Provider>
   );

@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { adminApi } from '../services/api.ts';
-import { FiPlus, FiEdit, FiTrash2, FiX, FiBook } from 'react-icons/fi';
+import { adminApi } from '../services/api';
+import { Icons, Icon } from '../lib/icons';
 import type { Education } from '../types';
 
 interface EduForm {
@@ -11,6 +11,7 @@ interface EduForm {
   endDate: string;
   gpa: string;
   description: string;
+  achievements: string;
 }
 
 export default function EducationManagement() {
@@ -18,7 +19,10 @@ export default function EducationManagement() {
   const [loading, setLoading] = useState(true);
   const [showModal, setShowModal] = useState(false);
   const [editing, setEditing] = useState<Education | null>(null);
-  const [form, setForm] = useState<EduForm>({ institution: '', degree: '', field: '', startDate: '', endDate: '', gpa: '', description: '' });
+  const [form, setForm] = useState<EduForm>({
+    institution: '', degree: '', field: '', startDate: '', endDate: '',
+    gpa: '', description: '', achievements: '',
+  });
 
   const fetchData = async () => {
     try {
@@ -32,7 +36,7 @@ export default function EducationManagement() {
 
   const openCreate = () => {
     setEditing(null);
-    setForm({ institution: '', degree: '', field: '', startDate: '', endDate: '', gpa: '', description: '' });
+    setForm({ institution: '', degree: '', field: '', startDate: '', endDate: '', gpa: '', description: '', achievements: '' });
     setShowModal(true);
   };
 
@@ -43,14 +47,19 @@ export default function EducationManagement() {
       startDate: item.startDate ? item.startDate.slice(0, 10) : '',
       endDate: item.endDate ? item.endDate.slice(0, 10) : '',
       gpa: item.gpa || '', description: item.description || '',
+      achievements: (item.achievements || []).join(', '),
     });
     setShowModal(true);
   };
 
   const handleSave = async () => {
     try {
-      if (editing) await adminApi.updateEducation(editing._id, form);
-      else await adminApi.createEducation(form);
+      const payload = {
+        ...form,
+        achievements: form.achievements.split(',').map(t => t.trim()).filter(Boolean),
+      };
+      if (editing) await adminApi.updateEducation(editing._id, payload);
+      else await adminApi.createEducation(payload);
       await fetchData();
       setShowModal(false);
     } catch (err) { console.error('Failed to save', err); }
@@ -58,10 +67,8 @@ export default function EducationManagement() {
 
   const handleDelete = async (id: string) => {
     if (!window.confirm('Delete this education?')) return;
-    try {
-      await adminApi.deleteEducation(id);
-      setItems(prev => prev.filter(i => i._id !== id));
-    } catch (err) { console.error('Failed to delete', err); }
+    try { await adminApi.deleteEducation(id); setItems(prev => prev.filter(i => i._id !== id)); }
+    catch (err) { console.error('Failed to delete', err); }
   };
 
   if (loading) return <div style={{ display: 'flex', justifyContent: 'center', padding: '80px 0' }}><div className="spinner" /></div>;
@@ -74,7 +81,7 @@ export default function EducationManagement() {
           <p>Manage your educational background ({items.length} entries)</p>
         </div>
         <div className="page-actions">
-          <button className="btn btn-primary" onClick={openCreate}><FiPlus size={16} /> Add Education</button>
+          <button className="btn btn-primary" onClick={openCreate}><Icon path={Icons.plus} size={16} /> Add Education</button>
         </div>
       </div>
       <div className="table-container">
@@ -86,20 +93,20 @@ export default function EducationManagement() {
                 <td><div className="cell-title">{i.institution}</div></td>
                 <td>{i.degree}</td>
                 <td>{i.field}</td>
-                <td style={{ fontSize: 13, color: 'var(--gray-500)' }}>
+                <td style={{ fontSize: 13, color: 'var(--text-secondary)' }}>
                   {i.startDate?.slice(0, 7)} — {i.endDate?.slice(0, 7)}
                 </td>
                 <td><span className={`badge ${i.isActive ? 'badge-green' : 'badge-gray'}`}>{i.isActive ? 'Active' : 'Hidden'}</span></td>
                 <td>
                   <div className="table-actions">
-                    <button className="btn-edit" onClick={() => openEdit(i)} data-tooltip="Edit"><FiEdit size={14} /></button>
-                    <button className="btn-delete" onClick={() => handleDelete(i._id)} data-tooltip="Delete"><FiTrash2 size={14} /></button>
+                    <button className="btn-edit" onClick={() => openEdit(i)} data-tooltip="Edit"><Icon path={Icons.edit} size={14} /></button>
+                    <button className="btn-delete" onClick={() => handleDelete(i._id)} data-tooltip="Delete"><Icon path={Icons.trash2} size={14} /></button>
                   </div>
                 </td>
               </tr>
             ))}
             {items.length === 0 && (
-              <tr><td colSpan={6}><div className="empty-state"><FiBook size={40} /><h3>No education yet</h3><p>Add your educational background.</p></div></td></tr>
+              <tr><td colSpan={6}><div className="empty-state"><Icon path={Icons.book} size={40} /><h3>No education yet</h3><p>Add your educational background.</p></div></td></tr>
             )}
           </tbody>
         </table>
@@ -110,7 +117,7 @@ export default function EducationManagement() {
           <div className="modal" onClick={(e) => e.stopPropagation()}>
             <div className="modal-header">
               <h3>{editing ? 'Edit Education' : 'Add Education'}</h3>
-              <button className="modal-close" onClick={() => setShowModal(false)}><FiX size={18} /></button>
+              <button className="modal-close" onClick={() => setShowModal(false)}><Icon path={Icons.x} size={18} /></button>
             </div>
             <div className="modal-body">
               <div className="form-row">
@@ -126,6 +133,7 @@ export default function EducationManagement() {
                 <div className="form-group"><label>End Date</label><input type="date" value={form.endDate} onChange={(e) => setForm({ ...form, endDate: e.target.value })} /></div>
               </div>
               <div className="form-group"><label>Description</label><textarea rows={3} value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })} /></div>
+              <div className="form-group"><label>Achievements (comma-separated)</label><textarea rows={2} value={form.achievements} onChange={(e) => setForm({ ...form, achievements: e.target.value })} /></div>
             </div>
             <div className="modal-footer">
               <button className="btn btn-outline" onClick={() => setShowModal(false)}>Cancel</button>

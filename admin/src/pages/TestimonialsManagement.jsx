@@ -1,26 +1,31 @@
 import React, { useState, useEffect } from 'react';
-import { adminApi } from '../utils/api';
+import { adminApi } from '../services/api';
+import { Icons, Icon } from '../lib/icons';
+import { useToast } from '../components/Toast';
+import ConfirmDialog from '../components/ConfirmDialog';
+import DataTable from '../components/DataTable';
 
-function TestimonialsManagement() {
+export default function TestimonialsManagement() {
+  const toast = useToast();
   const [testimonials, setTestimonials] = useState([]);
   const [loading, setLoading] = useState(true);
   const [showModal, setShowModal] = useState(false);
   const [editing, setEditing] = useState(null);
+  const [deleteTarget, setDeleteTarget] = useState(null);
+  const [deleting, setDeleting] = useState(false);
+  const [saving, setSaving] = useState(false);
   const [form, setForm] = useState({ name: '', role: '', company: '', content: '', rating: 5, featured: false });
 
-  useEffect(() => {
-    const fetchData = async () => {
-      try {
-        const { data } = await adminApi.getTestimonials();
-        setTestimonials(data.data || []);
-      } catch (err) {
-        console.error('Failed to load testimonials');
-      } finally {
-        setLoading(false);
-      }
-    };
-    fetchData();
-  }, []);
+  useEffect(() => { fetchTestimonials(); }, []);
+
+  const fetchTestimonials = async () => {
+    setLoading(true);
+    try {
+      const { data } = await adminApi.getTestimonials();
+      setTestimonials(data.data || []);
+    } catch { toast.error('Failed to load testimonials'); }
+    finally { setLoading(false); }
+  };
 
   const openCreate = () => {
     setEditing(null);
@@ -30,67 +35,77 @@ function TestimonialsManagement() {
 
   const openEdit = (t) => {
     setEditing(t);
-    setForm({ name: t.name, role: t.role, company: t.company || '', content: t.content, rating: t.rating, featured: t.featured });
+    setForm({ name: t.name, role: t.role, company: t.company || '', content: t.content, rating: t.rating || 5, featured: t.featured || false });
     setShowModal(true);
   };
 
   const handleSave = async () => {
+    if (!form.name.trim() || !form.content.trim()) { toast.error('Name and content are required'); return; }
+    setSaving(true);
     try {
-      if (editing) {
-        await adminApi.updateTestimonial(editing._id, form);
-      } else {
-        await adminApi.createTestimonial(form);
-      }
-      const { data } = await adminApi.getTestimonials();
-      setTestimonials(data.data || []);
+      if (editing) await adminApi.updateTestimonial(editing._id, form);
+      else await adminApi.createTestimonial(form);
+      toast.success(editing ? 'Testimonial updated' : 'Testimonial created');
+      await fetchTestimonials();
       setShowModal(false);
-    } catch (err) {
-      console.error('Failed to save testimonial', err);
-    }
+    } catch { toast.error('Failed to save testimonial'); }
+    finally { setSaving(false); }
   };
 
-  const handleDelete = async (id) => {
-    if (!window.confirm('Delete this testimonial?')) return;
+  const handleDelete = async () => {
+    if (!deleteTarget) return;
+    setDeleting(true);
     try {
-      await adminApi.deleteTestimonial(id);
-      setTestimonials(prev => prev.filter(t => t._id !== id));
-    } catch (err) {
-      console.error('Failed to delete', err);
-    }
+      await adminApi.deleteTestimonial(deleteTarget._id);
+      toast.success('Testimonial deleted');
+      setTestimonials(prev => prev.filter(t => t._id !== deleteTarget._id));
+    } catch { toast.error('Failed to delete testimonial'); }
+    finally { setDeleting(false); setDeleteTarget(null); }
   };
 
-  if (loading) return <div className="placeholder-page"><p>Loading testimonials...</p></div>;
+  const columns = [
+    { key: 'name', label: 'Name' },
+    {
+      key: 'role',
+      label: 'Role',
+      render: (row) => <span style={{ fontSize: 13, color: 'var(--text-secondary)' }}>{row.role}{row.company ? ` at ${row.company}` : ''}</span>,
+    },
+    {
+      key: 'rating',
+      label: 'Rating',
+      render: (row) => <span style={{ color: '#F59E0B', fontSize: 13 }}>{'★'.repeat(row.rating)}{'☆'.repeat(5 - row.rating)}</span>,
+    },
+    {
+      key: 'featured',
+      label: 'Featured',
+      render: (row) => row.featured ? <span className="badge badge-primary">Featured</span> : <span className="badge badge-gray">No</span>,
+    },
+  ];
 
   return (
     <div>
-      <div className="table-header">
-        <span style={{ fontSize: 14, fontWeight: 500 }}>{testimonials.length} testimonials</span>
-        <button className="btn btn-primary" onClick={openCreate}>
-          <i className="fa-regular fa-plus"></i> Add Testimonial
-        </button>
+      <div className="page-header">
+        <div>
+          <h1>Testimonials</h1>
+          <p>Manage client testimonials - {testimonials.length} total</p>
+        </div>
+        <div className="page-actions">
+          <button className="btn btn-primary" onClick={openCreate}>
+            <Icon path={Icons.plus} size={16} /> Add Testimonial
+          </button>
+        </div>
       </div>
 
-      <table className="data-table">
-        <thead>
-          <tr><th>Name</th><th>Role</th><th>Rating</th><th>Featured</th><th></th></tr>
-        </thead>
-        <tbody>
-          {testimonials.map(t => (
-            <tr key={t._id}>
-              <td style={{ fontWeight: 500 }}>{t.name}</td>
-              <td style={{ color: 'var(--gray-500)', fontSize: 12 }}>{t.role}{t.company ? ` at ${t.company}` : ''}</td>
-              <td style={{ color: '#F59E0B' }}>{'★'.repeat(t.rating)}{'☆'.repeat(5 - t.rating)}</td>
-              <td>{t.featured ? <span className="status published">Featured</span> : <span className="status draft">No</span>}</td>
-              <td>
-                <div className="table-actions">
-                  <button className="edit" onClick={() => openEdit(t)}><i className="fa-regular fa-pen"></i></button>
-                  <button className="delete" onClick={() => handleDelete(t._id)}><i className="fa-regular fa-trash-can"></i></button>
-                </div>
-              </td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
+      <DataTable
+        columns={columns}
+        data={testimonials}
+        loading={loading}
+        onEdit={openEdit}
+        onDelete={(row) => setDeleteTarget(row)}
+        searchPlaceholder="Search testimonials..."
+        emptyMessage="No testimonials yet. Click 'Add Testimonial' to create one."
+        emptyIcon={Icons.messageSquare}
+      />
 
       {showModal && (
         <div className="modal-overlay" onClick={() => setShowModal(false)}>
@@ -102,7 +117,7 @@ function TestimonialsManagement() {
             <div className="modal-body">
               <div className="form-row">
                 <div className="form-group">
-                  <label>Name</label>
+                  <label>Name <span style={{ color: 'var(--danger)' }}>*</span></label>
                   <input value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} />
                 </div>
                 <div className="form-group">
@@ -123,25 +138,36 @@ function TestimonialsManagement() {
                 </div>
               </div>
               <div className="form-group">
-                <label>Content</label>
-                <textarea value={form.content} onChange={(e) => setForm({ ...form, content: e.target.value })} />
+                <label>Content <span style={{ color: 'var(--danger)' }}>*</span></label>
+                <textarea rows={4} value={form.content} onChange={(e) => setForm({ ...form, content: e.target.value })} />
               </div>
               <div className="form-group">
-                <label style={{ display: 'flex', alignItems: 'center', gap: 8, cursor: 'pointer' }}>
+                <label className="form-check">
                   <input type="checkbox" checked={form.featured} onChange={(e) => setForm({ ...form, featured: e.target.checked })} />
-                  Featured testimonial
+                  <span>Featured testimonial</span>
                 </label>
               </div>
             </div>
             <div className="modal-footer">
               <button className="btn btn-outline" onClick={() => setShowModal(false)}>Cancel</button>
-              <button className="btn btn-primary" onClick={handleSave}>{editing ? 'Update' : 'Create'}</button>
+              <button className="btn btn-primary" onClick={handleSave} disabled={saving}>
+                {saving ? 'Saving...' : editing ? 'Update Testimonial' : 'Create Testimonial'}
+              </button>
             </div>
           </div>
         </div>
       )}
+
+      <ConfirmDialog
+        open={!!deleteTarget}
+        onClose={() => setDeleteTarget(null)}
+        onConfirm={handleDelete}
+        title="Delete Testimonial"
+        message={`Delete testimonial from "${deleteTarget?.name}"? This cannot be undone.`}
+        confirmText="Delete"
+        type="danger"
+        loading={deleting}
+      />
     </div>
   );
 }
-
-export default TestimonialsManagement;

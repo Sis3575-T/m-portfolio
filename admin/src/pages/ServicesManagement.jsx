@@ -1,34 +1,29 @@
 import React, { useState, useEffect } from 'react';
-import { adminApi } from '../utils/api';
+import { adminApi } from '../services/api';
+import { Icons, Icon } from '../lib/icons';
+import { useToast } from '../components/Toast';
+import ConfirmDialog from '../components/ConfirmDialog';
+import DataTable from '../components/DataTable';
 
-function Modal({ title, children, onClose }) {
-  return (
-    <div className="modal-overlay" onClick={onClose}>
-      <div className="modal" onClick={(e) => e.stopPropagation()}>
-        <div className="modal-header">
-          <h3>{title}</h3>
-          <button className="modal-close" onClick={onClose}>&times;</button>
-        </div>
-        <div className="modal-body">{children}</div>
-      </div>
-    </div>
-  );
-}
-
-function ServicesManagement() {
+export default function ServicesManagement() {
+  const toast = useToast();
   const [items, setItems] = useState([]);
   const [loading, setLoading] = useState(true);
   const [showModal, setShowModal] = useState(false);
   const [editing, setEditing] = useState(null);
+  const [deleteTarget, setDeleteTarget] = useState(null);
+  const [deleting, setDeleting] = useState(false);
+  const [saving, setSaving] = useState(false);
   const [form, setForm] = useState({ title: '', description: '', icon: '', features: '' });
 
-  useEffect(() => { fetchData(); }, []);
+  useEffect(() => { fetchItems(); }, []);
 
-  const fetchData = async () => {
+  const fetchItems = async () => {
+    setLoading(true);
     try {
       const { data } = await adminApi.getServices();
       setItems(data.data || []);
-    } catch (err) { console.error('Failed to load services'); }
+    } catch { toast.error('Failed to load services'); }
     finally { setLoading(false); }
   };
 
@@ -48,73 +43,112 @@ function ServicesManagement() {
   };
 
   const handleSave = async () => {
+    if (!form.title.trim()) { toast.error('Title is required'); return; }
+    setSaving(true);
     try {
-      const payload = {
-        ...form,
-        features: form.features.split('\n').map(s => s.trim()).filter(Boolean),
-      };
-      if (editing) {
-        await adminApi.updateService(editing._id, payload);
-      } else {
-        await adminApi.createService(payload);
-      }
-      const { data } = await adminApi.getServices();
-      setItems(data.data || []);
+      const payload = { ...form, features: form.features.split('\n').map(s => s.trim()).filter(Boolean) };
+      if (editing) await adminApi.updateService(editing._id, payload);
+      else await adminApi.createService(payload);
+      toast.success(editing ? 'Service updated' : 'Service created');
+      await fetchItems();
       setShowModal(false);
-    } catch (err) { console.error('Failed to save', err); }
+    } catch { toast.error('Failed to save service'); }
+    finally { setSaving(false); }
   };
 
-  const handleDelete = async (id) => {
-    if (!window.confirm('Delete this service?')) return;
+  const handleDelete = async () => {
+    if (!deleteTarget) return;
+    setDeleting(true);
     try {
-      await adminApi.deleteService(id);
-      setItems(prev => prev.filter(i => i._id !== id));
-    } catch (err) { console.error('Failed to delete', err); }
+      await adminApi.deleteService(deleteTarget._id);
+      toast.success('Service deleted');
+      setItems(prev => prev.filter(i => i._id !== deleteTarget._id));
+    } catch { toast.error('Failed to delete service'); }
+    finally { setDeleting(false); setDeleteTarget(null); }
   };
 
-  if (loading) return <div className="placeholder-page"><p>Loading...</p></div>;
+  const columns = [
+    {
+      key: 'title',
+      label: 'Service',
+      render: (row) => (
+        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+          {row.icon && <div style={{ width: 32, height: 32, borderRadius: 8, background: 'var(--blue-light)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--blue)' }}><Icon path={Icons[row.icon] || Icons.code} size={16} /></div>}
+          <div>
+            <div className="cell-title">{row.title}</div>
+            <div className="cell-subtitle">{row.description?.substring(0, 60)}</div>
+          </div>
+        </div>
+      ),
+    },
+    {
+      key: 'features',
+      label: 'Features',
+      render: (row) => <span style={{ fontSize: 13, color: 'var(--text-secondary)' }}>{(row.features || []).length} features</span>,
+    },
+    {
+      key: 'isActive',
+      label: 'Status',
+      render: (row) => <span className={`status ${row.isActive ? 'published' : 'draft'}`}>{row.isActive ? 'Active' : 'Hidden'}</span>,
+    },
+  ];
 
   return (
     <div>
-      <div className="table-header">
-        <span style={{ fontSize: 14, fontWeight: 500 }}>{items.length} services</span>
-        <button className="btn btn-primary" onClick={openCreate}><i className="fa-regular fa-plus"></i> Add Service</button>
+      <div className="page-header">
+        <div>
+          <h1>Services</h1>
+          <p>Manage your services - {items.length} total</p>
+        </div>
+        <div className="page-actions">
+          <button className="btn btn-primary" onClick={openCreate}><Icon path={Icons.plus} size={16} /> Add Service</button>
+        </div>
       </div>
 
-      <table className="data-table">
-        <thead><tr><th>Title</th><th>Features</th><th>Status</th><th></th></tr></thead>
-        <tbody>
-          {items.map(i => (
-            <tr key={i._id}>
-              <td style={{ fontWeight: 500 }}>{i.title}</td>
-              <td>{(i.features || []).length} features</td>
-              <td><span className={`status ${i.isActive ? 'published' : 'draft'}`}>{i.isActive ? 'Active' : 'Hidden'}</span></td>
-              <td>
-                <div className="table-actions">
-                  <button className="edit" onClick={() => openEdit(i)} title="Edit"><i className="fa-regular fa-pen"></i></button>
-                  <button className="delete" onClick={() => handleDelete(i._id)} title="Delete"><i className="fa-regular fa-trash-can"></i></button>
-                </div>
-              </td>
-            </tr>
-          ))}
-          {items.length === 0 && <tr><td colSpan={4} style={{ textAlign: 'center', padding: 32, color: 'var(--gray-400)' }}>No services yet</td></tr>}
-        </tbody>
-      </table>
+      <DataTable
+        columns={columns}
+        data={items}
+        loading={loading}
+        onEdit={openEdit}
+        onDelete={(row) => setDeleteTarget(row)}
+        searchPlaceholder="Search services..."
+        emptyMessage="No services yet. Click 'Add Service' to create one."
+        emptyIcon={Icons.settings}
+      />
 
       {showModal && (
-        <Modal title={editing ? 'Edit Service' : 'Add Service'} onClose={() => setShowModal(false)}>
-          <div className="form-group"><label>Title</label><input value={form.title} onChange={(e) => setForm({ ...form, title: e.target.value })} /></div>
-          <div className="form-group"><label>Description</label><textarea rows={3} value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })} /></div>
-          <div className="form-group"><label>Icon (FontAwesome class, e.g. FaGlobe)</label><input value={form.icon} onChange={(e) => setForm({ ...form, icon: e.target.value })} placeholder="FaGlobe" /></div>
-          <div className="form-group"><label>Features (one per line)</label><textarea rows={3} value={form.features} onChange={(e) => setForm({ ...form, features: e.target.value })} placeholder="Responsive Design&#10;Performance Optimization" /></div>
-          <div className="modal-footer" style={{ padding: '16px 0 0' }}>
-            <button className="btn btn-outline" onClick={() => setShowModal(false)}>Cancel</button>
-            <button className="btn btn-primary" onClick={handleSave}>{editing ? 'Update' : 'Create'}</button>
+        <div className="modal-overlay" onClick={() => setShowModal(false)}>
+          <div className="modal" onClick={(e) => e.stopPropagation()}>
+            <div className="modal-header">
+              <h3>{editing ? 'Edit Service' : 'Add Service'}</h3>
+              <button className="modal-close" onClick={() => setShowModal(false)}>&times;</button>
+            </div>
+            <div className="modal-body">
+              <div className="form-group"><label>Title <span style={{ color: 'var(--danger)' }}>*</span></label><input value={form.title} onChange={(e) => setForm({ ...form, title: e.target.value })} /></div>
+              <div className="form-group"><label>Description</label><textarea rows={3} value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })} /></div>
+              <div className="form-group"><label>Icon</label><input value={form.icon} onChange={(e) => setForm({ ...form, icon: e.target.value })} placeholder="Code, globe, server, etc." /></div>
+              <div className="form-group"><label>Features (one per line)</label><textarea rows={3} value={form.features} onChange={(e) => setForm({ ...form, features: e.target.value })} placeholder="Responsive Design&#10;Performance Optimization" /></div>
+            </div>
+            <div className="modal-footer" style={{ padding: '16px 0 0' }}>
+              <button className="btn btn-outline" onClick={() => setShowModal(false)}>Cancel</button>
+              <button className="btn btn-primary" onClick={handleSave} disabled={saving}>
+                {saving ? 'Saving...' : editing ? 'Update Service' : 'Create Service'}
+              </button>
+            </div>
           </div>
-        </Modal>
+        </div>
       )}
+
+      <ConfirmDialog
+        open={!!deleteTarget}
+        onClose={() => setDeleteTarget(null)}
+        onConfirm={handleDelete}
+        title="Delete Service"
+        message={`Delete "${deleteTarget?.title}"? This cannot be undone.`}
+        confirmText="Delete"
+        type="danger"
+        loading={deleting}
+      />
     </div>
   );
 }
-
-export default ServicesManagement;

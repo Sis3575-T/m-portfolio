@@ -1,23 +1,33 @@
 import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import { FaEye, FaEyeSlash } from 'react-icons/fa';
+import { Icons, Icon } from '../lib/icons';
 
-function LoginPage() {
+export default function LoginPage() {
   const { login } = useAuth();
-  const [email, setEmail] = useState('');
+  const navigate = useNavigate();
+  const [email, setEmail] = useState(() => localStorage.getItem('remember_me') || '');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
+  const [remember, setRemember] = useState(!!localStorage.getItem('remember_me'));
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError('');
+    if (!email || !password) {
+      setError('Please fill in all fields');
+      return;
+    }
     setLoading(true);
     try {
       await login(email, password);
+      if (remember) localStorage.setItem('remember_me', email);
+      else localStorage.removeItem('remember_me');
+      navigate('/admin/dashboard');
     } catch (err) {
-      setError(err.response?.data?.message || 'Invalid credentials');
+      setError(err.response?.data?.message || 'Invalid email or password');
     } finally {
       setLoading(false);
     }
@@ -25,53 +35,94 @@ function LoginPage() {
 
   return (
     <div className="login-page">
-      <div className="login-card">
-        <h1>Admin Login</h1>
-        <p>Sign in to manage your portfolio</p>
-        <form className="login-form" onSubmit={handleSubmit}>
-          <div>
-            <label>Email</label>
-            <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="Email" required />
+      <div className="login-left">
+        <div className="login-left-inner">
+          <div className="login-brand">
+            <div className="login-brand-icon">P</div>
+            <h1>Portfolio CMS</h1>
+            <p>Sign in to manage your portfolio dashboard</p>
           </div>
-          <div>
-            <label>Password</label>
-            <div style={{ position: 'relative' }}>
+
+          <form className="login-form" onSubmit={handleSubmit}>
+            <div className="login-field">
+              <label>Email Address</label>
               <input
-                type={showPassword ? 'text' : 'password'}
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                placeholder="Password"
-                required
-                style={{ paddingRight: '2.5rem' }}
+                type="email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                placeholder="admin@example.com"
+                autoComplete="email"
+                autoFocus
               />
-              <button
-                type="button"
-                onClick={() => setShowPassword(!showPassword)}
-                tabIndex={-1}
-                style={{
-                  position: 'absolute',
-                  right: '0.75rem',
-                  top: '50%',
-                  transform: 'translateY(-50%)',
-                  background: 'none',
-                  border: 'none',
-                  color: '#94a3b8',
-                  cursor: 'pointer',
-                  padding: '0.25rem',
-                }}
-              >
-                {showPassword ? <FaEyeSlash size={16} /> : <FaEye size={16} />}
-              </button>
+            </div>
+
+            <div className="login-field">
+              <label>Password</label>
+              <div className="login-password-wrap">
+                <input
+                  type={showPassword ? 'text' : 'password'}
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  placeholder="Enter your password"
+                  autoComplete="current-password"
+                />
+                <button
+                  type="button"
+                  className="login-password-toggle"
+                  onClick={() => setShowPassword(!showPassword)}
+                  tabIndex={-1}
+                >
+                  {showPassword ? <Icon path={Icons['eye-off']} size={18} /> : <Icon path={Icons.eye} size={18} />}
+                </button>
+              </div>
+            </div>
+
+            <div className="login-options">
+              <label className="login-remember">
+                <input
+                  type="checkbox"
+                  checked={remember}
+                  onChange={(e) => setRemember(e.target.checked)}
+                />
+                <span>Remember me</span>
+              </label>
+              <a href="#" className="login-forgot">Forgot password?</a>
+            </div>
+
+            {error && <div className="login-error">{error}</div>}
+
+            <button type="submit" className="login-submit" disabled={loading}>
+              {loading ? 'Signing in...' : 'Sign in'}
+            </button>
+          </form>
+        </div>
+      </div>
+
+      <div className="login-right">
+        <div className="login-right-bg" />
+        <div className="login-right-content">
+          <h2>Manage your portfolio with enterprise-grade tools</h2>
+          <p>Everything you need to manage projects, track analytics, handle messages, and customize your portfolio.</p>
+          <div className="login-right-features">
+            <div className="login-right-feature">
+              <Icon path={Icons.check} size={20} />
+              Drag-and-drop page builder
+            </div>
+            <div className="login-right-feature">
+              <Icon path={Icons.check} size={20} />
+              Real-time analytics dashboard
+            </div>
+            <div className="login-right-feature">
+              <Icon path={Icons.check} size={20} />
+              SEO optimization tools
+            </div>
+            <div className="login-right-feature">
+              <Icon path={Icons.check} size={20} />
+              Theme & appearance customizer
             </div>
           </div>
-          {error && <p className="login-error">{error}</p>}
-          <button type="submit" className="btn btn-primary" disabled={loading}>
-            {loading ? 'Signing in...' : 'Sign In'}
-          </button>
-        </form>
+        </div>
       </div>
     </div>
   );
 }
-
-export default LoginPage;

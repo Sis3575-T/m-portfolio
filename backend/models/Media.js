@@ -12,6 +12,7 @@ const mediaSchema = new mongoose.Schema({
     enum: ['image', 'document', 'resume', 'certificate', 'other'],
     default: 'image',
   },
+  folder: { type: String, default: '' },
   uploadedBy: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
 }, { timestamps: true });
 

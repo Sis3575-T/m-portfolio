@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion } from 'framer-motion';
+import { publicApi } from '../utils/api';
 import './Header.css';
 
 const NAV = ['Home', 'About', 'Skills', 'Projects', 'Contact'];
@@ -8,6 +9,14 @@ const Header = () => {
   const [menuOpen, setMenuOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
   const [active, setActive] = useState('home');
+  const [hero, setHero] = useState(null);
+
+  useEffect(() => {
+    publicApi.getHero().then(({ data }) => {
+      const h = data?.data;
+      setHero(Array.isArray(h) ? h[0] : h || null);
+    }).catch(() => {});
+  }, []);
 
   useEffect(() => {
     const onScroll = () => {
@@ -25,6 +34,10 @@ const Header = () => {
 
   const close = () => setMenuOpen(false);
 
+  const name = hero?.name || 'Sisay Temesgen';
+  const title = hero?.title || 'Full Stack Developer';
+  const initials = name.split(' ').map(w => w[0]).join('').slice(0, 2).toUpperCase();
+
   return (
     <motion.header
       className={`header${scrolled ? ' header--scrolled' : ''}`}
@@ -33,6 +46,14 @@ const Header = () => {
       transition={{ duration: 0.5, ease: 'easeOut' }}
     >
       <div className="header-inner">
+        <a href="#home" className="brand" onClick={close}>
+          <span className="brand-mark">{initials}</span>
+          <div className="brand-text">
+            <span className="brand-name">{name}</span>
+            <span className="brand-role">{title?.split(',')[0] || title}</span>
+          </div>
+        </a>
+
         <nav className={`nav${menuOpen ? ' nav--open' : ''}`} aria-label="Main navigation">
           {NAV.map(item => (
             <a
@@ -45,14 +66,6 @@ const Header = () => {
             </a>
           ))}
         </nav>
-
-        <a href="#home" className="brand" onClick={close}>
-          <span className="brand-mark">ST</span>
-          <div className="brand-text">
-            <span className="brand-name">Sisay Temesgen</span>
-            <span className="brand-role">Full Stack Developer</span>
-          </div>
-        </a>
 
         <button
           className={`hamburger${menuOpen ? ' hamburger--open' : ''}`}

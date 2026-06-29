@@ -1,7 +1,7 @@
 import axios from 'axios';
 
 const api = axios.create({
-  baseURL: import.meta.env.VITE_API_URL || 'http://localhost:5000/api',
+  baseURL: import.meta.env.VITE_API_URL || 'http://localhost:5001/api',
   headers: { 'Content-Type': 'application/json' },
 });
 
@@ -38,8 +38,23 @@ export const publicApi = {
   getTestimonials: (params) => api.get('/testimonials/public', { params }),
   getBlogs: (params) => api.get('/blogs/public', { params }),
   getBlogBySlug: (slug) => api.get(`/blogs/slug/${slug}`),
+  getCertificates: () => api.get('/certificates'),
+  getSettings: () => api.get('/settings'),
+  getHomePage: () => api.get('/pages/home'),
+  getPageBySlug: (slug) => api.get(`/pages/slug/${slug}`),
   getSEO: (page) => api.get(`/seo/${page}`),
   submitMessage: (data) => api.post('/messages', data),
+
+  searchAll: (query) => api.get(`/search/all?q=${encodeURIComponent(query)}`),
+  searchProjects: (query) => api.get(`/search/projects?q=${encodeURIComponent(query)}`),
+  searchBlogs: (query) => api.get(`/search/blogs?q=${encodeURIComponent(query)}`),
+
+  trackVisit: (data) => api.post('/analytics/track/visit', data),
+  trackAction: (data) => api.post('/analytics/track/action', data),
+  trackPerformance: (data) => api.post('/performance/track', data),
+  endSession: (data) => api.post('/analytics/end-session', data),
+
+  getTranslations: (language) => api.get(`/translations?language=${language}`),
 };
 
 export const adminApi = {
@@ -107,7 +122,7 @@ export const adminApi = {
   updateSEO: (page, data) => api.put(`/seo/${page}`, data),
 };
 
-const apiHost = (import.meta.env.VITE_API_URL || 'http://localhost:5000/api').replace(/\/api$/, '');
+const apiHost = (import.meta.env.VITE_API_URL || 'http://localhost:5001/api').replace(/\/api$/, '');
 
 export function imageUrl(url) {
   if (!url) return '';

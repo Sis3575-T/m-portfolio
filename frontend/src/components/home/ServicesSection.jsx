@@ -1,31 +1,32 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { FiCode, FiSmartphone, FiServer, FiLayout } from 'react-icons/fi';
-
-const services = [
-  {
-    icon: <FiLayout size={24} />,
-    title: 'Frontend Development',
-    desc: 'Responsive, accessible UIs built with React and modern CSS. Pixel-perfect implementations from Figma or any design system.',
-  },
-  {
-    icon: <FiServer size={24} />,
-    title: 'Backend Development',
-    desc: 'RESTful APIs and server-side logic with Node.js, Express, and MongoDB. Authentication, validation, and data modeling.',
-  },
-  {
-    icon: <FiCode size={24} />,
-    title: 'Full Stack Projects',
-    desc: 'End-to-end web applications from concept to deployment. Architecture planning, database design, and cloud hosting.',
-  },
-  {
-    icon: <FiSmartphone size={24} />,
-    title: 'Responsive Design',
-    desc: 'Mobile-first layouts that work seamlessly across all devices. Performance optimized with modern tooling.',
-  },
-];
+import { publicApi } from '../../utils/api';
+import { useI18n } from '../../utils/i18n.jsx';
 
 function ServicesSection() {
+  const { t } = useI18n();
+  const [services, setServices] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    publicApi.getServices()
+      .then(({ data }) => setServices(data.data || []))
+      .catch(() => {})
+      .finally(() => setLoading(false));
+  }, []);
+
+  if (loading) {
+    return (
+      <section id="services" className="skills">
+        <div className="skills-container" style={{ maxWidth: '1000px', textAlign: 'center', padding: '3rem 0' }}>
+          <div className="spinner" />
+        </div>
+      </section>
+    );
+  }
+
+  if (services.length === 0) return null;
+
   return (
     <section id="services" className="skills">
       <div className="skills-container" style={{ maxWidth: '1000px' }}>
@@ -36,27 +37,36 @@ function ServicesSection() {
           transition={{ duration: 0.6 }}
           className="text-center"
         >
-          <span className="section-tag">What I Do</span>
-          <h2 className="section-title">Services</h2>
+          <span className="section-tag">{t('services.title')}</span>
+          <h2 className="section-title">{t('services.heading')}</h2>
           <div className="section-line" />
           <p className="section-subtitle" style={{ margin: '1rem auto 0' }}>
-            From concept to deployment — building modern web solutions.
+            {t('services.subtitle')}
           </p>
         </motion.div>
 
         <div className="about-cards" style={{ marginTop: '3rem' }}>
           {services.map((service, idx) => (
             <motion.div
-              key={service.title}
+              key={service._id}
               initial={{ opacity: 0, y: 36 }}
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true, margin: '-80px' }}
               transition={{ duration: 0.5, delay: idx * 0.1 }}
               className="about-card"
             >
-              <div className="card-icon-wrap">{service.icon}</div>
+              {service.icon && (
+                <div className="card-icon-wrap" style={{ fontSize: '1.5rem' }}>{service.icon}</div>
+              )}
               <h4 className="card-title">{service.title}</h4>
-              <p className="card-content">{service.desc}</p>
+              <p className="card-content">{service.description}</p>
+              {service.features && service.features.length > 0 && (
+                <ul style={{ marginTop: '0.75rem', paddingLeft: '1.25rem', textAlign: 'left', fontSize: '0.85rem', color: 'var(--text-secondary)', lineHeight: 1.8 }}>
+                  {service.features.slice(0, 4).map((f, i) => (
+                    <li key={i}>{f}</li>
+                  ))}
+                </ul>
+              )}
             </motion.div>
           ))}
         </div>

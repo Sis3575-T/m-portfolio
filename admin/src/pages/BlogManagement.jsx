@@ -1,32 +1,31 @@
 import React, { useState, useEffect } from 'react';
-import { adminApi } from '../utils/api';
+import { adminApi } from '../services/api';
+import { Icons, Icon } from '../lib/icons';
+import { useToast } from '../components/Toast';
+import ConfirmDialog from '../components/ConfirmDialog';
+import DataTable from '../components/DataTable';
 
-function BlogManagement() {
+export default function BlogManagement() {
+  const toast = useToast();
   const [blogs, setBlogs] = useState([]);
   const [loading, setLoading] = useState(true);
   const [showModal, setShowModal] = useState(false);
   const [editing, setEditing] = useState(null);
+  const [deleteTarget, setDeleteTarget] = useState(null);
+  const [deleting, setDeleting] = useState(false);
+  const [saving, setSaving] = useState(false);
   const [form, setForm] = useState({ title: '', slug: '', excerpt: '', content: '', category: 'General', tags: '', featured: false });
-  const [page, setPage] = useState(1);
-  const perPage = 8;
 
-  useEffect(() => {
-    const fetchData = async () => {
-      try {
-        const { data } = await adminApi.getBlogs();
-        setBlogs(data.data || []);
-      } catch (err) {
-        console.error('Failed to load blogs');
-      } finally {
-        setLoading(false);
-      }
-    };
-    fetchData();
-  }, []);
+  useEffect(() => { fetchBlogs(); }, []);
 
-  const filtered = blogs;
-  const totalPages = Math.ceil(filtered.length / perPage);
-  const paged = filtered.slice((page - 1) * perPage, page * perPage);
+  const fetchBlogs = async () => {
+    setLoading(true);
+    try {
+      const { data } = await adminApi.getBlogs();
+      setBlogs(data.data || []);
+    } catch { toast.error('Failed to load blog posts'); }
+    finally { setLoading(false); }
+  };
 
   const openCreate = () => {
     setEditing(null);
@@ -37,102 +36,97 @@ function BlogManagement() {
   const openEdit = (blog) => {
     setEditing(blog);
     setForm({
-      title: blog.title || '',
-      slug: blog.slug || '',
-      excerpt: blog.excerpt || '',
-      content: blog.content || '',
-      category: blog.category || 'General',
-      tags: (blog.tags || []).join(', '),
-      featured: blog.featured || false,
+      title: blog.title || '', slug: blog.slug || '', excerpt: blog.excerpt || '',
+      content: blog.content || '', category: blog.category || 'General',
+      tags: (blog.tags || []).join(', '), featured: blog.featured || false,
     });
     setShowModal(true);
   };
 
   const handleSave = async () => {
+    if (!form.title.trim()) { toast.error('Title is required'); return; }
+    setSaving(true);
     try {
       const data = {
         ...form,
         tags: form.tags.split(',').map(t => t.trim()).filter(Boolean),
         slug: form.slug || form.title.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, ''),
       };
-      if (editing) {
-        await adminApi.updateBlog(editing._id, data);
-      } else {
-        await adminApi.createBlog(data);
-      }
-      const { data: refresh } = await adminApi.getBlogs();
-      setBlogs(refresh.data || []);
+      if (editing) await adminApi.updateBlog(editing._id, data);
+      else await adminApi.createBlog(data);
+      toast.success(editing ? 'Post updated' : 'Post created');
+      await fetchBlogs();
       setShowModal(false);
-    } catch (err) {
-      console.error('Failed to save blog', err);
-    }
+    } catch { toast.error('Failed to save blog post'); }
+    finally { setSaving(false); }
   };
 
-  const handleDelete = async (id) => {
-    if (!window.confirm('Delete this post?')) return;
+  const handleDelete = async () => {
+    if (!deleteTarget) return;
+    setDeleting(true);
     try {
-      await adminApi.deleteBlog(id);
-      setBlogs(prev => prev.filter(b => b._id !== id));
-    } catch (err) {
-      console.error('Failed to delete', err);
-    }
+      await adminApi.deleteBlog(deleteTarget._id);
+      toast.success('Post deleted');
+      setBlogs(prev => prev.filter(b => b._id !== deleteTarget._id));
+    } catch { toast.error('Failed to delete post'); }
+    finally { setDeleting(false); setDeleteTarget(null); }
   };
 
-  if (loading) return <div className="placeholder-page"><p>Loading blog posts...</p></div>;
+  const columns = [
+    { key: 'title', label: 'Title', render: (row) => <div className="cell-title">{row.title}</div> },
+    { key: 'category', label: 'Category' },
+    {
+      key: 'featured',
+      label: 'Featured',
+      render: (row) => row.featured ? <span className="badge badge-primary">Featured</span> : null,
+    },
+    {
+      key: 'isActive',
+      label: 'Status',
+      render: (row) => <span className={`status ${row.isActive ? 'published' : 'draft'}`}>{row.isActive ? 'Published' : 'Draft'}</span>,
+    },
+    {
+      key: 'publishedAt',
+      label: 'Date',
+      render: (row) => <span style={{ fontSize: 12, color: 'var(--text-secondary)' }}>{row.publishedAt ? new Date(row.publishedAt).toLocaleDateString() : '-'}</span>,
+    },
+  ];
 
   return (
     <div>
-      <div className="table-header">
-        <span style={{ fontSize: 14, fontWeight: 500 }}>{blogs.length} posts</span>
-        <button className="btn btn-primary" onClick={openCreate}>
-          <i className="fa-regular fa-plus"></i> New Post
-        </button>
-      </div>
-
-      <table className="data-table">
-        <thead>
-          <tr><th>Title</th><th>Category</th><th>Status</th><th>Date</th><th></th></tr>
-        </thead>
-        <tbody>
-          {paged.map(b => (
-            <tr key={b._id}>
-              <td style={{ fontWeight: 500 }}>{b.title}</td>
-              <td>{b.category}</td>
-              <td><span className={`status ${b.isActive ? 'published' : 'draft'}`}>{b.isActive ? 'Published' : 'Draft'}</span></td>
-              <td style={{ fontSize: 12, color: 'var(--gray-500)' }}>{new Date(b.publishedAt).toLocaleDateString()}</td>
-              <td>
-                <div className="table-actions">
-                  <button className="edit" onClick={() => openEdit(b)}><i className="fa-regular fa-pen"></i></button>
-                  <button className="delete" onClick={() => handleDelete(b._id)}><i className="fa-regular fa-trash-can"></i></button>
-                </div>
-              </td>
-            </tr>
-          ))}
-          {paged.length === 0 && <tr><td colSpan={5} style={{ textAlign: 'center', padding: 32, color: 'var(--gray-400)' }}>No blog posts</td></tr>}
-        </tbody>
-      </table>
-
-      <div className="pagination">
-        <span className="pagination-info">Showing {filtered.length > 0 ? (page - 1) * perPage + 1 : 0} to {Math.min(page * perPage, filtered.length)} of {filtered.length}</span>
-        <div className="pagination-btns">
-          <button onClick={() => setPage(p => Math.max(1, p - 1))} disabled={page === 1}><i className="fa-regular fa-chevron-left"></i></button>
-          {Array.from({ length: Math.min(totalPages, 5) }, (_, i) => (
-            <button key={i} className={page === i + 1 ? 'active' : ''} onClick={() => setPage(i + 1)}>{i + 1}</button>
-          ))}
-          <button onClick={() => setPage(p => Math.min(totalPages, p + 1))} disabled={page === totalPages}><i className="fa-regular fa-chevron-right"></i></button>
+      <div className="page-header">
+        <div>
+          <h1>Blog Posts</h1>
+          <p>Manage your blog - {blogs.length} posts</p>
+        </div>
+        <div className="page-actions">
+          <button className="btn btn-primary" onClick={openCreate}>
+            <Icon path={Icons.plus} size={16} /> New Post
+          </button>
         </div>
       </div>
 
+      <DataTable
+        columns={columns}
+        data={blogs}
+        loading={loading}
+        onEdit={openEdit}
+        onDelete={(row) => setDeleteTarget(row)}
+        searchPlaceholder="Search posts..."
+        emptyMessage="No blog posts yet. Click 'New Post' to create one."
+        emptyIcon={Icons.fileText}
+      />
+
       {showModal && (
         <div className="modal-overlay" onClick={() => setShowModal(false)}>
-          <div className="modal" onClick={(e) => e.stopPropagation()}>
+          <div className="modal modal-lg" onClick={(e) => e.stopPropagation()}>
             <div className="modal-header">
               <h3>{editing ? 'Edit Post' : 'New Post'}</h3>
               <button className="modal-close" onClick={() => setShowModal(false)}>&times;</button>
             </div>
             <div className="modal-body">
               <div className="form-group">
-                <label>Title</label>
+                <label>Title <span style={{ color: 'var(--danger)' }}>*</span></label>
                 <input value={form.title} onChange={(e) => setForm({ ...form, title: e.target.value })} />
               </div>
               <div className="form-group">
@@ -141,11 +135,11 @@ function BlogManagement() {
               </div>
               <div className="form-group">
                 <label>Excerpt</label>
-                <textarea value={form.excerpt} onChange={(e) => setForm({ ...form, excerpt: e.target.value })} />
+                <textarea rows={2} value={form.excerpt} onChange={(e) => setForm({ ...form, excerpt: e.target.value })} />
               </div>
               <div className="form-group">
                 <label>Content (markdown)</label>
-                <textarea value={form.content} onChange={(e) => setForm({ ...form, content: e.target.value })} style={{ minHeight: 150 }} />
+                <textarea rows={6} value={form.content} onChange={(e) => setForm({ ...form, content: e.target.value })} />
               </div>
               <div className="form-row">
                 <div className="form-group">
@@ -158,21 +152,32 @@ function BlogManagement() {
                 </div>
               </div>
               <div className="form-group">
-                <label style={{ display: 'flex', alignItems: 'center', gap: 8, cursor: 'pointer' }}>
+                <label className="form-check">
                   <input type="checkbox" checked={form.featured} onChange={(e) => setForm({ ...form, featured: e.target.checked })} />
-                  Featured post
+                  <span>Featured post</span>
                 </label>
               </div>
             </div>
             <div className="modal-footer">
               <button className="btn btn-outline" onClick={() => setShowModal(false)}>Cancel</button>
-              <button className="btn btn-primary" onClick={handleSave}>{editing ? 'Update' : 'Create'}</button>
+              <button className="btn btn-primary" onClick={handleSave} disabled={saving}>
+                {saving ? 'Saving...' : editing ? 'Update Post' : 'Create Post'}
+              </button>
             </div>
           </div>
         </div>
       )}
+
+      <ConfirmDialog
+        open={!!deleteTarget}
+        onClose={() => setDeleteTarget(null)}
+        onConfirm={handleDelete}
+        title="Delete Post"
+        message={`Delete "${deleteTarget?.title}"? This cannot be undone.`}
+        confirmText="Delete"
+        type="danger"
+        loading={deleting}
+      />
     </div>
   );
 }
-
-export default BlogManagement;

@@ -2,60 +2,66 @@ import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { FiExternalLink, FiDownload, FiAward, FiCheck } from 'react-icons/fi';
 import { publicApi, imageUrl } from '../../utils/api';
-
-const fallbackCertificates = [
-  {
-    _id: '1',
-    title: 'JavaScript Algorithms and Data Structures',
-    issuer: 'freeCodeCamp',
-    image: null,
-    credentialUrl: 'https://www.freecodecamp.org/certification/',
-    date: '2024',
-  },
-  {
-    _id: '2',
-    title: 'Responsive Web Design',
-    issuer: 'freeCodeCamp',
-    image: null,
-    credentialUrl: 'https://www.freecodecamp.org/certification/',
-    date: '2023',
-  },
-];
+import { useI18n } from '../../utils/i18n.jsx';
 
 function CertificatesSection() {
-  const [certificates, setCertificates] = useState(fallbackCertificates);
+  const { t } = useI18n();
+  const [certificates, setCertificates] = useState([]);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    publicApi.getCertificates().then((res) => {
-      if (res.data?.data?.length > 0) {
-        setCertificates(res.data.data.map(c => ({
-          ...c,
-          image: c.image ? imageUrl(c.image) : null,
-        })));
-      }
-    }).catch(() => {});
+    publicApi.getCertificates()
+      .then(({ data }) => {
+        const items = data.data || [];
+        if (items.length > 0) {
+          setCertificates(items.map(c => ({
+            ...c,
+            image: c.image ? imageUrl(c.image) : null,
+          })));
+        }
+      })
+      .catch(() => {})
+      .finally(() => setLoading(false));
   }, []);
 
-  if (!certificates.length) return null;
+  if (loading) {
+    return (
+      <section id="certificates" className="skills">
+        <div className="skills-container" style={{ textAlign: 'center', padding: '3rem 0' }}>
+          <div className="spinner" />
+        </div>
+      </section>
+    );
+  }
+
+  if (certificates.length === 0) return null;
 
   return (
-    <section id="certificates" className="section">
-      <div className="section-container">
+    <section id="certificates" className="skills">
+      <div className="skills-container">
         <motion.div
-          initial={{ opacity: 0, y: 20 }}
+          initial={{ opacity: 0, y: 36 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true, margin: '-80px' }}
-          transition={{ duration: 0.5 }}
-          className="section-header"
+          transition={{ duration: 0.6 }}
+          className="text-center"
         >
-          <span className="section-tag">Certificates</span>
-          <h2 className="section-title">Certifications</h2>
-          <p className="section-subtitle">
-            Professional certifications that validate my skills and knowledge.
+          <span className="section-tag">{t('certificates.title')}</span>
+          <h2 className="section-title">{t('certificates.heading')}</h2>
+          <div className="section-line" />
+          <p className="section-subtitle" style={{ margin: '1rem auto 0' }}>
+            {t('certificates.subtitle')}
           </p>
         </motion.div>
 
-        <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <div
+          style={{
+            display: 'grid',
+            gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))',
+            gap: '1.5rem',
+            marginTop: '2.5rem',
+          }}
+        >
           {certificates.map((cert, idx) => (
             <motion.div
               key={cert._id}
@@ -63,34 +69,52 @@ function CertificatesSection() {
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true, margin: '-50px' }}
               transition={{ duration: 0.4, delay: idx * 0.1 }}
-              className="hover-card"
+              style={{
+                background: 'var(--card-bg)',
+                borderRadius: '12px',
+                border: '1px solid var(--border-color)',
+                overflow: 'hidden',
+                display: 'flex',
+                flexDirection: 'column',
+              }}
             >
-              <div className="h-40 bg-gray-50 flex items-center justify-center border-b border-gray-200">
+              <div
+                style={{
+                  height: 160,
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  background: 'var(--bg-secondary, #f8f9fa)',
+                  borderBottom: '1px solid var(--border-color)',
+                }}
+              >
                 {cert.image ? (
-                  <img src={cert.image} alt={cert.title} className="w-full h-full object-contain p-4" />
+                  <img src={cert.image} alt={cert.title} style={{ maxWidth: '100%', maxHeight: '100%', objectFit: 'contain', padding: '1rem' }} />
                 ) : (
-                  <FiAward size={48} className="text-gray-300" />
+                  <FiAward size={48} style={{ color: 'var(--text-light)' }} />
                 )}
               </div>
-              <div className="p-5">
-                <h3 className="text-sm font-semibold text-gray-900 mb-1">{cert.title}</h3>
-                <p className="text-xs text-gray-500 mb-1">{cert.issuer}</p>
+              <div style={{ padding: '1.25rem', flex: 1, display: 'flex', flexDirection: 'column' }}>
+                <h3 style={{ fontSize: '0.9rem', fontWeight: 600, color: 'var(--text-primary)', marginBottom: '0.25rem' }}>{cert.title}</h3>
+                <p style={{ fontSize: '0.8rem', color: 'var(--text-secondary)', marginBottom: '0.25rem' }}>{cert.issuer}</p>
                 {cert.date && (
-                  <p className="text-xs text-gray-400 mb-3">{cert.date}</p>
+                  <p style={{ fontSize: '0.75rem', color: 'var(--text-light)', marginBottom: '0.75rem' }}>{cert.date}</p>
                 )}
-                <div className="flex items-center gap-2">
+                <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginTop: 'auto' }}>
                   {cert.credentialUrl && (
-                    <a href={cert.credentialUrl} target="_blank" rel="noreferrer" className="btn btn-ghost text-xs !py-1 !px-2.5">
+                    <a href={cert.credentialUrl} target="_blank" rel="noreferrer"
+                      style={{ fontSize: '0.75rem', color: 'var(--primary-color)', textDecoration: 'none', display: 'flex', alignItems: 'center', gap: 4, padding: '0.25rem 0.5rem', borderRadius: 6, border: '1px solid var(--border-color)' }}>
                       <FiExternalLink size={11} /> Verify
                     </a>
                   )}
                   {cert.fileUrl && (
-                    <a href={cert.fileUrl} download className="btn btn-ghost text-xs !py-1 !px-2.5">
+                    <a href={cert.fileUrl} download
+                      style={{ fontSize: '0.75rem', color: 'var(--primary-color)', textDecoration: 'none', display: 'flex', alignItems: 'center', gap: 4, padding: '0.25rem 0.5rem', borderRadius: 6, border: '1px solid var(--border-color)' }}>
                       <FiDownload size={11} /> Download
                     </a>
                   )}
                   {!cert.credentialUrl && !cert.fileUrl && (
-                    <span className="flex items-center gap-1 text-xs text-green-600">
+                    <span style={{ fontSize: '0.75rem', color: '#22c55e', display: 'flex', alignItems: 'center', gap: 4 }}>
                       <FiCheck size={12} /> Completed
                     </span>
                   )}

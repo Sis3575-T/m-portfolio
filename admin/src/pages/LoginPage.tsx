@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useAuth } from '../context/AuthContext.tsx';
-import { FiEye, FiEyeOff, FiLock, FiMail } from 'react-icons/fi';
+import { useAuth } from '../context/AuthContext';
+import { Icons, Icon } from '../lib/icons';
 
 export default function LoginPage() {
   const { login } = useAuth();
@@ -13,7 +13,7 @@ export default function LoginPage() {
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     setError('');
     if (!email || !password) {
@@ -26,7 +26,7 @@ export default function LoginPage() {
       if (remember) localStorage.setItem('remember_me', email);
       else localStorage.removeItem('remember_me');
       navigate('/admin/dashboard');
-    } catch (err: any) {
+    } catch (err) {
       setError(err.response?.data?.message || 'Invalid email or password');
     } finally {
       setLoading(false);
@@ -37,7 +37,7 @@ export default function LoginPage() {
     <div className="login-page">
       <div className="login-bg-grid" />
       <div className="login-container">
-        <div className="login-logo">P</div>
+        <div className="login-logo">Sisay Temesgen</div>
         <div className="login-card">
           <h1>Welcome back</h1>
           <p>Sign in to manage your portfolio</p>
@@ -55,27 +55,21 @@ export default function LoginPage() {
             </div>
             <div className="input-group">
               <label>Password</label>
-              <div style={{ position: 'relative' }}>
+              <div className="input-icon-wrap">
                 <input
                   type={showPassword ? 'text' : 'password'}
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   placeholder="Enter your password"
                   autoComplete="current-password"
-                  style={{ paddingRight: '40px' }}
                 />
                 <button
                   type="button"
+                  className="input-icon-toggle"
                   onClick={() => setShowPassword(!showPassword)}
-                  style={{
-                    position: 'absolute', right: '10px', top: '50%',
-                    transform: 'translateY(-50%)', background: 'none',
-                    border: 'none', color: '#9CA3AF', cursor: 'pointer',
-                    padding: '4px',
-                  }}
                   tabIndex={-1}
                 >
-                  {showPassword ? <FiEyeOff size={16} /> : <FiEye size={16} />}
+                  {showPassword ? <Icon path={Icons['eye-off']} size={16} /> : <Icon path={Icons.eye} size={16} />}
                 </button>
               </div>
             </div>
@@ -94,7 +88,14 @@ export default function LoginPage() {
             </div>
             {error && <div className="login-error">{error}</div>}
             <button type="submit" className="btn btn-primary btn-lg" disabled={loading}>
-              {loading ? <><div className="spinner" style={{ width: 16, height: 16, borderWidth: 2 }} /> Signing in...</> : 'Sign in'}
+              {loading ? (
+                <>
+                  <span className="spinner" style={{ width: 16, height: 16, borderWidth: 2, display: 'inline-block' }} />
+                  Signing in...
+                </>
+              ) : (
+                'Sign in'
+              )}
             </button>
           </form>
         </div>

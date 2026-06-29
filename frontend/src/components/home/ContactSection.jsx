@@ -1,22 +1,45 @@
-import React, { useState } from 'react';
-import { FaEnvelope, FaPhone, FaMapMarkerAlt, FaGithub, FaLinkedin, FaTwitter, FaPaperPlane, FaCheck, FaSpinner, FaUser, FaCommentAlt } from 'react-icons/fa';
+import React, { useState, useEffect } from 'react';
+import { FaEnvelope, FaPhone, FaMapMarkerAlt, FaGithub, FaLinkedin, FaTwitter, FaPaperPlane, FaCheck, FaSpinner, FaUser, FaCommentAlt, FaTelegram, FaGlobe } from 'react-icons/fa';
 import { motion } from 'framer-motion';
 import emailjs from '@emailjs/browser';
+import { publicApi } from '../../utils/api';
+import { useI18n } from '../../utils/i18n.jsx';
 
 const EMAILJS_SERVICE_ID = 'service_w8l2h6v';
 const EMAILJS_TEMPLATE_ID = 'template_kj2fx4o';
 const EMAILJS_PUBLIC_KEY = 'ovBEFSKgggx5XF6Qk';
 
+function socialIcon(platform) {
+  const map = {
+    github: <FaGithub size={18} />,
+    linkedin: <FaLinkedin size={18} />,
+    twitter: <FaTwitter size={18} />,
+    telegram: <FaTelegram size={18} />,
+    email: <FaEnvelope size={18} />,
+  };
+  return map[platform?.toLowerCase()] || <FaGlobe size={18} />;
+}
+
 function ContactSection() {
+  const { t } = useI18n();
   const [form, setForm] = useState({ name: '', email: '', phone: '', message: '' });
   const [submitted, setSubmitted] = useState(false);
   const [sending, setSending] = useState(false);
   const [error, setError] = useState('');
+  const [settings, setSettings] = useState(null);
+
+  useEffect(() => {
+    publicApi.getSettings().then(({ data }) => {
+      const s = data?.data;
+      setSettings(Array.isArray(s) ? s[0] : s || null);
+    }).catch(() => {});
+  }, []);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError('');
     setSending(true);
+    const toEmail = settings?.email || 'sisay3575@gmail.com';
     try {
       await emailjs.send(
         EMAILJS_SERVICE_ID,
@@ -27,7 +50,7 @@ function ContactSection() {
           from_phone: form.phone,
           subject: 'Contact Form Submission',
           message: form.message,
-          to_email: 'sisay3575@gmail.com',
+          to_email: toEmail,
         },
         EMAILJS_PUBLIC_KEY
       );
@@ -35,11 +58,24 @@ function ContactSection() {
       setForm({ name: '', email: '', phone: '', message: '' });
       setTimeout(() => setSubmitted(false), 3000);
     } catch (err) {
-      setError('Failed to send. Please email me directly at sisay3575@gmail.com');
+      setError(`${t('contact.errorPrefix')} ${toEmail}`);
     } finally {
       setSending(false);
     }
   };
+
+  const s = settings || {};
+  const email = s.email || 'sisay3575@gmail.com';
+  const phone = s.phone || '+251 935 756 054';
+  const address = s.address || 'Bahir Dar, Ethiopia';
+
+  const socialLinks = [
+    ...(s.github ? [{ platform: 'github', url: s.github }] : []),
+    ...(s.linkedin ? [{ platform: 'linkedin', url: s.linkedin }] : []),
+    ...(s.twitter ? [{ platform: 'twitter', url: s.twitter }] : []),
+    ...(s.telegram ? [{ platform: 'telegram', url: s.telegram }] : []),
+    ...(email ? [{ platform: 'email', url: `mailto:${email}` }] : []),
+  ];
 
   return (
     <section id="contact" className="contact">
@@ -51,12 +87,11 @@ function ContactSection() {
           transition={{ duration: 0.6 }}
           className="text-center"
         >
-          <span className="section-tag">Contact</span>
-          <h2 className="section-title">Get In Touch</h2>
+          <span className="section-tag">{t('contact.title')}</span>
+          <h2 className="section-title">{t('contact.heading')}</h2>
           <div className="section-line" />
           <p className="section-subtitle" style={{ margin: '1rem auto 0' }}>
-            Open to internships, freelance work, and development roles. Reach out to discuss how
-            I can contribute to your next project.
+            {t('contact.subtitle')}
           </p>
         </motion.div>
 
@@ -68,12 +103,8 @@ function ContactSection() {
             transition={{ duration: 0.5, delay: 0.1 }}
             className="contact-info"
           >
-            <h3 className="contact-heading">Let's Work Together</h3>
-            <p className="contact-text">
-              Have a project in mind or just want to say hello? Feel free to reach out.
-              I'm always open to discussing new opportunities, collaborations, or
-              interesting tech conversations.
-            </p>
+            <h3 className="contact-heading">{t('contact.letsWork')}</h3>
+            <p className="contact-text">{t('contact.description')}</p>
 
             <div className="contact-details">
               <div className="contact-detail-item">
@@ -81,9 +112,9 @@ function ContactSection() {
                   <FaEnvelope size={16} />
                 </div>
                 <div>
-                  <span className="detail-label">Email</span>
-                  <a href="mailto:sisay3575@gmail.com" className="detail-value link">
-                    sisay3575@gmail.com
+                  <span className="detail-label">{t('contact.email')}</span>
+                  <a href={`mailto:${email}`} className="detail-value link">
+                    {email}
                   </a>
                 </div>
               </div>
@@ -92,8 +123,8 @@ function ContactSection() {
                   <FaPhone size={16} />
                 </div>
                 <div>
-                  <span className="detail-label">Phone</span>
-                  <span className="detail-value">+251 935 756 054</span>
+                  <span className="detail-label">{t('contact.phone')}</span>
+                  <span className="detail-value">{phone}</span>
                 </div>
               </div>
               <div className="contact-detail-item">
@@ -101,26 +132,21 @@ function ContactSection() {
                   <FaMapMarkerAlt size={16} />
                 </div>
                 <div>
-                  <span className="detail-label">Location</span>
-                  <span className="detail-value">Bahir Dar, Ethiopia</span>
+                  <span className="detail-label">{t('contact.location')}</span>
+                  <span className="detail-value">{address}</span>
                 </div>
               </div>
             </div>
 
-            <div className="social-links">
-              <a href="https://github.com/Sis3575-T" target="_blank" rel="noreferrer" className="social-link" aria-label="GitHub">
-                <FaGithub size={18} />
-              </a>
-              <a href="https://linkedin.com/in/sisay-temesgen" target="_blank" rel="noreferrer" className="social-link" aria-label="LinkedIn">
-                <FaLinkedin size={18} />
-              </a>
-              <a href="https://twitter.com" target="_blank" rel="noreferrer" className="social-link" aria-label="Twitter">
-                <FaTwitter size={18} />
-              </a>
-              <a href="mailto:sisay3575@gmail.com" className="social-link" aria-label="Email">
-                <FaEnvelope size={18} />
-              </a>
-            </div>
+            {socialLinks.length > 0 && (
+              <div className="social-links">
+                {socialLinks.map((link, i) => (
+                  <a key={i} href={link.url} target="_blank" rel="noreferrer" className="social-link" aria-label={link.platform}>
+                    {socialIcon(link.platform)}
+                  </a>
+                ))}
+              </div>
+            )}
           </motion.div>
 
           <motion.div
@@ -133,7 +159,7 @@ function ContactSection() {
             <form className="contact-form" onSubmit={handleSubmit}>
               <div className="form-row">
                 <div className="form-group">
-                  <label htmlFor="name">Name</label>
+                  <label htmlFor="name">{t('contact.name')}</label>
                   <div className="input-icon-wrap">
                     <input
                       id="name"
@@ -141,13 +167,13 @@ function ContactSection() {
                       required
                       value={form.name}
                       onChange={(e) => setForm({ ...form, name: e.target.value })}
-                      placeholder="Your name"
+                      placeholder={t('contact.namePlaceholder')}
                     />
                     <FaUser className="input-icon" size={14} />
                   </div>
                 </div>
                 <div className="form-group">
-                  <label htmlFor="email">Email</label>
+                  <label htmlFor="email">{t('contact.emailLabel')}</label>
                   <div className="input-icon-wrap">
                     <input
                       id="email"
@@ -155,34 +181,34 @@ function ContactSection() {
                       required
                       value={form.email}
                       onChange={(e) => setForm({ ...form, email: e.target.value })}
-                      placeholder="your@email.com"
+                      placeholder={t('contact.emailPlaceholder')}
                     />
                     <FaEnvelope className="input-icon" size={14} />
                   </div>
                 </div>
               </div>
               <div className="form-group">
-                <label htmlFor="phone">Phone</label>
+                <label htmlFor="phone">{t('contact.phoneLabel')}</label>
                 <div className="input-icon-wrap">
                   <input
                     id="phone"
                     type="tel"
                     value={form.phone}
                     onChange={(e) => setForm({ ...form, phone: e.target.value })}
-                    placeholder="+251 XXX XXX XXX"
+                    placeholder={t('contact.phonePlaceholder')}
                   />
                   <FaPhone className="input-icon" size={14} />
                 </div>
               </div>
               <div className="form-group">
-                <label htmlFor="message">Message</label>
+                <label htmlFor="message">{t('contact.messageLabel')}</label>
                 <div className="input-icon-wrap">
                   <textarea
                     id="message"
                     required
                     value={form.message}
                     onChange={(e) => setForm({ ...form, message: e.target.value })}
-                    placeholder="Tell me about your project or opportunity..."
+                    placeholder={t('contact.messagePlaceholder')}
                     rows={5}
                   />
                   <FaCommentAlt className="input-icon textarea-icon" size={14} />
@@ -197,11 +223,11 @@ function ContactSection() {
                 className="submit-btn"
               >
                 {sending ? (
-                  <><FaSpinner className="spinner" /> Sending...</>
+                  <><FaSpinner className="spinner" /> {t('contact.sending')}</>
                 ) : submitted ? (
-                  <><FaCheck /> Message Sent</>
+                  <><FaCheck /> {t('contact.sent')}</>
                 ) : (
-                  <><FaPaperPlane /> Send Message</>
+                  <><FaPaperPlane /> {t('contact.send')}</>
                 )}
               </button>
             </form>

@@ -1,47 +1,74 @@
-import React, { useState } from 'react';
-import { Link } from 'react-router-dom';
+import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { FaExternalLinkAlt, FaGithub, FaFolder, FaArrowRight, FaSearch } from 'react-icons/fa';
-import touristImg from '../../assets/tourist.png';
-import abayHotelImg from '../../assets/hero2.jpg';
+import { FaExternalLinkAlt, FaGithub, FaFolder, FaSearch } from 'react-icons/fa';
+import { publicApi } from '../../utils/api';
+import { useI18n } from '../../utils/i18n.jsx';
 
-const projectsData = [
+const fallbackProjects = [
   {
-    _id: '1',
+    _id: 'fallback-p-1',
     title: 'Ethiopian Tourist Destination',
-    description: 'Full-stack web application built with React frontend and Node.js backend. Features real-time data management with MongoDB, RESTful API architecture, responsive design with CSS3, and interactive user interface. Implements destination search functionality, dynamic content rendering, user authentication, and booking system integration. Deployed with modern DevOps practices.',
-    thumbnail: touristImg,
-    liveUrl: 'https://tourist-destination-2.onrender.com/',
-    githubUrl: 'https://github.com/Sis3575-T/ethiopian-tourist-destination',
+    description: 'A comprehensive tourist destination platform showcasing Ethiopia\'s highest peaks, national parks, and cultural heritage sites. Features interactive guides, travel tips, and curated recommendations for travelers exploring Ethiopia.',
     technologies: ['React', 'Node.js', 'MongoDB', 'Express', 'CSS3'],
+    liveUrl: 'https://tourist-destination-2.onrender.com/',
+    githubUrl: '',
     category: 'Full Stack',
   },
   {
-    _id: '2',
+    _id: 'fallback-p-2',
     title: 'Abay Grand Hotel',
-    description: 'Elegant hotel booking and management system with stunning design and seamless user experience. Features include room reservations, availability calendar, guest management, and online booking with real-time updates. A modern hospitality solution built for luxury accommodations.',
-    thumbnail: abayHotelImg,
-    liveUrl: 'https://abay-grand-hotel-1.vercel.app/',
-    githubUrl: 'https://github.com/Sis3575-T/abay-grand-hotel',
+    description: 'A modern hotel booking and information platform built with Next.js and Tailwind CSS. Features room listings, booking functionality, and a responsive design optimized for all devices.',
     technologies: ['React', 'Next.js', 'Tailwind CSS', 'Vercel'],
-    category: 'Frontend',
+    liveUrl: 'https://abay-grand-hotel-1.vercel.app/',
+    githubUrl: '',
+    category: 'Full Stack',
+  },
+  {
+    _id: 'fallback-p-3',
+    title: 'Portfolio CMS',
+    description: 'A full-featured content management system with admin dashboard, authentication, and media management. Built with the MERN stack, featuring real-time updates and a modern UI.',
+    technologies: ['React', 'Express', 'MongoDB', 'Node.js', 'Cloudinary'],
+    liveUrl: '',
+    githubUrl: '',
+    category: 'Full Stack',
   },
 ];
 
-const categories = ['All', 'Full Stack', 'Frontend', 'Backend'];
-
 function ProjectsSection() {
+  const { t } = useI18n();
+  const [projects, setProjects] = useState([]);
+  const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
   const [activeCategory, setActiveCategory] = useState('All');
 
-  const filtered = projectsData.filter(p => {
+  useEffect(() => {
+    publicApi.getProjects()
+      .then(({ data }) => setProjects(data.data || []))
+      .catch(() => {})
+      .finally(() => setLoading(false));
+  }, []);
+
+  const items = projects.length > 0 ? projects : fallbackProjects;
+  const categories = ['All', ...new Set(items.map(p => p.category).filter(Boolean))];
+
+  const filtered = items.filter(p => {
     const matchSearch = !search ||
-      p.title.toLowerCase().includes(search.toLowerCase()) ||
-      p.description.toLowerCase().includes(search.toLowerCase()) ||
+      p.title?.toLowerCase().includes(search.toLowerCase()) ||
+      p.description?.toLowerCase().includes(search.toLowerCase()) ||
       (p.technologies || []).some(t => t.toLowerCase().includes(search.toLowerCase()));
     const matchCategory = activeCategory === 'All' || p.category === activeCategory;
     return matchSearch && matchCategory;
   });
+
+  if (loading) {
+    return (
+      <section id="projects" className="projects">
+        <div className="projects-container" style={{ textAlign: 'center', padding: '4rem 0' }}>
+          <p style={{ color: 'var(--text-muted)' }}>{t('projects.loading')}</p>
+        </div>
+      </section>
+    );
+  }
 
   return (
     <section id="projects" className="projects">
@@ -53,11 +80,11 @@ function ProjectsSection() {
           transition={{ duration: 0.6 }}
           className="text-center"
         >
-          <span className="section-tag">Projects</span>
-          <h2 className="section-title">Featured Projects</h2>
+          <span className="section-tag">{t('projects.title')}</span>
+          <h2 className="section-title">{t('projects.heading')}</h2>
           <div className="section-line" />
           <p className="section-subtitle" style={{ margin: '1rem auto 0' }}>
-            Applications built with modern technologies and development best practices.
+            {t('projects.subtitle')}
           </p>
         </motion.div>
 
@@ -66,7 +93,7 @@ function ProjectsSection() {
             <FaSearch className="project-search-icon" size={14} />
             <input
               type="text"
-              placeholder="Search projects..."
+              placeholder={t('projects.search')}
               value={search}
               onChange={(e) => setSearch(e.target.value)}
               className="project-search-input"
@@ -79,7 +106,7 @@ function ProjectsSection() {
                 onClick={() => setActiveCategory(cat)}
                 className={`category-filter-btn ${activeCategory === cat ? 'active' : ''}`}
               >
-                {cat}
+                {cat === 'All' ? t('projects.all') : cat}
               </button>
             ))}
           </div>
@@ -87,7 +114,7 @@ function ProjectsSection() {
 
         {filtered.length === 0 ? (
           <p style={{ textAlign: 'center', color: 'var(--text-muted)', marginTop: '3rem' }}>
-            No projects found.
+            {t('projects.none')}
           </p>
         ) : (
           <div className="projects-grid">
@@ -122,12 +149,12 @@ function ProjectsSection() {
                   <div className="project-links">
                     {project.liveUrl && project.liveUrl !== '#' && (
                       <a href={project.liveUrl} target="_blank" rel="noreferrer" className="project-link project-link-primary">
-                        <FaExternalLinkAlt size={13} /> Visit Site
+                        <FaExternalLinkAlt size={13} /> {t('projects.visitSite')}
                       </a>
                     )}
                     {project.githubUrl && (
                       <a href={project.githubUrl} target="_blank" rel="noreferrer" className="project-link">
-                        <FaGithub size={14} /> GitHub
+                        <FaGithub size={14} /> {t('projects.github')}
                       </a>
                     )}
                   </div>

@@ -1,49 +1,152 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { FaReact, FaNodeJs, FaHtml5, FaCss3Alt, FaJs, FaPython, FaGitAlt, FaDocker, FaFigma, FaNpm } from 'react-icons/fa';
-import { SiTailwindcss, SiMongodb, SiPostgresql, SiExpress, SiTypescript, SiVite, SiPostman } from 'react-icons/si';
+import { publicApi } from '../../utils/api';
+import { useI18n } from '../../utils/i18n.jsx';
+import {
+  FaReact, FaNodeJs, FaHtml5, FaCss3Alt, FaJs, FaPython, FaGitAlt, FaDocker, FaFigma, FaNpm,
+  FaAngular, FaVuejs, FaAws, FaLinux, FaJava
+} from 'react-icons/fa';
+import {
+  SiTailwindcss, SiMongodb, SiPostgresql, SiExpress, SiTypescript, SiVite, SiPostman,
+  SiNextdotjs, SiRedux, SiGraphql, SiFirebase, SiRedis, SiKubernetes, SiJenkins,
+  SiTerraform, SiGo, SiRust, SiSwift, SiKotlin, SiFlutter, SiDart, SiMysql,
+  SiSqlite, SiPrisma, SiOracle, SiMui, SiBootstrap, SiSass, SiJquery, SiWebpack,
+  SiBabel, SiEslint, SiPrettier, SiNginx, SiHeroku, SiNetlify
+} from 'react-icons/si';
 
-const skillGroups = [
-  {
-    label: 'Frontend',
-    skills: [
-      { name: 'React', icon: <FaReact />, color: '#61DAFB' },
-      { name: 'TypeScript', icon: <SiTypescript />, color: '#3178C6' },
-      { name: 'JavaScript', icon: <FaJs />, color: '#F7DF1E' },
-      { name: 'HTML5', icon: <FaHtml5 />, color: '#E34F26' },
-      { name: 'CSS3', icon: <FaCss3Alt />, color: '#1572B6' },
-      { name: 'Tailwind CSS', icon: <SiTailwindcss />, color: '#06B6D4' },
-    ],
-  },
-  {
-    label: 'Backend',
-    skills: [
-      { name: 'Node.js', icon: <FaNodeJs />, color: '#339933' },
-      { name: 'Express', icon: <SiExpress />, color: '#FFFFFF' },
-      { name: 'Python', icon: <FaPython />, color: '#3776AB' },
-    ],
-  },
-  {
-    label: 'Database',
-    skills: [
-      { name: 'MongoDB', icon: <SiMongodb />, color: '#47A248' },
-      { name: 'PostgreSQL', icon: <SiPostgresql />, color: '#4169E1' },
-    ],
-  },
-  {
-    label: 'Tools & Technologies',
-    skills: [
-      { name: 'Git', icon: <FaGitAlt />, color: '#F05032' },
-      { name: 'Docker', icon: <FaDocker />, color: '#2496ED' },
-      { name: 'Vite', icon: <SiVite />, color: '#646CFF' },
-      { name: 'Postman', icon: <SiPostman />, color: '#FF6C37' },
-      { name: 'Figma', icon: <FaFigma />, color: '#F24E1E' },
-      { name: 'npm', icon: <FaNpm />, color: '#CB3837' },
-    ],
-  },
-];
+function skillIcon(name) {
+  const map = {
+    'React': <FaReact />,
+    'Angular': <FaAngular />,
+    'Vue.js': <FaVuejs />,
+    'TypeScript': <SiTypescript />,
+    'JavaScript': <FaJs />,
+    'HTML5': <FaHtml5 />,
+    'CSS3': <FaCss3Alt />,
+    'Tailwind CSS': <SiTailwindcss />,
+    'Node.js': <FaNodeJs />,
+    'Express': <SiExpress />,
+    'Python': <FaPython />,
+    'Java': <FaJava />,
+    'Go': <SiGo />,
+    'Rust': <SiRust />,
+    'MongoDB': <SiMongodb />,
+    'PostgreSQL': <SiPostgresql />,
+    'MySQL': <SiMysql />,
+    'SQLite': <SiSqlite />,
+    'Redis': <SiRedis />,
+    'Prisma': <SiPrisma />,
+    'Oracle': <SiOracle />,
+    'Git': <FaGitAlt />,
+    'Docker': <FaDocker />,
+    'Kubernetes': <SiKubernetes />,
+    'AWS': <FaAws />,
+    'Linux': <FaLinux />,
+    'Nginx': <SiNginx />,
+    'Firebase': <SiFirebase />,
+    'GraphQL': <SiGraphql />,
+    'Next.js': <SiNextdotjs />,
+    'Redux': <SiRedux />,
+    'Vite': <SiVite />,
+    'Postman': <SiPostman />,
+    'Figma': <FaFigma />,
+    'npm': <FaNpm />,
+    'Jenkins': <SiJenkins />,
+    'Terraform': <SiTerraform />,
+    'Swift': <SiSwift />,
+    'Kotlin': <SiKotlin />,
+    'Flutter': <SiFlutter />,
+    'Dart': <SiDart />,
+    'MUI': <SiMui />,
+    'Bootstrap': <SiBootstrap />,
+    'Sass': <SiSass />,
+    'jQuery': <SiJquery />,
+    'Webpack': <SiWebpack />,
+    'Babel': <SiBabel />,
+    'ESLint': <SiEslint />,
+    'Prettier': <SiPrettier />,
+    'Heroku': <SiHeroku />,
+    'Netlify': <SiNetlify />,
+  };
+  if (map[name]) return map[name];
+  return <div style={{ fontSize: '1.2rem', fontWeight: 700, color: 'var(--primary-color)' }}>{name.charAt(0)}</div>;
+}
+
+function skillColor(name) {
+  const map = {
+    'React': '#61DAFB',
+    'Angular': '#DD0031',
+    'Vue.js': '#4FC08D',
+    'TypeScript': '#3178C6',
+    'JavaScript': '#F7DF1E',
+    'HTML5': '#E34F26',
+    'CSS3': '#1572B6',
+    'Tailwind CSS': '#06B6D4',
+    'Node.js': '#339933',
+    'Express': '#FFFFFF',
+    'Python': '#3776AB',
+    'Java': '#ED8B00',
+    'Go': '#00ADD8',
+    'Rust': '#000000',
+    'MongoDB': '#47A248',
+    'PostgreSQL': '#4169E1',
+    'MySQL': '#4479A1',
+    'SQLite': '#003B57',
+    'Redis': '#DC382D',
+    'Prisma': '#2D3748',
+    'Git': '#F05032',
+    'Docker': '#2496ED',
+    'AWS': '#FF9900',
+    'Linux': '#FCC624',
+    'Firebase': '#FFCA28',
+    'GraphQL': '#E10098',
+    'Next.js': '#000000',
+    'Redux': '#764ABC',
+    'Vite': '#646CFF',
+    'Postman': '#FF6C37',
+    'Figma': '#F24E1E',
+    'npm': '#CB3837',
+    'Flutter': '#02569B',
+    'Dart': '#0175C2',
+    'Bootstrap': '#7952B3',
+    'Sass': '#CC6699',
+  };
+  return map[name] || 'var(--primary-color)';
+}
 
 function SkillsSection() {
+  const { t } = useI18n();
+  const [skills, setSkills] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    publicApi.getSkills()
+      .then(({ data }) => {
+        const items = data.data || [];
+        const grouped = {};
+        items.forEach(s => {
+          const cat = s.category || 'Other';
+          if (!grouped[cat]) grouped[cat] = [];
+          grouped[cat].push(s);
+        });
+        setSkills(Object.entries(grouped));
+      })
+      .catch(() => {})
+      .finally(() => setLoading(false));
+  }, []);
+
+  if (loading) {
+    return (
+      <section id="skills" className="skills">
+        <div className="skills-container" style={{ textAlign: 'center', padding: '3rem 0' }}>
+          <div className="spinner" />
+        </div>
+      </section>
+    );
+  }
+
+  if (skills.length === 0) return null;
+
   return (
     <section id="skills" className="skills">
       <div className="skills-container">
@@ -54,31 +157,36 @@ function SkillsSection() {
           transition={{ duration: 0.6 }}
           className="text-center"
         >
-          <span className="section-tag">Skills</span>
-          <h2 className="section-title">Technical Skills</h2>
+          <span className="section-tag">{t('skills.title')}</span>
+          <h2 className="section-title">{t('skills.heading')}</h2>
           <div className="section-line" />
           <p className="section-subtitle" style={{ margin: '1rem auto 0' }}>
-            Technologies and tools I use to build modern, scalable applications.
+            {t('skills.subtitle')}
           </p>
         </motion.div>
 
         <div className="skill-groups">
-          {skillGroups.map((group, groupIdx) => (
+          {skills.map(([category, items], groupIdx) => (
             <motion.div
-              key={group.label}
+              key={category}
               initial={{ opacity: 0, y: 36 }}
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true, margin: '-80px' }}
               transition={{ duration: 0.5, delay: groupIdx * 0.1 }}
             >
-              <div className="skill-group-label">{group.label}</div>
+              <div className="skill-group-label">{category}</div>
               <div className="skill-cards">
-                {group.skills.map((skill) => (
-                  <div key={skill.name} className="skill-card" title={skill.name}>
-                    <div className="skill-svg" style={{ color: skill.color }}>
-                      {skill.icon}
+                {items.map((skill) => (
+                  <div key={skill._id} className="skill-card" title={`${skill.name} (${skill.proficiency || 0}%)`}>
+                    <div className="skill-svg" style={{ color: skillColor(skill.name) }}>
+                      {skillIcon(skill.name)}
                     </div>
                     <span className="skill-card-name">{skill.name}</span>
+                    {skill.proficiency != null && (
+                      <div style={{ width: '100%', height: 3, background: 'var(--border-color)', borderRadius: 2, marginTop: 4, overflow: 'hidden' }}>
+                        <div style={{ width: `${skill.proficiency}%`, height: '100%', background: skillColor(skill.name), borderRadius: 2 }} />
+                      </div>
+                    )}
                   </div>
                 ))}
               </div>

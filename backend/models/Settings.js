@@ -12,10 +12,33 @@ const settingsSchema = new mongoose.Schema({
   email: { type: String, default: 'sisay3575@gmail.com' },
   phone: { type: String, default: '+251 935 756 054' },
   address: { type: String, default: 'Bahir Dar, Ethiopia' },
+
+  city: { type: String, default: '' },
+  country: { type: String, default: '' },
+  nationality: { type: String, default: '' },
+  dateOfBirth: { type: String, default: '' },
+  professionalTitle: { type: String, default: '' },
+  shortBio: { type: String, default: '' },
+  longBio: { type: String, default: '' },
+  currentCompany: { type: String, default: '' },
+  currentPosition: { type: String, default: '' },
+  yearsOfExperience: { type: String, default: '' },
+  freelanceAvailable: { type: Boolean, default: false },
+  languages: { type: String, default: '' },
+  profilePhoto: { type: String, default: '' },
+  coverPhoto: { type: String, default: '' },
+
   github: { type: String, default: 'https://github.com/Sis3575-T' },
   linkedin: { type: String, default: '' },
   twitter: { type: String, default: '' },
   telegram: { type: String, default: '' },
+  facebook: { type: String, default: '' },
+  instagram: { type: String, default: '' },
+  youtube: { type: String, default: '' },
+  medium: { type: String, default: '' },
+  stackoverflow: { type: String, default: '' },
+  leetcode: { type: String, default: '' },
+
   maintenanceMode: { type: Boolean, default: false },
 }, { timestamps: true });
 

@@ -32,7 +32,7 @@ export const getAbout = () => request('GET', '/about');
 export const updateAbout = (data) => request('PUT', '/about', data);
 
 // Projects
-export const getProjects = (params = '') => request('GET', `/projects${params}`);
+export const getProjects = (params = '/public') => request('GET', `/projects${params}`);
 export const getProject = (id) => request('GET', `/projects/${id}`);
 export const createProject = (form) => request('POST', '/projects', form, true);
 export const updateProject = (id, form) => request('PUT', `/projects/${id}`, form, true);

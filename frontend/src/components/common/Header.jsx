@@ -1,24 +1,38 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { FaBars, FaTimes, FaSun, FaMoon, FaGithub, FaLinkedin, FaTwitter, FaTerminal } from 'react-icons/fa';
+import { FaBars, FaTimes, FaSun, FaMoon, FaTerminal } from 'react-icons/fa';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useTheme } from '../../context/ThemeContext';
-
-const navLinks = [
-  { label: 'Home', href: '#home' },
-  { label: 'About', href: '#about' },
-  { label: 'Skills', href: '#skills' },
-  { label: 'Projects', href: '#projects' },
-  { label: 'Experience', href: '#experience' },
-  { label: 'Contact', href: '#contact' },
-];
+import { useI18n } from '../../utils/i18n.jsx';
+import { publicApi } from '../../utils/api';
 
 function Header({ onToggleTerminal }) {
   const navigate = useNavigate();
   const { theme, toggleTheme } = useTheme();
+  const { t } = useI18n();
   const [scrolled, setScrolled] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
   const [activeSection, setActiveSection] = useState('home');
+  const [siteName, setSiteName] = useState('Sisay Temesgen');
+
+  const navLinks = useMemo(() => [
+    { label: t('nav.home'), href: '#home' },
+    { label: t('nav.about'), href: '#about' },
+    { label: t('nav.skills'), href: '#skills' },
+    { label: t('nav.projects'), href: '#projects' },
+    { label: t('nav.experience'), href: '#experience' },
+    { label: t('nav.contact'), href: '#contact' },
+  ], [t]);
+
+  useEffect(() => {
+    publicApi.getHero().then(({ data }) => {
+      const h = data?.data;
+      if (h) {
+        const heroData = Array.isArray(h) ? h[0] : h;
+        if (heroData?.name) setSiteName(heroData.name);
+      }
+    }).catch(() => {});
+  }, []);
 
   useEffect(() => {
     const onScroll = () => {
@@ -57,6 +71,7 @@ function Header({ onToggleTerminal }) {
   };
 
   const isLight = theme === 'light';
+  const initials = siteName.split(' ').map(w => w[0]).filter(Boolean).slice(0, 2).join('').toUpperCase() || 'ST';
 
   return (
     <>
@@ -94,10 +109,10 @@ function Header({ onToggleTerminal }) {
               }}
             >
               <svg width={20} height={20} viewBox="0 0 36 32">
-                <text x="18" y="25" font-family="Inter, Arial, sans-serif" font-weight="700" font-size="22" fill="white" text-anchor="middle" letter-spacing="-1">ST</text>
+                <text x="18" y="25" fontFamily="Inter, Arial, sans-serif" fontWeight="700" fontSize="22" fill="white" textAnchor="middle" letterSpacing="-1">{initials}</text>
               </svg>
             </div>
-            <span style={{ fontWeight: 600 }}>Sisay Temesgen</span>
+            <span style={{ fontWeight: 600 }}>{siteName}</span>
           </a>
 
           <nav className="hidden md:flex items-center gap-0.5">
@@ -146,9 +161,24 @@ function Header({ onToggleTerminal }) {
                 border: '1px solid rgba(255,255,255,0.12)',
               }}
               aria-label={`Switch to ${theme === 'dark' ? 'light' : 'dark'} mode`}
+              title="Toggle theme (Ctrl+J)"
             >
               {theme === 'dark' ? <FaSun size={14} /> : <FaMoon size={14} />}
             </button>
+
+            <kbd
+              className="hidden md:inline-flex"
+              style={{
+                fontSize: '0.65rem', color: 'rgba(255,255,255,0.35)',
+                background: 'rgba(255,255,255,0.06)',
+                border: '1px solid rgba(255,255,255,0.08)',
+                borderRadius: 4, padding: '0.15rem 0.4rem',
+                fontFamily: 'inherit', letterSpacing: '0.02em',
+              }}
+              title="Open command palette"
+            >
+              Ctrl+K
+            </kbd>
 
             <button
               className="md:hidden flex items-center justify-center w-9 h-9 rounded-lg"

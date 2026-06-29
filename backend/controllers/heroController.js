@@ -51,7 +51,8 @@ exports.updateHero = async (req, res) => {
     if (typeof body.buttons === 'string') {
       try { body.buttons = JSON.parse(body.buttons); } catch {}
     }
-    const hero = await Hero.findByIdAndUpdate(req.params.id, body, { new: true, runValidators: true });
+    const filter = req.params.id ? { _id: req.params.id } : { isActive: true };
+    const hero = await Hero.findOneAndUpdate(filter, body, { new: true, runValidators: true, upsert: true });
     if (!hero) return res.status(404).json({ success: false, message: 'Hero not found' });
     res.json({ success: true, data: hero });
   } catch (error) {

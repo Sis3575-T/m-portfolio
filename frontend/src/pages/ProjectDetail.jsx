@@ -2,10 +2,12 @@ import React, { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { Helmet } from 'react-helmet-async';
 import { publicApi, imageUrl } from '../utils/api';
+import { useI18n } from '../utils/i18n.jsx';
 import { FaGithub, FaExternalLinkAlt } from 'react-icons/fa';
 
 function ProjectDetail() {
   const { id } = useParams();
+  const { t } = useI18n();
   const [project, setProject] = useState(null);
   const [loading, setLoading] = useState(true);
 
@@ -26,14 +28,14 @@ function ProjectDetail() {
 
   if (loading) return (
     <div className="flex items-center justify-center min-h-[60vh] text-text-secondary">
-      Loading...
+      {t('projectDetail.loading')}
     </div>
   );
   if (!project) return (
     <div className="flex flex-col items-center justify-center min-h-[60vh] px-6">
-      <p className="text-lg text-text-secondary">Project not found</p>
+      <p className="text-lg text-text-secondary">{t('projectDetail.notFound')}</p>
       <Link to="/" className="mt-4 inline-flex items-center gap-2 px-6 py-3 rounded-lg bg-accent text-white text-sm font-medium hover:bg-accent-hover transition-all">
-        Back to Home
+        {t('projectDetail.backHome')}
       </Link>
     </div>
   );
@@ -45,7 +47,7 @@ function ProjectDetail() {
           <title>{project.title} — Sisay Temesgen</title>
         </Helmet>
         <Link to="/" className="inline-flex items-center gap-1 text-sm text-text-secondary hover:text-text-primary transition-colors mb-8">
-          &larr; Back to Home
+          &larr; {t('projectDetail.backHome')}
         </Link>
         <h1 className="font-display text-3xl sm:text-4xl font-bold text-text-primary tracking-tight">
           {project.title}
@@ -76,20 +78,20 @@ function ProjectDetail() {
           <div className="flex flex-wrap gap-3 w-full">
             {project.githubUrl ? (
               <a href={project.githubUrl} target="_blank" rel="noreferrer" className="inline-flex items-center gap-2 px-6 py-3 rounded-lg bg-accent text-white text-sm font-medium hover:bg-accent-hover transition-all">
-                <FaGithub size={14} /> GitHub
+                <FaGithub size={14} /> {t('projectDetail.github')}
               </a>
             ) : (
               <span className="inline-flex items-center gap-2 px-6 py-3 rounded-lg bg-gray-100 text-gray-400 text-sm font-medium cursor-not-allowed">
-                <FaGithub size={14} /> GitHub
+                <FaGithub size={14} /> {t('projectDetail.github')}
               </span>
             )}
             {project.liveUrl ? (
               <a href={project.liveUrl} target="_blank" rel="noreferrer" className="inline-flex items-center gap-2 px-6 py-3 rounded-lg border border-border text-text-primary text-sm font-medium hover:border-border-hover transition-all">
-                <FaExternalLinkAlt size={12} /> Live Demo
+                <FaExternalLinkAlt size={12} /> {t('projectDetail.liveDemo')}
               </a>
             ) : (
               <span className="inline-flex items-center gap-2 px-6 py-3 rounded-lg border border-gray-200 text-gray-400 text-sm font-medium cursor-not-allowed">
-                <FaExternalLinkAlt size={12} /> Live Demo
+                <FaExternalLinkAlt size={12} /> {t('projectDetail.liveDemo')}
               </span>
             )}
           </div>

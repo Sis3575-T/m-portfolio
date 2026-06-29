@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { adminApi } from '../utils/api';
+import { adminApi } from '../services/api';
 
 function HeroManagement() {
   const [heroes, setHeroes] = useState([]);

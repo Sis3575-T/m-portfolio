@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { adminApi, imageUrl } from '../services/api.ts';
-import { FiPlus, FiEdit, FiTrash2, FiX, FiUpload, FiAward, FiExternalLink } from 'react-icons/fi';
+import { adminApi, imageUrl } from '../services/api';
+import { Icons, Icon } from '../lib/icons';
 import type { Certificate } from '../types';
 import { formatDate } from '../lib/utils';
 
@@ -41,14 +41,10 @@ export default function CertificatesManagement() {
   const openEdit = (cert: Certificate) => {
     setEditing(cert);
     setForm({
-      title: cert.title,
-      issuer: cert.issuer,
-      issueDate: cert.issueDate || '',
-      expiryDate: cert.expiryDate || '',
-      credentialId: cert.credentialId || '',
-      credentialUrl: cert.credentialUrl || '',
-      image: cert.image || '',
-      visible: cert.visible,
+      title: cert.title, issuer: cert.issuer,
+      issueDate: cert.issueDate || '', expiryDate: cert.expiryDate || '',
+      credentialId: cert.credentialId || '', credentialUrl: cert.credentialUrl || '',
+      image: cert.image || '', visible: cert.visible,
     });
     setShowModal(true);
   };
@@ -59,27 +55,18 @@ export default function CertificatesManagement() {
       Object.entries(form).forEach(([key, val]) => {
         if (val !== undefined && val !== null) formData.append(key, String(val));
       });
-      if (editing) {
-        await adminApi.updateCertificate(editing._id, formData);
-      } else {
-        await adminApi.createCertificate(formData);
-      }
+      if (editing) await adminApi.updateCertificate(editing._id, formData);
+      else await adminApi.createCertificate(formData);
       const { data } = await adminApi.getCertificates();
       setCertificates(data.data || []);
       setShowModal(false);
-    } catch (err) {
-      console.error('Failed to save certificate', err);
-    }
+    } catch (err) { console.error('Failed to save certificate', err); }
   };
 
   const handleDelete = async (id: string) => {
     if (!window.confirm('Delete this certificate?')) return;
-    try {
-      await adminApi.deleteCertificate(id);
-      setCertificates(prev => prev.filter(c => c._id !== id));
-    } catch (err) {
-      console.error('Failed to delete', err);
-    }
+    try { await adminApi.deleteCertificate(id); setCertificates(prev => prev.filter(c => c._id !== id)); }
+    catch (err) { console.error('Failed to delete', err); }
   };
 
   const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -90,12 +77,8 @@ export default function CertificatesManagement() {
       fd.append('file', file);
       fd.append('category', 'image');
       const { data: up } = await adminApi.uploadMedia(fd);
-      if (up.success && up.data?.url) {
-        setForm({ ...form, image: up.data.url });
-      }
-    } catch (err) {
-      console.error('Failed to upload image', err);
-    }
+      if (up.success && up.data?.url) setForm({ ...form, image: up.data.url });
+    } catch (err) { console.error('Failed to upload image', err); }
   };
 
   if (loading) return <div style={{ display: 'flex', justifyContent: 'center', padding: '80px 0' }}><div className="spinner" /></div>;
@@ -108,18 +91,18 @@ export default function CertificatesManagement() {
           <p>Manage your certifications and credentials ({certificates.length} total)</p>
         </div>
         <div className="page-actions">
-          <button className="btn btn-primary" onClick={openCreate}><FiPlus size={16} /> Add Certificate</button>
+          <button className="btn btn-primary" onClick={openCreate}><Icon path={Icons.plus} size={16} /> Add Certificate</button>
         </div>
       </div>
 
       <div className="media-grid">
         {certificates.map(cert => (
           <div key={cert._id} className="media-card">
-            <div className="media-preview" style={{ background: 'var(--gray-50)' }}>
+            <div className="media-preview" style={{ background: 'var(--bg)' }}>
               {cert.image ? (
                 <img src={imageUrl(cert.image)} alt={cert.title} style={{ objectFit: 'contain', padding: 12 }} />
               ) : (
-                <FiAward size={40} />
+                <Icon path={Icons.award} size={40} />
               )}
             </div>
             <div className="media-info">
@@ -128,34 +111,33 @@ export default function CertificatesManagement() {
               {cert.issueDate && <div className="media-meta">Issued: {cert.issueDate}</div>}
             </div>
             <div style={{ position: 'absolute', top: 8, left: 8, display: 'flex', gap: 4 }}>
-              <span className={`badge ${cert.visible ? 'badge-green' : 'badge-gray'}`}>
-                {cert.visible ? 'Visible' : 'Hidden'}
-              </span>
+              <span className={`badge ${cert.visible ? 'badge-green' : 'badge-gray'}`}>{cert.visible ? 'Visible' : 'Hidden'}</span>
               {cert.credentialUrl && (
                 <a href={cert.credentialUrl} target="_blank" rel="noopener noreferrer"
-                  className="btn btn-ghost btn-xs" style={{ background: 'rgba(0,0,0,0.5)', color: '#fff' }}
-                  data-tooltip="View credential">
-                  <FiExternalLink size={12} />
+                  className="btn btn-ghost btn-xs" style={{ background: 'rgba(0,0,0,0.5)', color: '#fff' }} data-tooltip="View credential">
+                  <Icon path={Icons['external-link']} size={12} />
                 </a>
               )}
             </div>
             <div style={{ position: 'absolute', top: 8, right: 8, display: 'flex', gap: 4 }}>
               <button className="btn-edit" style={{ width: 28, height: 28, borderRadius: 6, background: 'rgba(0,0,0,0.5)', color: '#fff', border: 'none' }}
                 onClick={() => openEdit(cert)} data-tooltip="Edit">
-                <FiEdit size={12} />
+                <Icon path={Icons.edit} size={12} />
               </button>
               <button className="btn-delete" style={{ width: 28, height: 28, borderRadius: 6, background: 'rgba(0,0,0,0.5)', color: '#fff', border: 'none' }}
                 onClick={() => handleDelete(cert._id)} data-tooltip="Delete">
-                <FiTrash2 size={12} />
+                <Icon path={Icons.trash2} size={12} />
               </button>
             </div>
           </div>
         ))}
         {certificates.length === 0 && (
-          <div className="media-upload-card" style={{ gridColumn: '1 / -1' }} onClick={openCreate}>
-            <FiAward size={40} />
-            <p>No certificates yet</p>
-            <span>Click here to add your first certificate</span>
+          <div style={{ gridColumn: '1 / -1' }}>
+            <div className="empty-state" onClick={openCreate} style={{ cursor: 'pointer' }}>
+              <Icon path={Icons.award} size={48} />
+              <h3>No certificates yet</h3>
+              <p>Click here to add your first certificate</p>
+            </div>
           </div>
         )}
       </div>
@@ -165,7 +147,7 @@ export default function CertificatesManagement() {
           <div className="modal" onClick={(e) => e.stopPropagation()}>
             <div className="modal-header">
               <h3>{editing ? 'Edit Certificate' : 'Add Certificate'}</h3>
-              <button className="modal-close" onClick={() => setShowModal(false)}><FiX size={18} /></button>
+              <button className="modal-close" onClick={() => setShowModal(false)}><Icon path={Icons.x} size={18} /></button>
             </div>
             <div className="modal-body">
               <div className="form-row">
@@ -186,11 +168,11 @@ export default function CertificatesManagement() {
                   {form.image && (
                     <div className="image-preview" style={{ width: 120, height: 80 }}>
                       <img src={imageUrl(form.image)} alt="preview" />
-                      <button className="remove-image" onClick={() => setForm({ ...form, image: '' })}><FiX size={12} /></button>
+                      <button className="remove-image" onClick={() => setForm({ ...form, image: '' })}><Icon path={Icons.x} size={12} /></button>
                     </div>
                   )}
                   <label className="image-upload-btn">
-                    <FiUpload size={14} /> Upload Image
+                    <Icon path={Icons.upload} size={14} /> Upload Image
                     <input type="file" accept="image/*" onChange={handleImageUpload} style={{ display: 'none' }} />
                   </label>
                 </div>

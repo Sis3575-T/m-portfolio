@@ -1,21 +1,10 @@
-import React, { createContext, useContext, useState, useEffect, useCallback, type ReactNode } from 'react';
-import { adminApi } from '../services/api.ts';
+import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
+import { adminApi } from '../services/api';
 
-import type { User } from '../types/index.ts';
-interface AuthContextType {
-  user: User | null;
-  token: string | null;
-  loading: boolean;
-  isAuthenticated: boolean;
-  login: (email: string, password: string) => Promise<void>;
-  logout: () => void;
-  updateUser: (user: User) => void;
-}
+const AuthContext = createContext(null);
 
-const AuthContext = createContext<AuthContextType | null>(null);
-
-export function AuthProvider({ children }: { children: ReactNode }) {
-  const [user, setUser] = useState<User | null>(() => {
+export function AuthProvider({ children }) {
+  const [user, setUser] = useState(() => {
     try {
       const stored = localStorage.getItem('admin_user');
       return stored ? JSON.parse(stored) : null;
@@ -23,7 +12,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       return null;
     }
   });
-  const [token, setToken] = useState<string | null>(() => localStorage.getItem('admin_token'));
+  const [token, setToken] = useState(() => localStorage.getItem('admin_token'));
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -47,7 +36,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   }, [token]);
 
-  const login = useCallback(async (email: string, password: string) => {
+  const login = useCallback(async (email, password) => {
     const response = await adminApi.login(email, password);
     const { token: newToken, user: userData } = response.data;
     localStorage.setItem('admin_token', newToken);
@@ -64,7 +53,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setUser(null);
   }, []);
 
-  const updateUser = useCallback((updatedUser: User) => {
+  const updateUser = useCallback((updatedUser) => {
     setUser(updatedUser);
     localStorage.setItem('admin_user', JSON.stringify(updatedUser));
   }, []);
@@ -76,7 +65,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   );
 }
 
-export function useAuth(): AuthContextType {
+export function useAuth() {
   const ctx = useContext(AuthContext);
   if (!ctx) throw new Error('useAuth must be used within AuthProvider');
   return ctx;

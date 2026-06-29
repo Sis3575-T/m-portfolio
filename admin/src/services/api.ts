@@ -1,10 +1,12 @@
 import axios, { AxiosInstance, AxiosResponse } from 'axios';
 import type {
   User, Project, Skill, Experience, Education, Certificate,
-  Blog, Message, Media, Setting, Hero, About, DashboardStats, VisitorData,
+  Blog, Message, Media, Setting, Hero, About, Service, Testimonial,
+  PortfolioPage, PageComponent, DashboardStats, VisitorData, ActivityLog,
+  ThemeSettings, Backup, AnalyticsOverview,
 } from '../types';
 
-const API_URL: string = import.meta.env.VITE_API_URL || 'http://localhost:5001/api';
+const API_URL: string = import.meta.env.VITE_API_URL || '/api';
 
 const api: AxiosInstance = axios.create({
   baseURL: API_URL,
@@ -53,6 +55,10 @@ export const adminApi = {
   // Dashboard & Analytics
   getDashboardStats: () => api.get<ApiResponse<DashboardStats>>('/analytics/dashboard'),
   getVisitorStats: () => api.get<ApiResponse<VisitorData[]>>('/analytics/visitors'),
+  getAnalyticsOverview: () => api.get<ApiResponse<AnalyticsOverview>>('/analytics/overview'),
+  getVisitorLocations: () => api.get<ApiResponse<{ country: string; count: number; percentage: number }[]>>('/analytics/locations'),
+  getDeviceStats: () => api.get<ApiResponse<{ name: string; value: number; percentage: number }[]>>('/analytics/devices'),
+  getBrowserStats: () => api.get<ApiResponse<{ name: string; value: number; percentage: number }[]>>('/analytics/browsers'),
 
   // Hero
   getHero: () => api.get<ApiResponse<Hero>>('/hero'),
@@ -101,6 +107,18 @@ export const adminApi = {
   updateBlog: (id: string, data: Partial<Blog>) => api.put<ApiResponse<Blog>>(`/blogs/${id}`, data),
   deleteBlog: (id: string) => api.delete<ApiResponse<null>>(`/blogs/${id}`),
 
+  // Services
+  getServices: () => api.get<ApiResponse<Service[]>>('/services/all'),
+  createService: (data: Partial<Service>) => api.post<ApiResponse<Service>>('/services', data),
+  updateService: (id: string, data: Partial<Service>) => api.put<ApiResponse<Service>>(`/services/${id}`, data),
+  deleteService: (id: string) => api.delete<ApiResponse<null>>(`/services/${id}`),
+
+  // Testimonials
+  getTestimonials: () => api.get<ApiResponse<Testimonial[]>>('/testimonials/all'),
+  createTestimonial: (data: Partial<Testimonial>) => api.post<ApiResponse<Testimonial>>('/testimonials', data),
+  updateTestimonial: (id: string, data: Partial<Testimonial>) => api.put<ApiResponse<Testimonial>>(`/testimonials/${id}`, data),
+  deleteTestimonial: (id: string) => api.delete<ApiResponse<null>>(`/testimonials/${id}`),
+
   // Messages
   getMessages: (params?: Record<string, unknown>) => api.get<ApiResponse<Message[]>>('/messages', { params }),
   getMessage: (id: string) => api.get<ApiResponse<Message>>(`/messages/${id}`),
@@ -109,11 +127,14 @@ export const adminApi = {
   markAsRead: (id: string) => api.patch<ApiResponse<Message>>(`/messages/${id}/read`),
 
   // Media
-  getMedia: (params?: { category?: string; page?: number; limit?: number }) =>
+  getMedia: (params?: { category?: string; folder?: string; page?: number; limit?: number }) =>
     api.get<ApiResponse<Media[]>>('/media', { params }),
   getMediaStats: () => api.get('/media/stats'),
   uploadMedia: (formData: FormData) => api.post<ApiResponse<Media>>('/media/upload', formData, { headers: { 'Content-Type': 'multipart/form-data' } }),
   deleteMedia: (id: string) => api.delete<ApiResponse<null>>(`/media/${id}`),
+  updateMedia: (id: string, data: { name?: string; category?: string; folder?: string }) =>
+    api.put<ApiResponse<Media>>(`/media/${id}`, data),
+  getFolders: () => api.get<ApiResponse<string[]>>('/media/folders'),
 
   // SEO
   getSEO: () => api.get<ApiResponse<Record<string, unknown>[]>>('/seo'),
@@ -123,11 +144,56 @@ export const adminApi = {
   getSettings: () => api.get<ApiResponse<Setting>>('/settings'),
   updateSettings: (data: FormData) => api.put<ApiResponse<Setting>>('/settings', data, { headers: { 'Content-Type': 'multipart/form-data' } }),
 
+  // Pages (Dynamic Page Builder)
+  getPages: () => api.get<ApiResponse<PortfolioPage[]>>('/pages'),
+  createPage: (data: { title: string; slug: string; description?: string; insertAfter?: string }) =>
+    api.post<ApiResponse<PortfolioPage>>('/pages', data),
+  updatePage: (id: string, data: Partial<PortfolioPage>) =>
+    api.put<ApiResponse<PortfolioPage>>(`/pages/${id}`, data),
+  deletePage: (id: string) => api.delete<ApiResponse<null>>(`/pages/${id}`),
+  duplicatePage: (id: string) => api.post<ApiResponse<PortfolioPage>>(`/pages/${id}/duplicate`),
+  reorderPages: (items: { _id: string; order: number }[]) =>
+    api.put<ApiResponse<null>>('/pages/reorder', { items }),
+  togglePage: (id: string) => api.patch<ApiResponse<PortfolioPage>>(`/pages/${id}/toggle`),
+
+  // Components (Dynamic Component Builder)
+  getPageComponents: (pageId: string) => api.get<ApiResponse<PageComponent[]>>(`/pages/${pageId}/components`),
+  addComponent: (pageId: string, data: { type: string; title?: string }) =>
+    api.post<ApiResponse<PageComponent>>(`/pages/${pageId}/components`, data),
+  updateComponent: (pageId: string, componentId: string, data: Partial<PageComponent>) =>
+    api.put<ApiResponse<PageComponent>>(`/pages/${pageId}/components/${componentId}`, data),
+  deleteComponent: (pageId: string, componentId: string) =>
+    api.delete<ApiResponse<null>>(`/pages/${pageId}/components/${componentId}`),
+  duplicateComponent: (pageId: string, componentId: string) =>
+    api.post<ApiResponse<PageComponent>>(`/pages/${pageId}/components/${componentId}/duplicate`),
+  reorderComponents: (pageId: string, items: { _id: string; order: number }[]) =>
+    api.put<ApiResponse<null>>(`/pages/${pageId}/components/reorder`, { items }),
+  toggleComponent: (pageId: string, componentId: string) =>
+    api.patch<ApiResponse<PageComponent>>(`/pages/${pageId}/components/${componentId}/toggle`),
+  moveComponent: (pageId: string, componentId: string, targetPageId: string) =>
+    api.post<ApiResponse<PageComponent>>(`/pages/${pageId}/components/${componentId}/move`, { targetPageId }),
+
+  // Theme
+  getTheme: () => api.get<ApiResponse<ThemeSettings>>('/theme'),
+  updateTheme: (data: Partial<ThemeSettings>) => api.put<ApiResponse<ThemeSettings>>('/theme', data),
+  resetTheme: () => api.post<ApiResponse<ThemeSettings>>('/theme/reset'),
+
+  // Backups
+  getBackups: () => api.get<ApiResponse<Backup[]>>('/backups'),
+  createBackup: (data?: { name?: string }) => api.post<ApiResponse<Backup>>('/backups', data || {}),
+  restoreBackup: (id: string) => api.post<ApiResponse<null>>(`/backups/${id}/restore`),
+  deleteBackup: (id: string) => api.delete<ApiResponse<null>>(`/backups/${id}`),
+  exportData: (type: string) => api.get(`/backups/export/${type}`, { responseType: 'blob' }),
+  importData: (formData: FormData) => api.post<ApiResponse<{ imported: number }>>('/backups/import', formData, { headers: { 'Content-Type': 'multipart/form-data' } }),
+
+  // Activity Logs
+  getActivityLogs: () => api.get<ApiResponse<ActivityLog[]>>('/activity-logs'),
+
   // Admin
   getAdminUser: () => api.get<ApiResponse<{ user: User }>>('/auth/me'),
 };
 
-const apiHost: string = (import.meta.env.VITE_API_URL || 'http://localhost:5001/api').replace(/\/api$/, '');
+const apiHost: string = (import.meta.env.VITE_API_URL || '').replace(/\/api$/, '') || '';
 
 export function imageUrl(url: string | undefined | null): string {
   if (!url) return '';

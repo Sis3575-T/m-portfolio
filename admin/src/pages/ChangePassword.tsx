@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
-import { adminApi } from '../services/api.ts';
-import { FiSave, FiEye, FiEyeOff, FiLock, FiShield } from 'react-icons/fi';
+import { adminApi } from '../services/api';
+import { Icons, Icon } from '../lib/icons';
 
 export default function ChangePassword() {
   const [currentPassword, setCurrentPassword] = useState('');
@@ -62,7 +62,7 @@ export default function ChangePassword() {
         }}
         tabIndex={-1}
       >
-        {show ? <FiEyeOff size={16} /> : <FiEye size={16} />}
+        {show ? <Icon path={Icons['eye-off']} size={16} /> : <Icon path={Icons.eye} size={16} />}
       </button>
     </div>
   );
@@ -80,8 +80,8 @@ export default function ChangePassword() {
         {message && (
           <div style={{
             padding: '10px 16px',
-            background: message.type === 'success' ? 'var(--green-light)' : 'var(--red-light)',
-            color: message.type === 'success' ? 'var(--green)' : 'var(--red)',
+            background: message.type === 'success' ? 'var(--success-light)' : 'var(--danger-light)',
+            color: message.type === 'success' ? 'var(--success)' : 'var(--danger)',
             borderRadius: 'var(--radius)', fontSize: 13, fontWeight: 500, marginBottom: 16,
           }}>
             {message.text}
@@ -120,13 +120,13 @@ export default function ChangePassword() {
               />
             </div>
             <button type="submit" className="btn btn-primary" disabled={loading}>
-              <FiSave size={16} /> {loading ? 'Changing...' : 'Change Password'}
+              <Icon path={Icons.save} size={16} /> {loading ? 'Changing...' : 'Change Password'}
             </button>
           </form>
         </div>
 
-        <div style={{ padding: 16, background: 'var(--gray-50)', borderRadius: 'var(--radius)', border: '1px solid var(--gray-200)', fontSize: 12, color: 'var(--gray-500)' }}>
-          <strong style={{ color: 'var(--gray-700)', display: 'block', marginBottom: 4 }}>Password Requirements:</strong>
+        <div style={{ padding: 16, background: 'var(--bg)', borderRadius: 'var(--radius)', border: '1px solid var(--border)', fontSize: 12, color: 'var(--text-secondary)' }}>
+          <strong style={{ color: 'var(--text)', display: 'block', marginBottom: 4 }}>Password Requirements:</strong>
           <ul style={{ paddingLeft: 16, lineHeight: 1.8 }}>
             <li>Minimum 8 characters</li>
             <li>Should be different from your current password</li>

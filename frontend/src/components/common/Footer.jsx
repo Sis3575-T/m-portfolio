@@ -1,28 +1,43 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import {
   FaGithub, FaLinkedin, FaTwitter, FaEnvelope, FaArrowUp,
-  FaRocket, FaMapMarkerAlt, FaPhone,
+  FaRocket, FaMapMarkerAlt, FaPhone, FaTelegram,
   FaExternalLinkAlt
 } from 'react-icons/fa';
-
-const navLinks = [
-  { label: 'Home', href: '#home' },
-  { label: 'About', href: '#about' },
-  { label: 'Skills', href: '#skills' },
-  { label: 'Projects', href: '#projects' },
-  { label: 'Experience', href: '#experience' },
-  { label: 'Contact', href: '#contact' },
-];
-
-const quickLinks = [
-  { label: 'GitHub', href: 'https://github.com/Sis3575-T', icon: <FaGithub size={14} /> },
-  { label: 'LinkedIn', href: 'https://linkedin.com/in/sisay-temesgen', icon: <FaLinkedin size={14} /> },
-  { label: 'Email', href: 'mailto:sisay3575@gmail.com', icon: <FaEnvelope size={14} /> },
-];
+import { useI18n } from '../../utils/i18n.jsx';
+import { publicApi } from '../../utils/api';
 
 function Footer() {
+  const { t } = useI18n();
+  const navLinks = useMemo(() => [
+    { label: t('nav.home'), href: '#home' },
+    { label: t('nav.about'), href: '#about' },
+    { label: t('nav.skills'), href: '#skills' },
+    { label: t('nav.projects'), href: '#projects' },
+    { label: t('nav.experience'), href: '#experience' },
+    { label: t('nav.contact'), href: '#contact' },
+  ], [t]);
+
   const [showScroll, setShowScroll] = useState(false);
+  const [settings, setSettings] = useState(null);
+  const [hero, setHero] = useState(null);
+  const [about, setAbout] = useState(null);
   const year = new Date().getFullYear();
+
+  useEffect(() => {
+    Promise.all([
+      publicApi.getSettings().catch(() => ({ data: null })),
+      publicApi.getHero().catch(() => ({ data: null })),
+      publicApi.getAbout().catch(() => ({ data: null })),
+    ]).then(([settingsRes, heroRes, aboutRes]) => {
+      const s = settingsRes?.data?.data || settingsRes?.data || null;
+      const h = heroRes?.data?.data || heroRes?.data || null;
+      const a = aboutRes?.data?.data || aboutRes?.data || null;
+      setSettings(Array.isArray(s) ? s[0] : s);
+      setHero(Array.isArray(h) ? h[0] : h);
+      setAbout(Array.isArray(a) ? a[0] : a);
+    });
+  }, []);
 
   useEffect(() => {
     const onScroll = () => setShowScroll(window.scrollY > 400);
@@ -33,6 +48,20 @@ function Footer() {
   const scrollToTop = () => {
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
+
+  const s = settings || {};
+  const h = hero || {};
+  const a = about || {};
+
+  const socialLinks = [
+    ...(s.github ? [{ icon: <FaGithub size={18} />, url: s.github, label: 'GitHub' }] : []),
+    ...(s.linkedin ? [{ icon: <FaLinkedin size={18} />, url: s.linkedin, label: 'LinkedIn' }] : []),
+    ...(s.twitter ? [{ icon: <FaTwitter size={18} />, url: s.twitter, label: 'Twitter' }] : []),
+    ...(s.telegram ? [{ icon: <FaTelegram size={18} />, url: s.telegram, label: 'Telegram' }] : []),
+    ...(s.email ? [{ icon: <FaEnvelope size={18} />, url: `mailto:${s.email}`, label: 'Email' }] : []),
+  ];
+
+  const footerStats = a.stats || [];
 
   return (
     <>
@@ -50,36 +79,31 @@ function Footer() {
               <div className="footer-brand">
                 <span className="footer-logo">
                   <svg width={22} height={22} viewBox="0 0 36 32">
-                    <text x="18" y="25" font-family="Inter, Arial, sans-serif" font-weight="700" font-size="22" fill="white" text-anchor="middle" letter-spacing="-1">ST</text>
+                    <text x="18" y="25" fontFamily="Inter, Arial, sans-serif" fontWeight="700" fontSize="22" fill="white" textAnchor="middle" letterSpacing="-1">ST</text>
                   </svg>
                 </span>
                 <div>
-                  <p className="footer-name">Sisay Temesgen</p>
-                  <p className="footer-role">Full Stack Developer</p>
+                  <p className="footer-name">{h.name || 'Sisay Temesgen'}</p>
+                  <p className="footer-role">{h.title || 'Full Stack Developer'}</p>
                 </div>
               </div>
-              <p className="footer-bio">
-                Building modern, scalable web applications with cutting-edge technologies.
-                Passionate about creating impactful digital experiences.
-              </p>
-              <div className="footer-stats">
-                <div className="footer-stat">
-                  <span className="footer-stat-num">2+</span>
-                  <span className="footer-stat-label">Years Learning</span>
+              {a.biography && (
+                <p className="footer-bio">{a.biography}</p>
+              )}
+              {footerStats.length > 0 && (
+                <div className="footer-stats">
+                  {footerStats.slice(0, 3).map((stat, i) => (
+                    <div key={i} className="footer-stat">
+                      <span className="footer-stat-num">{stat.value}{stat.suffix || ''}</span>
+                      <span className="footer-stat-label">{stat.label}</span>
+                    </div>
+                  ))}
                 </div>
-                <div className="footer-stat">
-                  <span className="footer-stat-num">10+</span>
-                  <span className="footer-stat-label">Projects</span>
-                </div>
-                <div className="footer-stat">
-                  <span className="footer-stat-num">5+</span>
-                  <span className="footer-stat-label">Technologies</span>
-                </div>
-              </div>
+              )}
             </div>
 
             <div className="footer-col">
-              <h4 className="footer-col-title">Navigation</h4>
+              <h4 className="footer-col-title">{t('footer.navigation')}</h4>
               <nav className="footer-nav">
                 {navLinks.map(link => (
                   <a key={link.href} href={link.href} className="footer-nav-link">
@@ -91,10 +115,10 @@ function Footer() {
             </div>
 
             <div className="footer-col">
-              <h4 className="footer-col-title">Quick Links</h4>
+              <h4 className="footer-col-title">{t('footer.quickLinks')}</h4>
               <div className="footer-quick-links">
-                {quickLinks.map(link => (
-                  <a key={link.label} href={link.href} target="_blank" rel="noreferrer" className="footer-quick-link">
+                {socialLinks.slice(0, 4).map(link => (
+                  <a key={link.label} href={link.url} target="_blank" rel="noreferrer" className="footer-quick-link">
                     {link.icon}
                     {link.label}
                     <FaExternalLinkAlt size={9} className="footer-external-icon" />
@@ -104,35 +128,36 @@ function Footer() {
             </div>
 
             <div className="footer-col">
-              <h4 className="footer-col-title">Get In Touch</h4>
+              <h4 className="footer-col-title">{t('footer.getInTouch')}</h4>
               <div className="footer-contact-items">
-                <div className="footer-contact-item">
-                  <FaEnvelope size={14} className="footer-contact-icon" />
-                  <a href="mailto:sisay3575@gmail.com" className="footer-contact-text">sisay3575@gmail.com</a>
-                </div>
-                <div className="footer-contact-item">
-                  <FaPhone size={14} className="footer-contact-icon" />
-                  <span className="footer-contact-text">+251 935 756 054</span>
-                </div>
-                <div className="footer-contact-item">
-                  <FaMapMarkerAlt size={14} className="footer-contact-icon" />
-                  <span className="footer-contact-text">Bahir Dar, Ethiopia</span>
-                </div>
+                {s.email && (
+                  <div className="footer-contact-item">
+                    <FaEnvelope size={14} className="footer-contact-icon" />
+                    <a href={`mailto:${s.email}`} className="footer-contact-text">{s.email}</a>
+                  </div>
+                )}
+                {s.phone && (
+                  <div className="footer-contact-item">
+                    <FaPhone size={14} className="footer-contact-icon" />
+                    <span className="footer-contact-text">{s.phone}</span>
+                  </div>
+                )}
+                {s.address && (
+                  <div className="footer-contact-item">
+                    <FaMapMarkerAlt size={14} className="footer-contact-icon" />
+                    <span className="footer-contact-text">{s.address}</span>
+                  </div>
+                )}
               </div>
-              <div className="footer-social">
-                <a href="https://github.com/Sis3575-T" target="_blank" rel="noreferrer" className="footer-social-link" aria-label="GitHub">
-                  <FaGithub size={18} />
-                </a>
-                <a href="https://linkedin.com/in/sisay-temesgen" target="_blank" rel="noreferrer" className="footer-social-link" aria-label="LinkedIn">
-                  <FaLinkedin size={18} />
-                </a>
-                <a href="https://twitter.com" target="_blank" rel="noreferrer" className="footer-social-link" aria-label="Twitter">
-                  <FaTwitter size={18} />
-                </a>
-                <a href="mailto:sisay3575@gmail.com" className="footer-social-link" aria-label="Email">
-                  <FaEnvelope size={18} />
-                </a>
-              </div>
+              {socialLinks.length > 0 && (
+                <div className="footer-social">
+                  {socialLinks.map(link => (
+                    <a key={link.label} href={link.url} target="_blank" rel="noreferrer" className="footer-social-link" aria-label={link.label}>
+                      {link.icon}
+                    </a>
+                  ))}
+                </div>
+              )}
             </div>
           </div>
         </div>
@@ -142,10 +167,10 @@ function Footer() {
         <div className="footer-bottom">
           <div className="footer-container footer-bottom-inner">
             <p className="footer-copyright">
-              &copy; {year} Sisay Temesgen. All rights reserved.
+              {s.copyrightText || `© ${year} ${h.name || 'Sisay Temesgen'}. All rights reserved.`}
             </p>
             <p className="footer-tech-stack">
-              <FaRocket size={12} /> Always learning, always building.
+              <FaRocket size={12} /> {s.footerText || 'Always learning, always building.'}
             </p>
           </div>
         </div>

@@ -49,6 +49,16 @@ exports.uploadMedia = async (req, res) => {
   }
 };
 
+exports.updateMedia = async (req, res) => {
+  try {
+    const media = await Media.findByIdAndUpdate(req.params.id, req.body, { new: true, runValidators: true });
+    if (!media) return res.status(404).json({ success: false, message: 'Media not found' });
+    res.json({ success: true, data: media });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
+
 exports.deleteMedia = async (req, res) => {
   try {
     const media = await Media.findById(req.params.id);
@@ -59,6 +69,15 @@ exports.deleteMedia = async (req, res) => {
     }
     await Media.findByIdAndDelete(req.params.id);
     res.json({ success: true, message: 'Media deleted' });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+exports.getFolders = async (req, res) => {
+  try {
+    const folders = await Media.distinct('folder', { folder: { $ne: '' } });
+    res.json({ success: true, data: folders.sort() });
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });
   }

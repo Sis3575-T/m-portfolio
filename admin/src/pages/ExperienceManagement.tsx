@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { adminApi } from '../services/api.ts';
-import { FiPlus, FiEdit, FiTrash2, FiX, FiBriefcase } from 'react-icons/fi';
+import { adminApi } from '../services/api';
+import { Icons, Icon } from '../lib/icons';
 import type { Experience } from '../types';
 
 interface ExpForm {
@@ -11,6 +11,8 @@ interface ExpForm {
   endDate: string;
   current: boolean;
   description: string;
+  responsibilities: string;
+  achievements: string;
 }
 
 export default function ExperienceManagement() {
@@ -18,7 +20,10 @@ export default function ExperienceManagement() {
   const [loading, setLoading] = useState(true);
   const [showModal, setShowModal] = useState(false);
   const [editing, setEditing] = useState<Experience | null>(null);
-  const [form, setForm] = useState<ExpForm>({ company: '', position: '', location: '', startDate: '', endDate: '', current: false, description: '' });
+  const [form, setForm] = useState<ExpForm>({
+    company: '', position: '', location: '', startDate: '', endDate: '',
+    current: false, description: '', responsibilities: '', achievements: '',
+  });
 
   const fetchData = async () => {
     try {
@@ -32,7 +37,7 @@ export default function ExperienceManagement() {
 
   const openCreate = () => {
     setEditing(null);
-    setForm({ company: '', position: '', location: '', startDate: '', endDate: '', current: false, description: '' });
+    setForm({ company: '', position: '', location: '', startDate: '', endDate: '', current: false, description: '', responsibilities: '', achievements: '' });
     setShowModal(true);
   };
 
@@ -43,14 +48,21 @@ export default function ExperienceManagement() {
       startDate: item.startDate ? item.startDate.slice(0, 10) : '',
       endDate: item.endDate ? item.endDate.slice(0, 10) : '',
       current: item.current || false, description: item.description || '',
+      responsibilities: (item.responsibilities || []).join(', '),
+      achievements: (item.achievements || []).join(', '),
     });
     setShowModal(true);
   };
 
   const handleSave = async () => {
     try {
-      if (editing) await adminApi.updateExperience(editing._id, form);
-      else await adminApi.createExperience(form);
+      const payload = {
+        ...form,
+        responsibilities: form.responsibilities.split(',').map(t => t.trim()).filter(Boolean),
+        achievements: form.achievements.split(',').map(t => t.trim()).filter(Boolean),
+      };
+      if (editing) await adminApi.updateExperience(editing._id, payload);
+      else await adminApi.createExperience(payload);
       await fetchData();
       setShowModal(false);
     } catch (err) { console.error('Failed to save', err); }
@@ -58,10 +70,8 @@ export default function ExperienceManagement() {
 
   const handleDelete = async (id: string) => {
     if (!window.confirm('Delete this experience?')) return;
-    try {
-      await adminApi.deleteExperience(id);
-      setItems(prev => prev.filter(i => i._id !== id));
-    } catch (err) { console.error('Failed to delete', err); }
+    try { await adminApi.deleteExperience(id); setItems(prev => prev.filter(i => i._id !== id)); }
+    catch (err) { console.error('Failed to delete', err); }
   };
 
   if (loading) return <div style={{ display: 'flex', justifyContent: 'center', padding: '80px 0' }}><div className="spinner" /></div>;
@@ -74,7 +84,7 @@ export default function ExperienceManagement() {
           <p>Manage your work history ({items.length} entries)</p>
         </div>
         <div className="page-actions">
-          <button className="btn btn-primary" onClick={openCreate}><FiPlus size={16} /> Add Experience</button>
+          <button className="btn btn-primary" onClick={openCreate}><Icon path={Icons.plus} size={16} /> Add Experience</button>
         </div>
       </div>
       <div className="table-container">
@@ -85,20 +95,20 @@ export default function ExperienceManagement() {
               <tr key={i._id}>
                 <td><div className="cell-title">{i.company}</div></td>
                 <td>{i.position}</td>
-                <td style={{ fontSize: 13, color: 'var(--gray-500)' }}>
+                <td style={{ fontSize: 13, color: 'var(--text-secondary)' }}>
                   {i.startDate?.slice(0, 7)} — {i.current ? 'Present' : i.endDate?.slice(0, 7)}
                 </td>
                 <td><span className={`badge ${i.isActive ? 'badge-green' : 'badge-gray'}`}>{i.isActive ? 'Active' : 'Hidden'}</span></td>
                 <td>
                   <div className="table-actions">
-                    <button className="btn-edit" onClick={() => openEdit(i)} data-tooltip="Edit"><FiEdit size={14} /></button>
-                    <button className="btn-delete" onClick={() => handleDelete(i._id)} data-tooltip="Delete"><FiTrash2 size={14} /></button>
+                    <button className="btn-edit" onClick={() => openEdit(i)} data-tooltip="Edit"><Icon path={Icons.edit} size={14} /></button>
+                    <button className="btn-delete" onClick={() => handleDelete(i._id)} data-tooltip="Delete"><Icon path={Icons.trash2} size={14} /></button>
                   </div>
                 </td>
               </tr>
             ))}
             {items.length === 0 && (
-              <tr><td colSpan={5}><div className="empty-state"><FiBriefcase size={40} /><h3>No experience yet</h3><p>Add your first work experience.</p></div></td></tr>
+              <tr><td colSpan={5}><div className="empty-state"><Icon path={Icons.briefcase} size={40} /><h3>No experience yet</h3><p>Add your first work experience.</p></div></td></tr>
             )}
           </tbody>
         </table>
@@ -106,10 +116,10 @@ export default function ExperienceManagement() {
 
       {showModal && (
         <div className="modal-overlay" onClick={() => setShowModal(false)}>
-          <div className="modal" onClick={(e) => e.stopPropagation()}>
+          <div className="modal modal-lg" onClick={(e) => e.stopPropagation()}>
             <div className="modal-header">
               <h3>{editing ? 'Edit Experience' : 'Add Experience'}</h3>
-              <button className="modal-close" onClick={() => setShowModal(false)}><FiX size={18} /></button>
+              <button className="modal-close" onClick={() => setShowModal(false)}><Icon path={Icons.x} size={18} /></button>
             </div>
             <div className="modal-body">
               <div className="form-row">
@@ -130,6 +140,8 @@ export default function ExperienceManagement() {
                 <div className="form-group"><label>End Date</label><input type="date" value={form.endDate} onChange={(e) => setForm({ ...form, endDate: e.target.value })} disabled={form.current} /></div>
               </div>
               <div className="form-group"><label>Description</label><textarea rows={3} value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })} /></div>
+              <div className="form-group"><label>Responsibilities (comma-separated)</label><textarea rows={2} value={form.responsibilities} onChange={(e) => setForm({ ...form, responsibilities: e.target.value })} /></div>
+              <div className="form-group"><label>Achievements (comma-separated)</label><textarea rows={2} value={form.achievements} onChange={(e) => setForm({ ...form, achievements: e.target.value })} /></div>
             </div>
             <div className="modal-footer">
               <button className="btn btn-outline" onClick={() => setShowModal(false)}>Cancel</button>

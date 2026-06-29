@@ -1,7 +1,7 @@
 import axios from 'axios';
 
 const api = axios.create({
-  baseURL: import.meta.env.VITE_API_URL || 'http://localhost:5000/api',
+  baseURL: import.meta.env.VITE_API_URL || '/api',
   headers: { 'Content-Type': 'application/json' },
 });
 
@@ -98,7 +98,7 @@ export const adminApi = {
   deleteCertificate: (id) => api.delete(`/certificates/${id}`),
 };
 
-const apiHost = (import.meta.env.VITE_API_URL || 'http://localhost:5000/api').replace(/\/api$/, '');
+const apiHost = (import.meta.env.VITE_API_URL || '').replace(/\/api$/, '') || '';
 
 export function imageUrl(url) {
   if (!url) return '';

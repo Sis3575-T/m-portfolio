@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { adminApi } from '../services/api.ts';
-import { FiPlus, FiSearch, FiEdit, FiTrash2, FiX, FiCode } from 'react-icons/fi';
+import { adminApi } from '../services/api';
+import { Icons, Icon } from '../lib/icons';
 import type { Skill } from '../types';
 
 const categories = ['Frontend', 'Backend', 'Database', 'Cloud', 'DevOps', 'Tools', 'Other'];
@@ -66,14 +66,14 @@ export default function SkillsManagement() {
           <p>Manage your technical skills ({skills.length} total)</p>
         </div>
         <div className="page-actions">
-          <button className="btn btn-primary" onClick={openCreate}><FiPlus size={16} /> Add Skill</button>
+          <button className="btn btn-primary" onClick={openCreate}><Icon path={Icons.plus} size={16} /> Add Skill</button>
         </div>
       </div>
       {categories.map(cat => {
         const catSkills = skills.filter(s => s.category === cat);
         if (catSkills.length === 0 && cat !== 'Frontend') return null;
         return (
-          <div key={cat} style={{ marginBottom: 28 }}>
+          <div key={cat} className="skill-category">
             <div className="skill-category-title">{cat}</div>
             <div className="table-container">
               <table className="data-table">
@@ -86,23 +86,23 @@ export default function SkillsManagement() {
                       <td><div className="cell-title">{s.name}</div></td>
                       <td>
                         <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-                          <div style={{ flex: 1, maxWidth: 160, height: 6, background: 'var(--gray-100)', borderRadius: 3, overflow: 'hidden' }}>
-                            <div style={{ width: `${s.proficiency}%`, height: '100%', background: 'var(--blue)', borderRadius: 3 }} />
+                          <div className="progress-bar" style={{ maxWidth: 160 }}>
+                            <div className="progress-bar-fill" style={{ width: `${s.proficiency}%` }} />
                           </div>
-                          <span style={{ fontSize: 12, color: 'var(--gray-500)', fontWeight: 600 }}>{s.proficiency}%</span>
+                          <span style={{ fontSize: 12, color: 'var(--text-secondary)', fontWeight: 600 }}>{s.proficiency}%</span>
                         </div>
                       </td>
                       <td><span className={`badge ${s.isActive ? 'badge-green' : 'badge-gray'}`}>{s.isActive ? 'Active' : 'Hidden'}</span></td>
                       <td>
                         <div className="table-actions">
-                          <button className="btn-edit" onClick={() => openEdit(s)} data-tooltip="Edit"><FiEdit size={14} /></button>
-                          <button className="btn-delete" onClick={() => handleDelete(s._id)} data-tooltip="Delete"><FiTrash2 size={14} /></button>
+                          <button className="btn-edit" onClick={() => openEdit(s)} data-tooltip="Edit"><Icon path={Icons.edit} size={14} /></button>
+                          <button className="btn-delete" onClick={() => handleDelete(s._id)} data-tooltip="Delete"><Icon path={Icons.trash2} size={14} /></button>
                         </div>
                       </td>
                     </tr>
                   ))}
                   {catSkills.length === 0 && (
-                    <tr><td colSpan={4} style={{ textAlign: 'center', padding: 24, color: 'var(--gray-400)' }}>No skills in this category</td></tr>
+                    <tr><td colSpan={4} style={{ textAlign: 'center', padding: 24, color: 'var(--text-light)' }}>No skills in this category</td></tr>
                   )}
                 </tbody>
               </table>
@@ -116,7 +116,7 @@ export default function SkillsManagement() {
           <div className="modal" onClick={(e) => e.stopPropagation()}>
             <div className="modal-header">
               <h3>{editing ? 'Edit Skill' : 'Add Skill'}</h3>
-              <button className="modal-close" onClick={() => setShowModal(false)}><FiX size={18} /></button>
+              <button className="modal-close" onClick={() => setShowModal(false)}><Icon path={Icons.x} size={18} /></button>
             </div>
             <div className="modal-body">
               <div className="form-group">
@@ -132,7 +132,10 @@ export default function SkillsManagement() {
                 </div>
                 <div className="form-group">
                   <label>Proficiency (0-100)</label>
-                  <input type="number" min={0} max={100} value={form.proficiency} onChange={(e) => setForm({ ...form, proficiency: Number(e.target.value) })} />
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                    <input type="range" min={0} max={100} value={form.proficiency} onChange={(e) => setForm({ ...form, proficiency: Number(e.target.value) })} style={{ flex: 1 }} />
+                    <span style={{ fontSize: 12, fontWeight: 600, minWidth: 36 }}>{form.proficiency}%</span>
+                  </div>
                 </div>
               </div>
             </div>
