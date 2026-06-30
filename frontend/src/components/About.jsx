@@ -2,8 +2,7 @@ import React from 'react';
 import { getImageUrl } from '../api';
 
 function About({ settings, sectionTitle, sectionSubtitle }) {
-  if (!settings) return null;
-  const { profilePhoto, shortBio, longBio, professionalTitle, name, city, country, yearsOfExperience, freelanceAvailable, email } = settings;
+  const { profilePhoto, shortBio, longBio, professionalTitle, name, city, country, yearsOfExperience, freelanceAvailable, email } = settings || {};
 
   const summary = longBio || shortBio || 'I am a software engineer focused on building modern, accessible, and maintainable web applications with a strong emphasis on quality and user experience.';
   const highlights = [

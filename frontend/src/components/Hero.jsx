@@ -2,18 +2,16 @@ import React from 'react';
 import { getImageUrl } from '../api';
 
 function Hero({ hero, settings }) {
-  if (!hero) return null;
-
-  const name = hero.name || settings?.name || 'Sisay Temesgen';
-  const title = hero.title || settings?.professionalTitle || 'Full Stack Developer';
-  const avatar = hero.avatar;
-  const buttons = hero.buttons || [];
-  const socialLinks = hero.socialLinks || [];
-  const availability = hero.availability || {};
-  const role = hero.role || 'Full Stack Developer';
-  const greeting = hero.greeting || 'Hello, I\'m';
-  const headline = hero.headline || 'I build polished digital products that blend thoughtful design with reliable engineering.';
-  const description = hero.description || settings?.shortBio || 'I specialize in creating responsive, accessible web experiences with React, Node.js, and modern full-stack architecture.';
+  const name = hero?.name || settings?.name || 'Sisay Temesgen';
+  const title = hero?.title || settings?.professionalTitle || 'Full Stack Developer';
+  const avatar = hero?.avatar;
+  const buttons = hero?.buttons || [];
+  const socialLinks = hero?.socialLinks || [];
+  const availability = hero?.availability || {};
+  const role = hero?.role || title || 'Full Stack Developer';
+  const greeting = hero?.greeting || 'Hello, I\'m';
+  const headline = hero?.headline || 'I build polished digital products that blend thoughtful design with reliable engineering.';
+  const description = hero?.description || settings?.shortBio || 'I specialize in creating responsive, accessible web experiences with React, Node.js, and modern full-stack architecture.';
 
   const settingsSocial = settings ? {
     github: settings.github,
