@@ -47,37 +47,42 @@ function HomePage() {
 
   const fetchData = useCallback(() => {
     setData(prev => ({ ...prev, loading: true, error: null }));
+
+    const resolveData = (promise, fallback = null) =>
+      promise
+        .then((res) => res?.data?.data ?? fallback)
+        .catch(() => fallback);
+
     Promise.all([
-      websiteApi.getSiteConfig(),
-      websiteApi.getHero(),
-      websiteApi.getProjects(),
-      websiteApi.getSkills(),
-      websiteApi.getExperience(),
-      websiteApi.getEducation(),
-      websiteApi.getTestimonials(),
-      websiteApi.getServices(),
-      websiteApi.getBlog(),
+      resolveData(websiteApi.getSiteConfig(), null),
+      resolveData(websiteApi.getHero(), null),
+      resolveData(websiteApi.getProjects(), []),
+      resolveData(websiteApi.getSkills(), []),
+      resolveData(websiteApi.getExperience(), []),
+      resolveData(websiteApi.getEducation(), []),
+      resolveData(websiteApi.getTestimonials(), []),
+      resolveData(websiteApi.getServices(), []),
+      resolveData(websiteApi.getBlog(), []),
     ])
-      .then(([configRes, heroRes, projectsRes, skillsRes, expRes, eduRes, testRes, servRes, blogRes]) => {
-        const config = configRes.data.data;
+      .then(([config, hero, projects, skills, experience, education, testimonials, services, blog]) => {
         setData({
           loading: false,
           error: null,
           sections: config?.sections || null,
           settings: config?.settings || null,
           navItems: config?.navItems || [],
-          hero: heroRes.data.data,
-          projects: projectsRes.data.data || [],
-          skills: skillsRes.data.data || [],
-          experience: expRes.data.data || [],
-          education: eduRes.data.data || [],
-          testimonials: testRes.data.data || [],
-          services: servRes.data.data || [],
-          blog: blogRes.data.data || [],
+          hero,
+          projects,
+          skills,
+          experience,
+          education,
+          testimonials,
+          services,
+          blog,
         });
       })
       .catch(err => {
-        setData(prev => ({ ...prev, loading: false, error: err.message }));
+        setData(prev => ({ ...prev, loading: false, error: err.message || 'Failed to load portfolio content.' }));
       });
   }, []);
 
