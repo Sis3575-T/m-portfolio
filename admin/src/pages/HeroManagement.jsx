@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { adminApi } from '../services/api';
+import { adminApi, imageUrl } from '../services/api';
 
 function HeroManagement() {
   const [heroes, setHeroes] = useState([]);
@@ -152,7 +152,7 @@ function HeroManagement() {
                 <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
                   {form.avatar && !form.avatarFile && (
                     <img
-                      src={import.meta.env.VITE_API_URL?.replace('/api', '') + form.avatar}
+                      src={imageUrl(form.avatar)}
                       alt="Current"
                       style={{ width: 80, height: 80, borderRadius: '50%', objectFit: 'cover', border: '2px solid var(--border-color)' }}
                     />

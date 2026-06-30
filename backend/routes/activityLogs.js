@@ -1,9 +1,10 @@
 const express = require('express');
 const router = express.Router();
-const { protect } = require('../middleware/auth');
-const { getActivityLogs } = require('../controllers/activityLogController');
+const { getActivityLogs, getRecentActivity, clearActivityLogs } = require('../controllers/activityLogController');
+const { protect, adminOnly } = require('../middleware/auth');
 
-router.use(protect);
-router.get('/', getActivityLogs);
+router.get('/', protect, adminOnly, getActivityLogs);
+router.get('/recent', protect, getRecentActivity);
+router.delete('/', protect, adminOnly, clearActivityLogs);
 
 module.exports = router;

@@ -17,7 +17,7 @@ import MessagesManagement from './pages/MessagesManagement';
 import MediaLibrary from './pages/MediaLibrary';
 import AnalyticsPage from './pages/AnalyticsPage';
 import SEOManagement from './pages/SEOManagement';
-import ThemeCustomizer from './pages/ThemeCustomizer';
+import ThemeBuilder from './pages/ThemeBuilder';
 import ResumeManagement from './pages/ResumeManagement';
 import SettingsPage from './pages/SettingsPage';
 import ActivityLogs from './pages/ActivityLogs';
@@ -344,7 +344,7 @@ function AdminRouter({ activePage, onNavigate }) {
     resume: <ResumeManagement />,
     analytics: <AnalyticsPage />,
     seo: <SEOManagement />,
-    theme: <ThemeCustomizer />,
+    theme: <ThemeBuilder />,
     settings: <SettingsPage onNavigate={onNavigate} />,
     activity: <ActivityLogs />,
     backup: <BackupRestore />,

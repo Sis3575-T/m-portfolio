@@ -7,6 +7,10 @@ const userSchema = new mongoose.Schema({
   password: { type: String, required: true, minlength: 8 },
   role: { type: String, enum: ['admin', 'editor'], default: 'admin' },
   avatar: { type: String, default: '' },
+  refreshToken: { type: String, default: null },
+  lastLogin: { type: Date },
+  loginAttempts: { type: Number, default: 0 },
+  lockedUntil: { type: Date },
 }, { timestamps: true });
 
 userSchema.pre('save', async function (next) {

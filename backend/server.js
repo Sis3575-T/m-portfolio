@@ -53,6 +53,7 @@ const performanceRoutes = require('./routes/performance');
 const accessibilityRoutes = require('./routes/accessibility');
 const searchRoutes = require('./routes/search');
 const userRoutes = require('./routes/users');
+const templateRoutes = require('./routes/templates');
 
 const fs = require('fs');
 
@@ -118,6 +119,7 @@ app.use('/api/performance', performanceRoutes);
 app.use('/api/accessibility', accessibilityRoutes);
 app.use('/api/search', searchRoutes);
 app.use('/api/users', userRoutes);
+app.use('/api/templates', templateRoutes);
 
 // Sitemap generation
 app.get('/api/sitemap.xml', async (req, res) => {
@@ -146,6 +148,21 @@ app.get('/robots.txt', (req, res) => {
   const baseUrl = process.env.CLIENT_URL || 'http://localhost:5173';
   res.type('text/plain');
   res.send(`User-agent: *\nAllow: /\nSitemap: ${baseUrl}/api/sitemap.xml\n`);
+});
+
+app.get('/', (req, res) => {
+  res.json({
+    success: true,
+    name: 'Portfolio CMS API',
+    version: '1.0.0',
+    status: 'operational',
+    timestamp: new Date().toISOString(),
+    endpoints: {
+      health: '/api/health',
+      admin: '/api/auth/login',
+      docs: 'See README for full API documentation',
+    },
+  });
 });
 
 app.get('/api/health', (req, res) => {

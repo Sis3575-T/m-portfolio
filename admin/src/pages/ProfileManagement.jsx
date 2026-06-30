@@ -94,8 +94,13 @@ export default function ProfileManagement() {
         payload.languages = payload.languages.split(',').map(s => s.trim()).filter(Boolean).join(', ');
       }
       await api.put('/settings', payload);
-      if (form.profilePhoto) {
-        await api.put('/hero', { avatar: form.profilePhoto });
+      const heroUpdate = {};
+      if (form.profilePhoto) heroUpdate.avatar = form.profilePhoto;
+      if (form.name) heroUpdate.name = form.name;
+      if (form.professionalTitle) heroUpdate.title = form.professionalTitle;
+      if (form.shortBio) heroUpdate.introduction = form.shortBio;
+      if (Object.keys(heroUpdate).length > 0) {
+        await api.put('/hero', heroUpdate);
       }
       toast.success('Profile saved successfully');
     } catch (err) {

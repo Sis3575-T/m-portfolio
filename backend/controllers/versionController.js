@@ -1,40 +1,20 @@
-const VersionHistory = require('../models/VersionHistory');
-const mongoose = require('mongoose');
+const Version = require('../models/Version');
 
 exports.getVersions = async (req, res) => {
   try {
-    const { resource, resourceId, page = 1, limit = 20 } = req.query;
-    const filter = {};
-    if (resource) filter.resource = resource;
-    if (resourceId) filter.resourceId = resourceId;
-
-    const [total, versions] = await Promise.all([
-      VersionHistory.countDocuments(filter),
-      VersionHistory.find(filter)
-        .populate('createdBy', 'name email')
-        .sort({ version: -1 })
-        .skip((parseInt(page) - 1) * parseInt(limit))
-        .limit(parseInt(limit))
-        .lean(),
-    ]);
-
-    res.json({
-      success: true,
-      data: versions,
-      total,
-      page: parseInt(page),
-      pages: Math.ceil(total / parseInt(limit)),
-    });
+    const { resource, resourceId } = req.params;
+    const versions = await Version.find({ resource, resourceId })
+      .populate('user', 'name email')
+      .sort({ createdAt: -1 });
+    res.json({ success: true, data: versions });
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });
   }
 };
 
-exports.getVersionById = async (req, res) => {
+exports.getVersion = async (req, res) => {
   try {
-    const version = await VersionHistory.findById(req.params.id)
-      .populate('createdBy', 'name email')
-      .lean();
+    const version = await Version.findById(req.params.id).populate('user', 'name email');
     if (!version) return res.status(404).json({ success: false, message: 'Version not found' });
     res.json({ success: true, data: version });
   } catch (error) {
@@ -42,34 +22,24 @@ exports.getVersionById = async (req, res) => {
   }
 };
 
-exports.createVersion = async ({ resource, resourceId, data, changes, userId }) => {
-  try {
-    const lastVersion = await VersionHistory.findOne({ resource, resourceId })
-      .sort({ version: -1 })
-      .select('version')
-      .lean();
-    const version = (lastVersion?.version || 0) + 1;
-    return await VersionHistory.create({ resource, resourceId, version, data, changes, createdBy: userId });
-  } catch (error) {
-    console.error('Failed to create version:', error.message);
-  }
-};
-
 exports.restoreVersion = async (req, res) => {
   try {
-    const version = await VersionHistory.findById(req.params.id);
+    const version = await Version.findById(req.params.id);
     if (!version) return res.status(404).json({ success: false, message: 'Version not found' });
 
-    const Model = mongoose.model(version.resource);
-    if (!Model) return res.status(400).json({ success: false, message: `Unknown resource: ${version.resource}` });
+    const Model = require(`../models/${version.resource}`);
+    await Model.findByIdAndUpdate(version.resourceId, version.data, { new: true });
 
-    const updated = await Model.findByIdAndUpdate(version.resourceId, version.data, {
-      new: true,
-      runValidators: true,
+    await Version.create({
+      resource: version.resource,
+      resourceId: version.resourceId,
+      data: version.data,
+      action: 'restore',
+      user: req.user._id,
+      description: `Restored to version from ${version.createdAt}`,
     });
-    if (!updated) return res.status(404).json({ success: false, message: 'Resource not found' });
 
-    res.json({ success: true, data: updated, message: 'Version restored successfully' });
+    res.json({ success: true, message: 'Version restored', data: version.data });
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });
   }
@@ -77,28 +47,13 @@ exports.restoreVersion = async (req, res) => {
 
 exports.compareVersions = async (req, res) => {
   try {
-    const { id1, id2 } = req.body;
-    if (!id1 || !id2) return res.status(400).json({ success: false, message: 'id1 and id2 are required' });
-
+    const { id1, id2 } = req.params;
     const [v1, v2] = await Promise.all([
-      VersionHistory.findById(id1).lean(),
-      VersionHistory.findById(id2).lean(),
+      Version.findById(id1),
+      Version.findById(id2),
     ]);
-
-    if (!v1) return res.status(404).json({ success: false, message: 'Version 1 not found' });
-    if (!v2) return res.status(404).json({ success: false, message: 'Version 2 not found' });
-
+    if (!v1 || !v2) return res.status(404).json({ success: false, message: 'Version not found' });
     res.json({ success: true, data: { version1: v1, version2: v2 } });
-  } catch (error) {
-    res.status(500).json({ success: false, message: error.message });
-  }
-};
-
-exports.deleteVersion = async (req, res) => {
-  try {
-    const version = await VersionHistory.findByIdAndDelete(req.params.id);
-    if (!version) return res.status(404).json({ success: false, message: 'Version not found' });
-    res.json({ success: true, message: 'Version deleted' });
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });
   }

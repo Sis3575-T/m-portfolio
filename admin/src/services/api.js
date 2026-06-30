@@ -168,7 +168,18 @@ export const adminApi = {
   importData: (formData) => api.post('/backups/import', formData, { headers: { 'Content-Type': 'multipart/form-data' } }),
 
   // Activity Logs
-  getActivityLogs: () => api.get('/activity-logs'),
+  getActivityLogs: (params) => api.get('/activity-logs', { params }),
+  getRecentActivity: () => api.get('/activity-logs/recent'),
+
+  // Notifications
+  getNotifications: (params) => api.get('/notifications', { params }),
+  markNotificationRead: (id) => api.put(`/notifications/${id}/read`),
+  markAllNotificationsRead: () => api.put('/notifications/read-all'),
+  deleteNotification: (id) => api.delete(`/notifications/${id}`),
+
+  // Auth
+  refreshToken: (refreshToken) => api.post('/auth/refresh', { refreshToken }),
+  logout: () => api.post('/auth/logout'),
 };
 
 const apiHost = (import.meta.env.VITE_API_URL || '').replace(/\/api$/, '') || '';
