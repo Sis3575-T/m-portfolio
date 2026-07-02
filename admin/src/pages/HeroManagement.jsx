@@ -3,6 +3,7 @@ import { adminApi, imageUrl } from '../services/api';
 import { Icons, Icon } from '../lib/icons';
 import { useToast } from '../components/Toast';
 import PageLayout from '../components/PageLayout';
+import SectionStyles from '../components/SectionStyles';
 
 export default function HeroManagement() {
   const toast = useToast();
@@ -17,6 +18,7 @@ export default function HeroManagement() {
     backgroundImage: '', backgroundFile: null,
     socialLinks: [{ platform: '', url: '' }],
     ctaButtons: [{ label: '', url: '' }],
+    highlights: [{ value: '', label: '' }],
   });
 
   useEffect(() => { fetchHero(); }, []);
@@ -37,6 +39,7 @@ export default function HeroManagement() {
         backgroundFile: null,
         socialLinks: (h.socialLinks || []).length > 0 ? h.socialLinks : [{ platform: '', url: '' }],
         ctaButtons: (h.ctaButtons || h.buttons || []).length > 0 ? (h.ctaButtons || h.buttons || []) : [{ label: '', url: '' }],
+        highlights: (h.highlights || []).length > 0 ? h.highlights : [{ value: '', label: '' }],
       });
     } catch {
       toast.error('Failed to load hero');
@@ -55,6 +58,7 @@ export default function HeroManagement() {
       fd.append('shortBio', form.shortBio);
       fd.append('socialLinks', JSON.stringify(form.socialLinks.filter(s => s.platform || s.url)));
       fd.append('ctaButtons', JSON.stringify(form.ctaButtons.filter(b => b.label)));
+      fd.append('highlights', JSON.stringify(form.highlights.filter(h => h.value || h.label)));
       if (form.avatarFile) fd.append('avatar', form.avatarFile);
       if (form.backgroundFile) fd.append('backgroundImage', form.backgroundFile);
       await adminApi.updateHero(fd);
@@ -81,6 +85,14 @@ export default function HeroManagement() {
     const copy = [...form.ctaButtons];
     copy[i] = { ...copy[i], [field]: value };
     setForm({ ...form, ctaButtons: copy });
+  };
+
+  const addHighlight = () => setForm({ ...form, highlights: [...form.highlights, { value: '', label: '' }] });
+  const removeHighlight = (i) => setForm({ ...form, highlights: form.highlights.filter((_, idx) => idx !== i) });
+  const updateHighlight = (i, field, value) => {
+    const copy = [...form.highlights];
+    copy[i] = { ...copy[i], [field]: value };
+    setForm({ ...form, highlights: copy });
   };
 
   const handleAvatarChange = (e) => {
@@ -225,7 +237,32 @@ export default function HeroManagement() {
             </button>
           </div>
         </div>
+
+        <div style={{ padding: '1.5rem', borderRadius: 14, border: '1px solid var(--color-border)', background: 'var(--color-card)' }}>
+          <h3 style={{ fontSize: '1rem', fontWeight: 700, color: 'var(--color-text)', margin: '0 0 1rem' }}>Highlights Stats</h3>
+          <p style={{ fontSize: '0.82rem', color: 'var(--color-text-secondary)', margin: '-0.5rem 0 1rem' }}>Stats shown on the hero section (e.g. "2+ Years", "15+ Projects")</p>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+            {form.highlights.map((h, i) => (
+              <div key={i} style={{ display: 'flex', gap: '0.75rem', alignItems: 'center' }}>
+                <div className="form-group" style={{ flex: 1, margin: 0 }}>
+                  <input value={h.value} onChange={(e) => updateHighlight(i, 'value', e.target.value)} placeholder="Value (e.g. 2+)" />
+                </div>
+                <div className="form-group" style={{ flex: 1, margin: 0 }}>
+                  <input value={h.label} onChange={(e) => updateHighlight(i, 'label', e.target.value)} placeholder="Label (e.g. Years)" />
+                </div>
+                <button onClick={() => removeHighlight(i)} style={{ width: 32, height: 32, display: 'flex', alignItems: 'center', justifyContent: 'center', border: 'none', borderRadius: 6, cursor: 'pointer', color: 'var(--color-danger)', background: 'transparent', flexShrink: 0 }}>
+                  <Icon path={Icons.trash2} size={14} />
+                </button>
+              </div>
+            ))}
+            <button className="btn btn-ghost btn-sm" onClick={addHighlight} style={{ alignSelf: 'flex-start' }}>
+              <Icon path={Icons.plus} size={14} /> Add Stat
+            </button>
+          </div>
+        </div>
       </div>
+
+      <SectionStyles sectionKey="hero" label="Hero Section Styles" />
     </PageLayout>
   );
 }

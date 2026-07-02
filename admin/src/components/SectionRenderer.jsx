@@ -1,6 +1,6 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Icons, Icon } from '../lib/icons';
-import { imageUrl } from '../services/api';
+import { imageUrl, adminApi } from '../services/api';
 
 const animationStyles = {
   fade: { opacity: 0, animation: 'sectionFadeIn var(--anim-duration, 1s) var(--anim-delay, 0s) forwards' },
@@ -165,12 +165,20 @@ export function ProjectsSection({ section, data }) {
 }
 
 export function SkillsSection({ section, data }) {
-  const s = section; const c = s.content || {}; const st = s.style || {}; const l = s.layout || {}; const m = s.media || {}; const anim = s.animation || {};
+  const s = section; const c = s.content || {}; const l = s.layout || {}; const m = s.media || {}; const anim = s.animation || {};
   const animStyle = animationStyles[anim.type] || {};
+  const [pageStyles, setPageStyles] = useState({});
+  useEffect(() => {
+    adminApi.getSettings().then(res => {
+      const settings = res.data?.data || res.data?.settings || {};
+      setPageStyles(settings.pageStyles?.skills || {});
+    }).catch(() => {});
+  }, []);
+  const st = { ...s.style, ...pageStyles };
   const skills = Array.isArray(data) ? data : [];
   const cols = l.columns || c.columns || 2;
   return (
-    <div style={{ padding: l.padding || '80px 0', background: m.backgroundImage ? `url(${imageUrl(m.backgroundImage)}) center/cover no-repeat` : st.background || '#f8f9fa', color: st.textColor || '#333', ...animStyle, '--anim-duration': `${anim.duration || 1}s`, '--anim-delay': `${anim.delay || 0}s` }}>
+    <div style={{ padding: l.padding || '80px 0', background: pageStyles.bgColor || (m.backgroundImage ? `url(${imageUrl(m.backgroundImage)}) center/cover no-repeat` : st.background || '#f8f9fa'), color: st.textColor || '#333', ...animStyle, '--anim-duration': `${anim.duration || 1}s`, '--anim-delay': `${anim.delay || 0}s` }}>
       <div style={{ maxWidth: l.containerWidth === 'boxed' ? 1100 : '100%', margin: '0 auto', padding: '0 24px' }}>
         {c.title && <h2 style={{ fontSize: '2rem', fontWeight: 700, color: st.headingColor || st.textColor, textAlign: 'center', margin: '0 0 8px' }}>{c.title}</h2>}
         {c.subtitle && <p style={{ textAlign: 'center', opacity: 0.7, margin: '0 0 32px' }}>{c.subtitle}</p>}
@@ -184,13 +192,7 @@ export function SkillsSection({ section, data }) {
                   <div style={{ fontWeight: 600, fontSize: '0.9rem' }}>{skill.name || 'Skill'}</div>
                   <div style={{ fontSize: '0.72rem', opacity: 0.6 }}>{skill.category || ''}</div>
                 </div>
-                {c.showProficiency && <span style={{ fontWeight: 700, fontSize: '0.85rem', color: st.linkColor || '#3b82f6' }}>{skill.proficiency || 0}%</span>}
               </div>
-              {c.showProficiency && (
-                <div style={{ width: '100%', height: 8, background: 'var(--color-bg)', borderRadius: 4, overflow: 'hidden' }}>
-                  <div style={{ width: `${skill.proficiency || 0}%`, height: '100%', background: `linear-gradient(90deg, ${st.linkColor || '#3b82f6'}, ${st.linkColor || '#3b82f6'}dd)`, borderRadius: 4, transition: 'width 0.8s ease' }} />
-                </div>
-              )}
             </div>
           ))}
         </div>

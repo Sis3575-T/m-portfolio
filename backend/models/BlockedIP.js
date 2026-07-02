@@ -9,7 +9,6 @@ const blockedIPSchema = new mongoose.Schema({
   active: { type: Boolean, default: true },
 }, { timestamps: true });
 
-blockedIPSchema.index({ ip: 1 });
 blockedIPSchema.index({ active: 1 });
 
 module.exports = mongoose.model('BlockedIP', blockedIPSchema);

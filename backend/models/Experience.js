@@ -11,6 +11,7 @@ const experienceSchema = new mongoose.Schema({
   responsibilities: [{ type: String, trim: true }],
   achievements: [{ type: String, trim: true }],
   location: { type: String, default: '' },
+  totalYears: { type: Number, default: 0 },
   order: { type: Number, default: 0 },
   isActive: { type: Boolean, default: true },
   status: { type: String, enum: ['draft', 'published', 'archived'], default: 'draft' },

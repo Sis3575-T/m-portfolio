@@ -312,29 +312,53 @@ export default function SettingsPage() {
 
         {activeTab === 'security' && (
           <>
-            {renderSection('Change Password', 'Update your admin account password', (
-              <div style={{ maxWidth: 450, display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-                <div className="form-group">
-                  <label>Current Password</label>
-                  <input type="password" value={passwordForm.current} onChange={(e) => setPasswordForm({ ...passwordForm, current: e.target.value })} placeholder="Enter current password" />
-                </div>
-                <div className="form-group">
-                  <label>New Password</label>
-                  <input type="password" value={passwordForm.new} onChange={(e) => setPasswordForm({ ...passwordForm, new: e.target.value })} placeholder="Enter new password (min 8 chars)" />
-                </div>
-                <div className="form-group">
-                  <label>Confirm New Password</label>
-                  <input type="password" value={passwordForm.confirm} onChange={(e) => setPasswordForm({ ...passwordForm, confirm: e.target.value })} placeholder="Confirm new password" />
-                </div>
-                <button className="btn btn-primary" onClick={handleChangePassword} disabled={changingPassword} style={{ alignSelf: 'flex-start' }}>
-                  <Icon path={Icons.save} size={14} /> {changingPassword ? 'Changing...' : 'Change Password'}
-                </button>
-                <div style={{ padding: '0.75rem', background: 'var(--color-bg-subtle)', borderRadius: 8, fontSize: '0.78rem', color: 'var(--color-text-secondary)' }}>
-                  <strong>Requirements:</strong>
-                  <ul style={{ paddingLeft: '1rem', margin: '0.25rem 0 0', lineHeight: 1.6 }}>
-                    <li>Minimum 8 characters</li>
-                    <li>Use a mix of letters, numbers, and symbols</li>
-                  </ul>
+            {renderSection('Account Security', 'Manage your admin account password and security settings', (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.5rem' }}>
+                  <div>
+                    <h4 style={{ fontSize: '0.9rem', fontWeight: 600, color: 'var(--color-text)', margin: '0 0 1rem' }}>Change Password</h4>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+                      <div className="form-group" style={{ margin: 0 }}>
+                        <label>Current Password</label>
+                        <input type="password" value={passwordForm.current} onChange={(e) => setPasswordForm({ ...passwordForm, current: e.target.value })} placeholder="Enter current password" />
+                      </div>
+                      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.75rem' }}>
+                        <div className="form-group" style={{ margin: 0 }}>
+                          <label>New Password</label>
+                          <input type="password" value={passwordForm.new} onChange={(e) => setPasswordForm({ ...passwordForm, new: e.target.value })} placeholder="Min 8 characters" />
+                        </div>
+                        <div className="form-group" style={{ margin: 0 }}>
+                          <label>Confirm Password</label>
+                          <input type="password" value={passwordForm.confirm} onChange={(e) => setPasswordForm({ ...passwordForm, confirm: e.target.value })} placeholder="Re-enter new password" />
+                        </div>
+                      </div>
+                      <button className="btn btn-primary" onClick={handleChangePassword} disabled={changingPassword} style={{ alignSelf: 'flex-start' }}>
+                        <Icon path={Icons.save} size={14} /> {changingPassword ? 'Changing...' : 'Change Password'}
+                      </button>
+                    </div>
+                  </div>
+                  <div>
+                    <h4 style={{ fontSize: '0.9rem', fontWeight: 600, color: 'var(--color-text)', margin: '0 0 1rem' }}>Password Requirements</h4>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+                      {[
+                        { label: 'Minimum 8 characters', check: passwordForm.new.length >= 8 },
+                        { label: 'Contains uppercase letter', check: /[A-Z]/.test(passwordForm.new) },
+                        { label: 'Contains lowercase letter', check: /[a-z]/.test(passwordForm.new) },
+                        { label: 'Contains a number', check: /\d/.test(passwordForm.new) },
+                        { label: 'Contains a symbol', check: /[!@#$%^&*(),.?":{}|<>_]/.test(passwordForm.new) },
+                        { label: 'Passwords match', check: passwordForm.new && passwordForm.new === passwordForm.confirm },
+                      ].map((req, i) => (
+                        <div key={i} style={{ display: 'flex', alignItems: 'center', gap: '0.6rem', padding: '0.5rem 0.75rem', borderRadius: 8, background: req.check ? 'var(--color-success-subtle, #ecfdf5)' : 'var(--color-bg-subtle)', border: `1px solid ${req.check ? 'var(--color-success, #10b981)' : 'var(--color-border)'}`, transition: 'all 0.2s' }}>
+                          <span style={{ color: req.check ? 'var(--color-success, #10b981)' : 'var(--color-text-tertiary)', fontSize: '1rem', lineHeight: 1 }}>
+                            {req.check ? '✓' : '○'}
+                          </span>
+                          <span style={{ fontSize: '0.82rem', color: req.check ? 'var(--color-success, #10b981)' : 'var(--color-text-secondary)', fontWeight: req.check ? 600 : 400 }}>
+                            {req.label}
+                          </span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
                 </div>
               </div>
             ))}

@@ -185,8 +185,8 @@ export default function AnalyticsPage() {
   ];
 
   const visitorColumns = [
-    { key: 'country', label: 'Country', width: 100, render: (_, row) => <><Flag country={row.country} /> {row.country}</> },
-    { key: 'browser', label: 'Browser', width: 100, render: (_, row) => <><BrowserIcon browser={row.browser} /> {row.browser}</> },
+    { key: 'country', label: 'Country', width: 100, render: (_, row) => <><Flag country={row?.country} /> {row?.country || '—'}</> },
+    { key: 'browser', label: 'Browser', width: 100, render: (_, row) => <><BrowserIcon browser={row?.browser} /> {row?.browser || '—'}</> },
     { key: 'deviceType', label: 'Device', width: 90 },
     { key: 'landingPage', label: 'Landing Page', width: 180 },
     { key: 'duration', label: 'Duration', width: 90, render: (v) => formatDuration(v) },

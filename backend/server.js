@@ -84,7 +84,7 @@ app.use(cors({
     const allowed = [
       process.env.CLIENT_URL,
       'http://localhost:5173',
-      'http://localhost:5174',
+      'http://localhost:5154',
     ].filter(Boolean);
     if (!origin || allowed.includes(origin)) return cb(null, true);
     cb(null, true);

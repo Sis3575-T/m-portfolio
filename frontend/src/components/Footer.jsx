@@ -7,10 +7,26 @@ function Footer({ settings: propSettings, navItems: propNavItems }) {
   const [pages, setPages] = useState(propNavItems || []);
   const [showBackToTop, setShowBackToTop] = useState(false);
 
+  const footerStyles = settings?.pageStyles?.footer || {};
+  const footerStyle = {
+    ...(footerStyles.bgColor ? { '--footer-bg': footerStyles.bgColor } : {}),
+    ...(footerStyles.textColor ? { '--footer-text': footerStyles.textColor } : {}),
+  };
+
   useEffect(() => {
     if (!propSettings) websiteApi.getSettings().then((res) => setSettings(res.data.data)).catch(() => {});
     if (!propNavItems) websiteApi.getPages().then((res) => setPages(res.data.data || [])).catch(() => {});
   }, [propSettings, propNavItems]);
+
+  useEffect(() => {
+    if (footerStyles.customCss) {
+      const id = 'footer-custom-css';
+      let el = document.getElementById(id);
+      if (!el) { el = document.createElement('style'); el.id = id; document.head.appendChild(el); }
+      el.textContent = footerStyles.customCss;
+      return () => { const e = document.getElementById(id); if (e) e.remove(); };
+    }
+  }, [footerStyles.customCss]);
 
   useEffect(() => {
     const onScroll = () => setShowBackToTop(window.scrollY > 400);
@@ -39,7 +55,7 @@ function Footer({ settings: propSettings, navItems: propNavItems }) {
 
   return (
     <>
-      <footer className="footer">
+      <footer className="footer" style={footerStyle}>
         <div className="container">
           <div className="footer-grid">
             <div className="footer-col footer-brand-col">

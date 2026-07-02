@@ -1,21 +1,33 @@
-import React, { useState, useEffect, useRef, useCallback } from 'react';
+import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import { motion } from 'framer-motion';
 import { FaTerminal, FaTimes } from 'react-icons/fa';
 import { useNavigate } from 'react-router-dom';
 import { publicApi } from '../utils/api';
+import './Terminal.css';
 
-const aboutData = {
+const FALLBACKS = {
   name: 'Sisay Temesgen',
   role: 'Full Stack Developer & AI Enthusiast',
   education: 'B.Sc. Computer Science at Bahir Dar University',
   bio: 'Passionate about building modern web applications with clean architecture. I specialize in the MERN stack and love exploring AI/ML technologies. Currently focused on creating impactful digital experiences through code.',
-};
-
-const skillsData = {
-  frontend: ['HTML', 'CSS', 'JavaScript', 'React', 'Tailwind CSS'],
-  backend: ['Node.js', 'Express', 'REST APIs'],
-  database: ['MongoDB', 'PostgreSQL'],
-  tools: ['Git', 'GitHub', 'Vite', 'VS Code', 'Docker'],
+  location: 'Bahir Dar, Ethiopia',
+  email: 'sisay3575@gmail.com',
+  github: 'https://github.com/Sis3575-T',
+  linkedin: 'linkedin.com/in/sisay-temesgen',
+  phone: '',
+  address: 'Bahir Dar, Ethiopia',
+  skills: {
+    Frontend: ['HTML', 'CSS', 'JavaScript', 'React', 'Tailwind CSS'],
+    Backend: ['Node.js', 'Express', 'REST APIs'],
+    Database: ['MongoDB', 'PostgreSQL'],
+    Tools: ['Git', 'GitHub', 'Vite', 'VS Code', 'Docker'],
+  },
+  social: [
+    { platform: 'github', url: 'https://github.com/Sis3575-T' },
+    { platform: 'linkedin', url: 'linkedin.com/in/sisay-temesgen' },
+    { platform: 'twitter', url: 'twitter.com' },
+    { platform: 'email', url: 'sisay3575@gmail.com' },
+  ],
 };
 
 function Terminal({ onClose }) {
@@ -25,10 +37,53 @@ function Terminal({ onClose }) {
   const [cmdHistory, setCmdHistory] = useState([]);
   const [historyIdx, setHistoryIdx] = useState(-1);
   const [bootDone, setBootDone] = useState(false);
-  const [projects, setProjects] = useState([]);
-  const [projectsLoaded, setProjectsLoaded] = useState(false);
+  const [allData, setAllData] = useState({ hero: null, about: null, skills: [], settings: null, projects: [] });
+  const [dataLoaded, setDataLoaded] = useState(false);
   const inputRef = useRef(null);
   const endRef = useRef(null);
+
+  const d = allData;
+  const hero = d.hero;
+  const about = d.about;
+  const skillsList = d.skills;
+  const settings = d.settings;
+  const projects = d.projects;
+
+  const name = hero?.name || settings?.name || FALLBACKS.name;
+  const role = hero?.role || hero?.title || settings?.professionalTitle || FALLBACKS.role;
+  const bio = about?.biography || hero?.introduction || settings?.longBio || settings?.shortBio || FALLBACKS.bio;
+
+  const groupedSkills = useMemo(() => {
+    if (skillsList.length === 0) return FALLBACKS.skills;
+    const g = {};
+    skillsList.forEach(s => {
+      const cat = s.category || 'Other';
+      if (!g[cat]) g[cat] = [];
+      g[cat].push(s.name);
+    });
+    return g;
+  }, [skillsList]);
+
+  const socialLinks = useMemo(() => {
+    const heroSocial = (hero?.socialLinks || []).map(s => ({ platform: s.platform, url: s.url }));
+    const settingsSocial = [
+      { platform: 'github', url: settings?.github },
+      { platform: 'linkedin', url: settings?.linkedin },
+      { platform: 'twitter', url: settings?.twitter },
+      { platform: 'telegram', url: settings?.telegram },
+      { platform: 'facebook', url: settings?.facebook },
+      { platform: 'instagram', url: settings?.instagram },
+      { platform: 'youtube', url: settings?.youtube },
+    ].filter(s => s.url);
+    const merged = [...heroSocial, ...settingsSocial];
+    return merged.length > 0 ? merged : FALLBACKS.social;
+  }, [hero, settings]);
+
+  const email = settings?.email || FALLBACKS.email;
+  const github = settings?.github || FALLBACKS.github;
+  const linkedin = settings?.linkedin || FALLBACKS.linkedin;
+  const phone = settings?.phone || FALLBACKS.phone;
+  const address = settings?.address || hero?.location || FALLBACKS.address;
 
   useEffect(() => {
     const onKey = (e) => { if (e.key === 'Escape') onClose(); };
@@ -90,10 +145,10 @@ function Terminal({ onClose }) {
 
   useEffect(() => {
     const bootMsgs = [
-      'Initializing portfolio...',
-      'Loading modules...',
-      'Establishing connection...',
-      'Welcome, user!',
+      '[SYSTEM] Initializing portfolio kernel...',
+      '[SYSTEM] Loading modules: React, Node.js, MongoDB',
+      '[SYSTEM] Establishing secure connection...',
+      '> Welcome! Type a command or click a link.',
     ];
     let delay = 0;
     bootMsgs.forEach((msg, i) => {
@@ -108,6 +163,33 @@ function Terminal({ onClose }) {
   }, [addLine, showBanner]);
 
   useEffect(() => {
+    if (bootDone && !dataLoaded) {
+      const loadData = async () => {
+        try {
+          const results = await Promise.allSettled([
+            publicApi.getHero(),
+            publicApi.getAbout(),
+            publicApi.getSkills(),
+            publicApi.getSettings(),
+            publicApi.getProjects(),
+          ]);
+          setAllData({
+            hero: results[0].status === 'fulfilled' ? (results[0].value.data?.data || null) : null,
+            about: results[1].status === 'fulfilled' ? (results[1].value.data?.data || null) : null,
+            skills: results[2].status === 'fulfilled' ? (results[2].value.data?.data || []) : [],
+            settings: results[3].status === 'fulfilled' ? (results[3].value.data?.data || null) : null,
+            projects: results[4].status === 'fulfilled' ? (results[4].value.data?.data || []) : [],
+          });
+        } catch {
+        } finally {
+          setDataLoaded(true);
+        }
+      };
+      loadData();
+    }
+  }, [bootDone, dataLoaded]);
+
+  useEffect(() => {
     endRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [lines]);
 
@@ -115,25 +197,9 @@ function Terminal({ onClose }) {
     inputRef.current?.focus();
   });
 
-  useEffect(() => {
-    if (bootDone && !projectsLoaded) {
-      const loadProjects = async () => {
-        try {
-          const { data } = await publicApi.getProjects();
-          setProjects(data.data || []);
-        } catch {
-          // silently fail
-        } finally {
-          setProjectsLoaded(true);
-        }
-      };
-      loadProjects();
-    }
-  }, [bootDone, projectsLoaded]);
-
   const openProject = (project) => {
     if (project?._id) {
-      navigate(`/project/${project._id}`);
+      navigate(`/projects/${project._id}`);
       onClose();
     }
   };
@@ -159,25 +225,25 @@ function Terminal({ onClose }) {
     },
     about: () => {
       addTypedLine('About Me', 'highlight');
-      setTimeout(() => addLine(`Name:     ${aboutData.name}`, 'output'), 200);
-      setTimeout(() => addLine(`Role:     ${aboutData.role}`, 'output'), 300);
-      setTimeout(() => addLine(`Education: ${aboutData.education}`, 'output'), 400);
+      setTimeout(() => addLine(`  Name:     ${name}`, 'output'), 200);
+      setTimeout(() => addLine(`  Role:     ${role}`, 'output'), 300);
+      setTimeout(() => addLine(`  Location: ${address}`, 'output'), 400);
       setTimeout(() => addLine('', 'output'), 450);
-      setTimeout(() => addTypedLine(aboutData.bio, 'output'), 550);
+      setTimeout(() => addTypedLine(bio, 'output'), 550);
     },
     skills: () => {
       addTypedLine('Technical Skills', 'highlight');
       let delay = 200;
-      Object.entries(skillsData).forEach(([category, items]) => {
+      Object.entries(groupedSkills).forEach(([category, items]) => {
         setTimeout(() => {
-          addLine(`  ${category.charAt(0).toUpperCase() + category.slice(1)}:  ${items.join(', ')}`, 'output');
+          addLine(`  ${category}:  ${items.join(', ')}`, 'output');
         }, delay);
         delay += 120;
       });
     },
     projects: () => {
       addTypedLine('Projects', 'highlight');
-      if (!projectsLoaded) {
+      if (!dataLoaded) {
         setTimeout(() => addLine('  Loading projects...', 'dim'), 200);
       } else if (projects.length === 0) {
         setTimeout(() => addLine('  No projects found.', 'output'), 200);
@@ -187,7 +253,9 @@ function Terminal({ onClose }) {
           setTimeout(() => addLine(`  ${i + 1}. ${p.title}`, 'project-link', () => openProject(p)), delay);
           setTimeout(() => addLine(`     ${p.description}`, 'output'), delay + 80);
           setTimeout(() => addLine(`     Tech: ${(p.technologies || p.techs || []).join(', ')}`, 'dim'), delay + 160);
-          if (i < projects.length - 1) setTimeout(() => addLine('', 'output'), delay + 200);
+          if (p.liveUrl) setTimeout(() => addLine(`     Live Demo: ${p.liveUrl}`, 'link', () => window.open(p.liveUrl, '_blank')), delay + 200);
+          if (p.githubUrl) setTimeout(() => addLine(`     GitHub:    ${p.githubUrl}`, 'link', () => window.open(p.githubUrl, '_blank')), delay + 240);
+          if (i < projects.length - 1) setTimeout(() => addLine('', 'output'), delay + 280);
         });
       }
       const len = projects.length || 0;
@@ -196,21 +264,24 @@ function Terminal({ onClose }) {
     },
     contact: () => {
       addTypedLine('Contact Information', 'highlight');
-      setTimeout(() => addLine('  Email:    sisay3575@gmail.com', 'output'), 200);
-      setTimeout(() => addLine('  GitHub:   https://github.com/Sis3575-T', 'output'), 300);
-      setTimeout(() => addLine('  LinkedIn: linkedin.com/in/sisay-temesgen', 'output'), 400);
+      setTimeout(() => addLine(`  Email:    ${email}`, 'output'), 200);
+      if (phone) setTimeout(() => addLine(`  Phone:    ${phone}`, 'output'), 250);
+      setTimeout(() => addLine(`  GitHub:   ${github}`, 'output'), 300);
+      setTimeout(() => addLine(`  LinkedIn: ${linkedin}`, 'output'), 400);
+      if (address) setTimeout(() => addLine(`  Location: ${address}`, 'output'), 450);
     },
     social: () => {
       addTypedLine('Social Links', 'highlight');
-      setTimeout(() => addLine('  GitHub   -> https://github.com/Sis3575-T', 'output'), 200);
-      setTimeout(() => addLine('  LinkedIn -> linkedin.com/in/sisay-temesgen', 'output'), 300);
-      setTimeout(() => addLine('  Twitter  -> twitter.com', 'output'), 400);
-      setTimeout(() => addLine('  Email    -> sisay3575@gmail.com', 'output'), 500);
+      socialLinks.forEach((link, i) => {
+        setTimeout(() => {
+          addLine(`  ${link.platform.padEnd(12)}-> ${link.url}`, 'output');
+        }, 200 + i * 100);
+      });
     },
     whoami: () => {
-      addTypedLine(`${aboutData.name}`, 'highlight');
-      setTimeout(() => addLine(`${aboutData.role}`, 'output'), 200);
-      setTimeout(() => addLine(`${aboutData.education}`, 'output'), 300);
+      addTypedLine(`${name}`, 'highlight');
+      setTimeout(() => addLine(`  ${role}`, 'output'), 200);
+      setTimeout(() => addLine(`  ${address}`, 'output'), 300);
     },
     banner: () => {
       showBanner();
@@ -303,7 +374,7 @@ function Terminal({ onClose }) {
             <span className="terminal-dot green" />
           </div>
           <span className="terminal-title">
-            <FaTerminal size={12} /> Terminal — sisay@portfolio:~$
+            <FaTerminal size={12} /> Terminal — {name.toLowerCase().replace(/\s+/g, '')}@portfolio:~$
           </span>
           <button className="terminal-close" onClick={onClose} aria-label="Close terminal">
             <FaTimes size={14} />

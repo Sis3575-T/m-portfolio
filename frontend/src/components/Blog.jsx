@@ -1,14 +1,35 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { getImageUrl } from '../api';
 
-function Blog({ posts, sectionTitle, sectionSubtitle }) {
+function Blog({ posts, settings, sectionTitle, sectionSubtitle }) {
   if (!posts || posts.length === 0) return null;
 
   const latest = posts.slice(0, 3);
 
+  const pageStyles = settings?.pageStyles?.blog || {};
+  const sectionStyle = {
+    ...(pageStyles.bgColor ? { backgroundColor: pageStyles.bgColor } : {}),
+    ...(pageStyles.textColor ? { color: pageStyles.textColor } : {}),
+    ...(pageStyles.fontFamily ? { fontFamily: pageStyles.fontFamily } : {}),
+    ...(pageStyles.paddingY === 'small' ? { paddingTop: '2rem', paddingBottom: '2rem' } : {}),
+    ...(pageStyles.paddingY === 'medium' ? { paddingTop: '4rem', paddingBottom: '4rem' } : {}),
+    ...(pageStyles.paddingY === 'large' ? { paddingTop: '6rem', paddingBottom: '6rem' } : {}),
+    ...(pageStyles.paddingY === 'xlarge' ? { paddingTop: '8rem', paddingBottom: '8rem' } : {}),
+  };
+
+  useEffect(() => {
+    if (pageStyles.customCss) {
+      const id = 'blog-custom-css';
+      let el = document.getElementById(id);
+      if (!el) { el = document.createElement('style'); el.id = id; document.head.appendChild(el); }
+      el.textContent = pageStyles.customCss;
+      return () => { const e = document.getElementById(id); if (e) e.remove(); };
+    }
+  }, [pageStyles.customCss]);
+
   return (
-    <section className="blog section" id="blog">
+    <section className="blog section" id="blog" style={sectionStyle}>
       <div className="container">
         <div className="section-header">
           <h2 className="section-title">{sectionTitle || 'Latest Posts'}</h2>

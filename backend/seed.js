@@ -255,6 +255,7 @@ async function seed() {
 
     if ((await Page.countDocuments()) === 0) {
       await Page.create({
+        name: 'Home',
         title: 'Home',
         slug: 'home',
         description: 'Portfolio homepage',

@@ -60,13 +60,7 @@ module.exports = async function seedContent() {
   // ── About ─────────────────────────────────────────────────────────────────
   if ((await About.countDocuments()) === 0) {
     await About.create({
-      biography: `I'm a passionate Full Stack Developer with a strong foundation in modern web technologies. My journey into software development began with curiosity about how websites work, and has evolved into a committed career building robust, scalable applications.
-
-I specialize in the MERN stack — MongoDB, Express.js, React, and Node.js — and I'm constantly exploring new tools and frameworks to expand my capabilities. Every project I undertake is an opportunity to solve real problems through clean architecture, responsive design, and thoughtful user experiences.
-
-What drives me is the belief that great software should be both functional and elegant. I take pride in writing code that is not only efficient but also maintainable and well-documented.
-
-Currently based in Bahir Dar, Ethiopia, I'm open to remote collaboration, freelance opportunities, and full-time roles where I can contribute my skills to meaningful projects.`,
+      biography: ``,
       careerJourney: `My development journey started with self-taught HTML and CSS, gradually expanding into JavaScript and modern frameworks. Through building real projects — from e-commerce platforms to admin dashboards — I've gained hands-on experience with the full software development lifecycle: requirements analysis, system design, implementation, testing, and deployment.
 
 I'm currently pursuing a degree in Computer Science at Bahir Dar University, where I complement academic learning with practical project experience.`,

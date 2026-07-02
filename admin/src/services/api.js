@@ -3,7 +3,7 @@ import axios from 'axios';
 function getApiUrl() {
   const isLocal = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
   if (isLocal) return 'http://localhost:5001/api';
-  return import.meta.env.VITE_API_URL || localStorage.getItem('api_url') || 'http://localhost:5001/api';
+  return import.meta.env.VITE_API_URL || '/api';
 }
 
 const api = axios.create({
@@ -97,8 +97,8 @@ export const adminApi = {
 
   // Skills
   getSkills: () => api.get('/skills/all'),
-  createSkill: (data) => api.post('/skills', data),
-  updateSkill: (id, data) => api.put(`/skills/${id}`, data),
+  createSkill: (data) => api.post('/skills', data, { headers: { 'Content-Type': 'multipart/form-data' } }),
+  updateSkill: (id, data) => api.put(`/skills/${id}`, data, { headers: { 'Content-Type': 'multipart/form-data' } }),
   deleteSkill: (id) => api.delete(`/skills/${id}`),
   reorderSkills: (items) => api.put('/skills/reorder', { items }),
 

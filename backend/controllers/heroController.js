@@ -32,6 +32,9 @@ exports.createHero = async (req, res) => {
     if (typeof body.buttons === 'string') {
       try { body.buttons = JSON.parse(body.buttons); } catch {}
     }
+    if (typeof body.highlights === 'string') {
+      try { body.highlights = JSON.parse(body.highlights); } catch {}
+    }
     const hero = await Hero.create(body);
     res.status(201).json({ success: true, data: hero });
   } catch (error) {
@@ -50,6 +53,9 @@ exports.updateHero = async (req, res) => {
     }
     if (typeof body.buttons === 'string') {
       try { body.buttons = JSON.parse(body.buttons); } catch {}
+    }
+    if (typeof body.highlights === 'string') {
+      try { body.highlights = JSON.parse(body.highlights); } catch {}
     }
     const filter = req.params.id ? { _id: req.params.id } : { isActive: true };
     const hero = await Hero.findOneAndUpdate(filter, body, { new: true, runValidators: true, upsert: true });

@@ -4,6 +4,7 @@ import { Icons, Icon } from '../lib/icons';
 import { useToast } from '../components/Toast';
 import ConfirmDialog from '../components/ConfirmDialog';
 import PageLayout from '../components/PageLayout';
+import SectionStyles from '../components/SectionStyles';
 import Toolbar from '../components/Toolbar';
 
 export default function TestimonialsManagement() {
@@ -313,6 +314,8 @@ export default function TestimonialsManagement() {
         type="danger"
         loading={deleting}
       />
+
+      <SectionStyles sectionKey="testimonials" label="Testimonials Section Styles" />
     </PageLayout>
   );
 }

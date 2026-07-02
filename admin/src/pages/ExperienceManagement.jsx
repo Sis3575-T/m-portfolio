@@ -4,6 +4,7 @@ import { Icons, Icon } from '../lib/icons';
 import { useToast } from '../components/Toast';
 import ConfirmDialog from '../components/ConfirmDialog';
 import PageLayout from '../components/PageLayout';
+import SectionStyles from '../components/SectionStyles';
 import Toolbar from '../components/Toolbar';
 
 export default function ExperienceManagement() {
@@ -18,7 +19,7 @@ export default function ExperienceManagement() {
   const [searchVal, setSearchVal] = useState('');
   const [form, setForm] = useState({
     company: '', position: '', startDate: '', endDate: '',
-    current: false, description: '', technologies: '', order: 0,
+    current: false, description: '', technologies: '', order: 0, totalYears: 0,
   });
 
   useEffect(() => { fetchItems(); }, []);
@@ -37,7 +38,7 @@ export default function ExperienceManagement() {
 
   const openCreate = () => {
     setEditing(null);
-    setForm({ company: '', position: '', startDate: '', endDate: '', current: false, description: '', technologies: '', order: 0 });
+    setForm({ company: '', position: '', startDate: '', endDate: '', current: false, description: '', technologies: '', order: 0, totalYears: 0 });
     setShowModal(true);
   };
 
@@ -52,6 +53,7 @@ export default function ExperienceManagement() {
       description: item.description || '',
       technologies: (item.technologies || []).join(', '),
       order: item.order ?? 0,
+      totalYears: item.totalYears ?? 0,
     });
     setShowModal(true);
   };
@@ -106,6 +108,7 @@ export default function ExperienceManagement() {
 
   const currentPositions = items.filter(i => i.current);
   const totalYears = items.reduce((years, item) => {
+    if (item.totalYears) return years + item.totalYears;
     if (item.current) {
       const start = new Date(item.startDate);
       return years + ((new Date()) - start) / (365.25 * 24 * 60 * 60 * 1000);
@@ -283,6 +286,10 @@ export default function ExperienceManagement() {
                 <label>Order</label>
                 <input type="number" value={form.order} onChange={(e) => setForm({ ...form, order: Number(e.target.value) })} />
               </div>
+              <div className="form-group">
+                <label>Total Years <span style={{ fontSize: '0.75rem', color: 'var(--color-text-tertiary)', fontWeight: 400 }}>(manual override)</span></label>
+                <input type="number" step="0.1" min="0" value={form.totalYears} onChange={(e) => setForm({ ...form, totalYears: Number(e.target.value) })} placeholder="e.g. 2.5" />
+              </div>
             </div>
             <div className="modal-footer">
               <button className="btn btn-outline" onClick={() => setShowModal(false)}>Cancel</button>
@@ -304,6 +311,8 @@ export default function ExperienceManagement() {
         type="danger"
         loading={deleting}
       />
+
+      <SectionStyles sectionKey="experience" label="Experience Section Styles" />
     </PageLayout>
   );
 }

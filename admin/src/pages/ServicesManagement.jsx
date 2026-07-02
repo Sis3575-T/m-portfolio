@@ -4,6 +4,7 @@ import { Icons, Icon } from '../lib/icons';
 import { useToast } from '../components/Toast';
 import ConfirmDialog from '../components/ConfirmDialog';
 import PageLayout from '../components/PageLayout';
+import SectionStyles from '../components/SectionStyles';
 import Toolbar from '../components/Toolbar';
 
 export default function ServicesManagement() {
@@ -286,6 +287,8 @@ export default function ServicesManagement() {
         type="danger"
         loading={deleting}
       />
+
+      <SectionStyles sectionKey="services" label="Services Section Styles" />
     </PageLayout>
   );
 }

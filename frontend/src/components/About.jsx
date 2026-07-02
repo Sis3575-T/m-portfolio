@@ -1,8 +1,30 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { getImageUrl } from '../api';
 
 function About({ settings, sectionTitle, sectionSubtitle }) {
   const { profilePhoto, shortBio, longBio, professionalTitle, name, city, country, yearsOfExperience, freelanceAvailable, email } = settings || {};
+
+  const pageStyles = settings?.pageStyles?.about || {};
+  const sectionStyle = {
+    ...(pageStyles.bgColor ? { backgroundColor: pageStyles.bgColor } : {}),
+    ...(pageStyles.textColor ? { color: pageStyles.textColor } : {}),
+    ...(pageStyles.textAlign ? { textAlign: pageStyles.textAlign } : {}),
+    ...(pageStyles.fontFamily ? { fontFamily: pageStyles.fontFamily } : {}),
+    ...(pageStyles.paddingY === 'small' ? { paddingTop: '2rem', paddingBottom: '2rem' } : {}),
+    ...(pageStyles.paddingY === 'medium' ? { paddingTop: '4rem', paddingBottom: '4rem' } : {}),
+    ...(pageStyles.paddingY === 'large' ? { paddingTop: '6rem', paddingBottom: '6rem' } : {}),
+    ...(pageStyles.paddingY === 'xlarge' ? { paddingTop: '8rem', paddingBottom: '8rem' } : {}),
+  };
+
+  useEffect(() => {
+    if (pageStyles.customCss) {
+      const id = 'about-custom-css';
+      let el = document.getElementById(id);
+      if (!el) { el = document.createElement('style'); el.id = id; document.head.appendChild(el); }
+      el.textContent = pageStyles.customCss;
+      return () => { const e = document.getElementById(id); if (e) e.remove(); };
+    }
+  }, [pageStyles.customCss]);
 
   const summary = longBio || shortBio || 'I am a software engineer focused on building modern, accessible, and maintainable web applications with a strong emphasis on quality and user experience.';
   const highlights = [
@@ -12,7 +34,7 @@ function About({ settings, sectionTitle, sectionSubtitle }) {
   ];
 
   return (
-    <section className="about section" id="about">
+    <section className="about section" id="about" style={sectionStyle}>
       <div className="container">
         <div className="section-header">
           <h2 className="section-title">{sectionTitle || 'About Me'}</h2>

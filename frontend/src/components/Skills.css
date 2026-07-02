@@ -9,6 +9,22 @@
   gap: 1.25rem;
 }
 
+.skill-icon {
+  font-size: 2rem;
+  line-height: 1;
+  margin-bottom: 0.75rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 48px;
+  height: 48px;
+  background: var(--cat-bg, #f1f5f9);
+  border-radius: 12px;
+  font-weight: 700;
+  color: #475569;
+  flex-shrink: 0;
+}
+
 .skill-card {
   background: #fff;
   border: 1px solid #e2e8f0;

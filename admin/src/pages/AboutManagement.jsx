@@ -3,6 +3,7 @@ import { adminApi, imageUrl } from '../services/api';
 import { Icons, Icon } from '../lib/icons';
 import { useToast } from '../components/Toast';
 import PageLayout from '../components/PageLayout';
+import SectionStyles from '../components/SectionStyles';
 
 export default function AboutManagement() {
   const toast = useToast();
@@ -27,10 +28,10 @@ export default function AboutManagement() {
       setAbout(a);
       setForm({
         title: a.title || '',
-        description: a.description || a.biography || '',
-        image: a.image || a.profileImage || '',
+        description: a.biography || '',
+        image: a.image || '',
         imageFile: null,
-        keyPoints: (a.keyPoints || a.keyAchievements || []).length > 0 ? (a.keyPoints || a.keyAchievements || []) : [''],
+        keyPoints: (a.keyAchievements || []).length > 0 ? a.keyAchievements : [''],
         stats: (a.stats || []).length > 0 ? a.stats : [{ label: '', value: '' }],
       });
     } catch {
@@ -41,16 +42,21 @@ export default function AboutManagement() {
   };
 
   const handleSave = async () => {
-    if (!form.title.trim()) { toast.error('Title is required'); return; }
+    if (!form.title.trim() && !form.description.trim()) { toast.error('Title or description is required'); return; }
     setSaving(true);
     try {
       const fd = new FormData();
-      fd.append('title', form.title);
-      fd.append('description', form.description);
-      fd.append('keyPoints', JSON.stringify(form.keyPoints.filter(k => k.trim())));
+      fd.append('biography', form.description);
+      fd.append('keyAchievements', JSON.stringify(form.keyPoints.filter(k => k.trim())));
       fd.append('stats', JSON.stringify(form.stats.filter(s => s.label || s.value)));
       if (form.imageFile) fd.append('image', form.imageFile);
-      await adminApi.updateAbout(fd);
+      await Promise.all([
+        adminApi.updateAbout(fd),
+        adminApi.updateSettings({
+          longBio: form.description,
+          profilePhoto: form.imageFile ? form.image : about?.image || form.image,
+        }),
+      ]);
       toast.success('About updated successfully');
       await fetchAbout();
     } catch {
@@ -187,6 +193,8 @@ export default function AboutManagement() {
           </div>
         </div>
       </div>
+
+      <SectionStyles sectionKey="about" label="About Section Styles" />
     </PageLayout>
   );
 }

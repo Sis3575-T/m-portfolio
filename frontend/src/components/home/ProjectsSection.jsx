@@ -1,27 +1,41 @@
 import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { FaExternalLinkAlt, FaGithub, FaFolder, FaSearch } from 'react-icons/fa';
-import { publicApi } from '../../utils/api';
+import { FaExternalLinkAlt, FaGithub, FaSearch } from 'react-icons/fa';
+import { publicApi, imageUrl } from '../../utils/api';
 import { useI18n } from '../../utils/i18n.jsx';
+import '../Projects.css';
+
+const statusColors = {
+  'Completed': '#10b981',
+  'In Progress': '#f59e0b',
+  'Featured': '#8b5cf6',
+  'Open Source': '#3b82f6',
+};
 
 const fallbackProjects = [
   {
     _id: 'fallback-p-1',
     title: 'Ethiopian Tourist Destination',
-    description: 'A comprehensive tourist destination platform showcasing Ethiopia\'s highest peaks, national parks, and cultural heritage sites. Features interactive guides, travel tips, and curated recommendations for travelers exploring Ethiopia.',
+    description: 'A comprehensive tourist destination platform showcasing Ethiopia\'s highest peaks, national parks, and cultural heritage sites. Features interactive guides, travel tips, and curated recommendations.',
     technologies: ['React', 'Node.js', 'MongoDB', 'Express', 'CSS3'],
     liveUrl: 'https://tourist-destination-2.onrender.com/',
     githubUrl: '',
     category: 'Full Stack',
+    statusBadge: 'Completed',
+    overlayOpacity: 0.6,
+    cardBorderRadius: 16,
   },
   {
     _id: 'fallback-p-2',
     title: 'Abay Grand Hotel',
-    description: 'A modern hotel booking and information platform built with Next.js and Tailwind CSS. Features room listings, booking functionality, and a responsive design optimized for all devices.',
+    description: 'A modern hotel booking and information platform with room listings, booking functionality, and responsive design optimized for all devices.',
     technologies: ['React', 'Next.js', 'Tailwind CSS', 'Vercel'],
     liveUrl: 'https://abay-grand-hotel-1.vercel.app/',
     githubUrl: '',
     category: 'Full Stack',
+    statusBadge: 'Completed',
+    overlayOpacity: 0.6,
+    cardBorderRadius: 16,
   },
   {
     _id: 'fallback-p-3',
@@ -31,6 +45,9 @@ const fallbackProjects = [
     liveUrl: '',
     githubUrl: '',
     category: 'Full Stack',
+    statusBadge: 'Featured',
+    overlayOpacity: 0.6,
+    cardBorderRadius: 16,
   },
 ];
 
@@ -51,14 +68,16 @@ function ProjectsSection() {
   const items = projects.length > 0 ? projects : fallbackProjects;
   const categories = ['All', ...new Set(items.map(p => p.category).filter(Boolean))];
 
-  const filtered = items.filter(p => {
-    const matchSearch = !search ||
-      p.title?.toLowerCase().includes(search.toLowerCase()) ||
-      p.description?.toLowerCase().includes(search.toLowerCase()) ||
-      (p.technologies || []).some(t => t.toLowerCase().includes(search.toLowerCase()));
-    const matchCategory = activeCategory === 'All' || p.category === activeCategory;
-    return matchSearch && matchCategory;
-  });
+  const filtered = items
+    .filter(p => p.isVisible !== false && p.status !== 'draft')
+    .filter(p => {
+      const matchSearch = !search ||
+        p.title?.toLowerCase().includes(search.toLowerCase()) ||
+        p.description?.toLowerCase().includes(search.toLowerCase()) ||
+        (p.technologies || []).some(t => t.toLowerCase().includes(search.toLowerCase()));
+      const matchCategory = activeCategory === 'All' || p.category === activeCategory;
+      return matchSearch && matchCategory;
+    });
 
   if (loading) {
     return (
@@ -101,13 +120,15 @@ function ProjectsSection() {
           </div>
           <div className="project-category-filters">
             {categories.map(cat => (
-              <button
+              <motion.button
                 key={cat}
                 onClick={() => setActiveCategory(cat)}
                 className={`category-filter-btn ${activeCategory === cat ? 'active' : ''}`}
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
               >
                 {cat === 'All' ? t('projects.all') : cat}
-              </button>
+              </motion.button>
             ))}
           </div>
         </div>
@@ -118,49 +139,141 @@ function ProjectsSection() {
           </p>
         ) : (
           <div className="projects-grid">
-            {filtered.map((project, idx) => (
-              <motion.div
-                key={project._id}
-                initial={{ opacity: 0, y: 30 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true, margin: '-80px' }}
-                transition={{ duration: 0.5, delay: idx * 0.1 }}
-                className="project-card"
-              >
-                <div className="project-image">
-                  {project.thumbnail ? (
-                    <img src={project.thumbnail} alt={project.title} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-                  ) : project.images && project.images.length > 0 ? (
-                    <img src={project.images[0]} alt={project.title} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-                  ) : (
-                    <div className="project-image-placeholder">
-                      <FaFolder size={48} style={{ color: 'var(--primary-color)', opacity: 0.4 }} />
+            {filtered.map((project, idx) => {
+              const badge = project.statusBadge || 'Completed';
+              const bgColor = statusColors[badge] || statusColors['Completed'];
+              const cardRadius = project.cardBorderRadius || 16;
+              const overlayOpacity = project.overlayOpacity !== undefined ? project.overlayOpacity : 0.6;
+              const showStatusBadge = project.showStatusBadge !== false;
+              const showTechStack = project.showTechStack !== false;
+              const maxTech = project.maxTechDisplay || 6;
+              const descLines = project.descriptionLines || 3;
+
+              return (
+                <motion.div
+                  key={project._id}
+                  initial={{ opacity: 0, y: 20 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  viewport={{ once: true, margin: '-60px' }}
+                  transition={{ duration: 0.5, delay: idx * 0.1 }}
+                  className="project-card-wrapper"
+                >
+                  <div
+                    className="project-card"
+                    style={{ borderRadius: `${cardRadius}px` }}
+                  >
+                    {/* Card Image Container */}
+                    <div
+                      className="project-card-image-container"
+                      style={{ borderRadius: `${cardRadius}px` }}
+                    >
+                      {project.thumbnail ? (
+                        <>
+                          <img
+                            src={imageUrl(project.thumbnail)}
+                            alt={project.title}
+                            className="project-card-image"
+                            style={{ objectPosition: project.objectPosition || 'center' }}
+                          />
+                          <div
+                            className="project-card-overlay"
+                            style={{ background: `rgba(0, 0, 0, ${overlayOpacity})` }}
+                          />
+                        </>
+                      ) : (
+                        <>
+                          <div className="project-card-placeholder">
+                            {project.title?.charAt(0) || 'P'}
+                          </div>
+                          <div className="project-card-overlay" style={{ background: `rgba(0, 0, 0, ${overlayOpacity})` }} />
+                        </>
+                      )}
+
+                      {/* Overlay Content */}
+                      <div className="project-card-content">
+                        {/* Status Badge */}
+                        {showStatusBadge && (
+                          <div
+                            className="project-status-badge"
+                            style={{ background: bgColor }}
+                          >
+                            {badge}
+                          </div>
+                        )}
+
+                        {/* Main Content */}
+                        <div className="project-content-main">
+                          <h3 className="project-card-title">{project.title}</h3>
+                          <p
+                            className="project-card-desc"
+                            style={{ '--desc-lines': descLines }}
+                          >
+                            {project.description}
+                          </p>
+
+                          {/* Technology Stack */}
+                          {showTechStack && project.technologies && project.technologies.length > 0 && (
+                            <div className="project-tech-stack">
+                              {project.technologies.slice(0, maxTech).map((tech, i) => (
+                                <span key={i} className="project-tech-badge">
+                                  {tech}
+                                </span>
+                              ))}
+                              {project.technologies.length > maxTech && (
+                                <span className="project-tech-badge project-tech-more">
+                                  +{project.technologies.length - maxTech}
+                                </span>
+                              )}
+                            </div>
+                          )}
+
+                          {/* Action Buttons */}
+                          <div className="project-card-actions">
+                            {project.liveUrl && project.liveUrl !== '#' && (
+                              <a
+                                href={project.liveUrl}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="project-btn project-btn-primary"
+                                title={project.liveLabel || t('projects.visitSite')}
+                              >
+                                {project.liveLabel || t('projects.visitSite')}
+                              </a>
+                            )}
+                            {project.githubUrl && (
+                              <a
+                                href={project.githubUrl}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="project-btn project-btn-secondary"
+                                title={project.githubLabel || t('projects.github')}
+                              >
+                                {project.githubLabel || t('projects.github')}
+                              </a>
+                            )}
+                            {project.projectUrl && (
+                              <a
+                                href={project.projectUrl}
+                                className="project-btn project-btn-ghost"
+                                title={project.detailsLabel || 'Details'}
+                              >
+                                {project.detailsLabel || 'Details'}
+                              </a>
+                            )}
+                          </div>
+                        </div>
+                      </div>
                     </div>
-                  )}
-                </div>
-                <div className="project-content">
-                  <h3 className="project-title">{project.title}</h3>
-                  <p className="project-description">{project.description}</p>
-                  <div className="project-tech">
-                    {(project.technologies || []).slice(0, 4).map((tech) => (
-                      <span key={tech} className="tech-badge">{tech}</span>
-                    ))}
+
+                    {/* Card Border */}
+                    <div
+                      className="project-card-border"
+                      style={{ borderRadius: `${cardRadius}px` }}
+                    />
                   </div>
-                  <div className="project-links">
-                    {project.liveUrl && project.liveUrl !== '#' && (
-                      <a href={project.liveUrl} target="_blank" rel="noreferrer" className="project-link project-link-primary">
-                        <FaExternalLinkAlt size={13} /> {t('projects.visitSite')}
-                      </a>
-                    )}
-                    {project.githubUrl && (
-                      <a href={project.githubUrl} target="_blank" rel="noreferrer" className="project-link">
-                        <FaGithub size={14} /> {t('projects.github')}
-                      </a>
-                    )}
-                  </div>
-                </div>
-              </motion.div>
-            ))}
+                </motion.div>
+              );
+            })}
           </div>
         )}
       </div>

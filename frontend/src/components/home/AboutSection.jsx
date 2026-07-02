@@ -11,7 +11,7 @@ function AboutSection() {
   const [heroAvatar, setHeroAvatar] = useState('');
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
+  const fetchData = () => {
     Promise.all([
       publicApi.getAbout().catch(() => ({ data: null })),
       publicApi.getHero().catch(() => ({ data: null })),
@@ -24,6 +24,20 @@ function AboutSection() {
         if (hero?.avatar) setHeroAvatar(imageUrl(hero.avatar));
       }
     }).catch(() => {}).finally(() => setLoading(false));
+  };
+
+  useEffect(() => {
+    fetchData();
+
+    // Refetch when page becomes visible
+    const handleVisibilityChange = () => {
+      if (!document.hidden) {
+        fetchData();
+      }
+    };
+
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+    return () => document.removeEventListener('visibilitychange', handleVisibilityChange);
   }, []);
 
   if (loading) {

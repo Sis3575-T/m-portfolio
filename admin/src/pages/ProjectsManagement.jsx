@@ -5,12 +5,13 @@ import { Icons, Icon } from '../lib/icons';
 import { useToast } from '../components/Toast';
 import ConfirmDialog from '../components/ConfirmDialog';
 import PageLayout from '../components/PageLayout';
+import SectionStyles from '../components/SectionStyles';
 import DataTable from '../components/DataTable';
 import Toolbar from '../components/Toolbar';
 
 const categories = ['Full Stack', 'Frontend', 'Backend', 'DevOps', 'Mobile', 'AI/ML'];
 
-const tabs = ['General', 'Content', 'Media'];
+const tabs = ['General', 'Content', 'Media', 'Card Style'];
 
 export default function ProjectsManagement() {
   const toast = useToast();
@@ -27,9 +28,13 @@ export default function ProjectsManagement() {
   const [filterVal, setFilterVal] = useState({ status: '', category: '' });
   const [form, setForm] = useState({
     title: '', slug: '', description: '', tags: '', category: 'Full Stack',
-    status: 'draft', featured: false, order: 0,
-    projectUrl: '', githubUrl: '', youtubeUrl: '',
-    thumbnail: '', images: [],
+    status: 'draft', featured: false, isVisible: true, order: 0,
+    liveUrl: '', githubUrl: '', youtubeUrl: '', projectUrl: '',
+    thumbnail: '', images: [], technologies: [],
+    statusBadge: 'Completed', objectPosition: 'center',
+    liveLabel: 'Live Demo', githubLabel: 'GitHub', detailsLabel: 'Details',
+    cardBorderRadius: 16, overlayOpacity: 0.6, hoverScale: 1.05, hoverShadow: true,
+    showStatusBadge: true, showTechStack: true, maxTechDisplay: 6, descriptionLines: 3,
   });
 
   useEffect(() => { fetchProjects(); }, []);
@@ -52,7 +57,16 @@ export default function ProjectsManagement() {
   const openCreate = () => {
     setEditing(null);
     setActiveTab('General');
-    setForm({ title: '', slug: '', description: '', tags: '', category: 'Full Stack', status: 'draft', featured: false, order: 0, projectUrl: '', githubUrl: '', youtubeUrl: '', thumbnail: '', images: [] });
+    setForm({ 
+      title: '', slug: '', description: '', tags: '', category: 'Full Stack', 
+      status: 'draft', featured: false, isVisible: true, order: 0, 
+      liveUrl: '', githubUrl: '', youtubeUrl: '', projectUrl: '', 
+      thumbnail: '', images: [], technologies: [],
+      statusBadge: 'Completed', objectPosition: 'center', 
+      liveLabel: 'Live Demo', githubLabel: 'GitHub', detailsLabel: 'Details',
+      cardBorderRadius: 16, overlayOpacity: 0.6, hoverScale: 1.05, hoverShadow: true,
+      showStatusBadge: true, showTechStack: true, maxTechDisplay: 6, descriptionLines: 3,
+    });
     setShowModal(true);
   };
 
@@ -67,12 +81,28 @@ export default function ProjectsManagement() {
       category: project.category || 'Full Stack',
       status: project.status || 'draft',
       featured: project.featured || false,
+      isVisible: project.isVisible !== false,
       order: project.order ?? 0,
-      projectUrl: project.projectUrl || '',
+      liveUrl: project.liveUrl || '',
       githubUrl: project.githubUrl || '',
       youtubeUrl: project.youtubeUrl || '',
+      projectUrl: project.projectUrl || '',
       thumbnail: project.thumbnail || '',
       images: project.images || [],
+      technologies: project.technologies || [],
+      statusBadge: project.statusBadge || 'Completed',
+      objectPosition: project.objectPosition || 'center',
+      liveLabel: project.liveLabel || 'Live Demo',
+      githubLabel: project.githubLabel || 'GitHub',
+      detailsLabel: project.detailsLabel || 'Details',
+      cardBorderRadius: project.cardBorderRadius || 16,
+      overlayOpacity: project.overlayOpacity || 0.6,
+      hoverScale: project.hoverScale || 1.05,
+      hoverShadow: project.hoverShadow !== false,
+      showStatusBadge: project.showStatusBadge !== false,
+      showTechStack: project.showTechStack !== false,
+      maxTechDisplay: project.maxTechDisplay || 6,
+      descriptionLines: project.descriptionLines || 3,
     });
     setShowModal(true);
   };
@@ -83,10 +113,11 @@ export default function ProjectsManagement() {
     try {
       const data = {
         ...form,
-        tags: form.tags.split(',').map(t => t.trim()).filter(Boolean),
+        technologies: form.tags.split(',').map(t => t.trim()).filter(Boolean),
         slug: form.slug || generateSlug(form.title),
         status: action === 'publish' ? 'published' : form.status,
       };
+      delete data.tags;
       if (editing) {
         await adminApi.updateProject(editing._id, data);
         toast.success('Project updated');
@@ -295,6 +326,12 @@ export default function ProjectsManagement() {
             <span>Featured project</span>
           </label>
         </div>
+        <div className="form-group">
+          <label className="form-check">
+            <input type="checkbox" checked={form.isVisible} onChange={(e) => setForm({ ...form, isVisible: e.target.checked })} />
+            <span>Visible on portfolio</span>
+          </label>
+        </div>
       </>
     );
     if (activeTab === 'Content') return (
@@ -304,19 +341,12 @@ export default function ProjectsManagement() {
           <textarea value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })} placeholder="Describe your project..." rows={6} style={{ fontFamily: 'var(--font-mono, monospace)', fontSize: '0.85rem' }} />
         </div>
         <div className="form-group">
-          <label>Tags (comma-separated)</label>
-          <input value={form.tags} onChange={(e) => setForm({ ...form, tags: e.target.value })} placeholder="React, Node.js, MongoDB" />
+          <label>Technologies (comma-separated)</label>
+          <input value={form.tags} onChange={(e) => setForm({ ...form, tags: e.target.value })} placeholder="React, Node.js, MongoDB, Express" />
+          <small style={{ color: 'var(--color-text-secondary)', fontSize: '0.8rem' }}>Enter technologies separated by commas. These will appear as badges on the card.</small>
         </div>
         <div className="form-group">
-          <label>Project URL</label>
-          <input value={form.projectUrl} onChange={(e) => setForm({ ...form, projectUrl: e.target.value })} placeholder="https://..." />
-        </div>
-        <div className="form-group">
-          <label>GitHub URL</label>
-          <input value={form.githubUrl} onChange={(e) => setForm({ ...form, githubUrl: e.target.value })} placeholder="https://github.com/..." />
-        </div>
-        <div className="form-group">
-          <label>YouTube URL</label>
+          <label>YouTube / Video URL</label>
           <input value={form.youtubeUrl} onChange={(e) => setForm({ ...form, youtubeUrl: e.target.value })} placeholder="https://youtube.com/..." />
         </div>
       </>
@@ -355,6 +385,107 @@ export default function ProjectsManagement() {
             Add Images
             <input type="file" accept="image/*" multiple onChange={handleImagesUpload} style={{ display: 'none' }} />
           </label>
+        </div>
+      </>
+    );
+    if (activeTab === 'Card Style') return (
+      <>
+        <div className="form-group">
+          <label className="form-check">
+            <input type="checkbox" checked={form.isVisible} onChange={(e) => setForm({ ...form, isVisible: e.target.checked })} />
+            <span>Visible on portfolio</span>
+          </label>
+        </div>
+        <div className="form-group">
+          <label className="form-check">
+            <input type="checkbox" checked={form.showStatusBadge} onChange={(e) => setForm({ ...form, showStatusBadge: e.target.checked })} />
+            <span>Show status badge</span>
+          </label>
+        </div>
+        <div className="form-group">
+          <label className="form-check">
+            <input type="checkbox" checked={form.showTechStack} onChange={(e) => setForm({ ...form, showTechStack: e.target.checked })} />
+            <span>Show technology stack</span>
+          </label>
+        </div>
+        <div className="form-group">
+          <label>Status Badge Label</label>
+          <select value={form.statusBadge} onChange={(e) => setForm({ ...form, statusBadge: e.target.value })}>
+            <option value="Completed">Completed</option>
+            <option value="In Progress">In Progress</option>
+            <option value="Featured">Featured</option>
+            <option value="Open Source">Open Source</option>
+          </select>
+        </div>
+        <div className="form-group">
+          <label>Image Position</label>
+          <select value={form.objectPosition} onChange={(e) => setForm({ ...form, objectPosition: e.target.value })}>
+            <option value="center">Center</option>
+            <option value="top">Top</option>
+            <option value="bottom">Bottom</option>
+            <option value="left">Left</option>
+            <option value="right">Right</option>
+          </select>
+        </div>
+
+        <h4 style={{ fontSize: '0.9rem', fontWeight: 600, margin: '1rem 0 0.5rem', color: 'var(--color-text)' }}>Button Labels</h4>
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '1rem' }}>
+          <div className="form-group">
+            <label>Live Demo Button</label>
+            <input value={form.liveLabel} onChange={(e) => setForm({ ...form, liveLabel: e.target.value })} placeholder="Live Demo" />
+          </div>
+          <div className="form-group">
+            <label>GitHub Button</label>
+            <input value={form.githubLabel} onChange={(e) => setForm({ ...form, githubLabel: e.target.value })} placeholder="GitHub" />
+          </div>
+          <div className="form-group">
+            <label>Details Button</label>
+            <input value={form.detailsLabel} onChange={(e) => setForm({ ...form, detailsLabel: e.target.value })} placeholder="Details" />
+          </div>
+        </div>
+
+        <h4 style={{ fontSize: '0.9rem', fontWeight: 600, margin: '1rem 0 0.5rem', color: 'var(--color-text)' }}>Card Styling</h4>
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
+          <div className="form-group">
+            <label>Border Radius (px)</label>
+            <input type="number" min="0" max="50" value={form.cardBorderRadius} onChange={(e) => setForm({ ...form, cardBorderRadius: Number(e.target.value) })} />
+          </div>
+          <div className="form-group">
+            <label>Overlay Opacity (0-1)</label>
+            <input type="number" min="0" max="1" step="0.1" value={form.overlayOpacity} onChange={(e) => setForm({ ...form, overlayOpacity: Number(e.target.value) })} />
+          </div>
+          <div className="form-group">
+            <label>Hover Scale</label>
+            <input type="number" min="1" max="1.2" step="0.01" value={form.hoverScale} onChange={(e) => setForm({ ...form, hoverScale: Number(e.target.value) })} />
+          </div>
+          <div className="form-group">
+            <label>Description Lines</label>
+            <input type="number" min="1" max="5" value={form.descriptionLines} onChange={(e) => setForm({ ...form, descriptionLines: Number(e.target.value) })} />
+          </div>
+          <div className="form-group">
+            <label>Max Tech Display</label>
+            <input type="number" min="1" max="12" value={form.maxTechDisplay} onChange={(e) => setForm({ ...form, maxTechDisplay: Number(e.target.value) })} />
+          </div>
+          <div className="form-group">
+            <label className="form-check">
+              <input type="checkbox" checked={form.hoverShadow} onChange={(e) => setForm({ ...form, hoverShadow: e.target.checked })} />
+              <span>Hover shadow effect</span>
+            </label>
+          </div>
+        </div>
+
+        <h4 style={{ fontSize: '0.9rem', fontWeight: 600, margin: '1rem 0 0.5rem', color: 'var(--color-text)' }}>Project URLs</h4>
+        <div className="form-group">
+          <label>Live Demo URL</label>
+          <input value={form.liveUrl} onChange={(e) => setForm({ ...form, liveUrl: e.target.value })} placeholder="https://..." />
+        </div>
+        <div className="form-group">
+          <label>GitHub URL</label>
+          <input value={form.githubUrl} onChange={(e) => setForm({ ...form, githubUrl: e.target.value })} placeholder="https://github.com/..." />
+        </div>
+        <div className="form-group">
+          <label>Details Page URL</label>
+          <input value={form.projectUrl} onChange={(e) => setForm({ ...form, projectUrl: e.target.value })} placeholder="/projects/my-project" />
         </div>
       </>
     );
@@ -468,6 +599,8 @@ export default function ProjectsManagement() {
         type="danger"
         loading={deleting}
       />
+
+      <SectionStyles sectionKey="projects" label="Projects Section Styles" />
     </PageLayout>
   );
 }

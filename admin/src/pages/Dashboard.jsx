@@ -350,11 +350,11 @@ export default function Dashboard() {
               {activity.slice(0, 6).map((item, i) => (
                 <div key={i} style={{ display: 'flex', alignItems: 'center', gap: '0.65rem', padding: '0.4rem 0', borderBottom: i < Math.min(5, activity.length - 1) ? '1px solid var(--color-border-light)' : 'none' }}>
                   <div style={{ width: 28, height: 28, borderRadius: '50%', background: 'var(--color-primary-subtle)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '0.7rem', fontWeight: 700, color: 'var(--color-primary)', flexShrink: 0 }}>
-                    {item.user?.charAt(0)?.toUpperCase() || 'S'}
+                    {typeof item.user === 'string' ? item.user.charAt(0).toUpperCase() : (item.user?.name?.charAt(0)?.toUpperCase() || 'S')}
                   </div>
                   <div style={{ flex: 1, minWidth: 0 }}>
                     <div style={{ fontSize: '0.78rem', color: 'var(--color-text)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                      <strong>{item.user || 'System'}</strong> {item.action || item.message || ''}
+                      <strong>{typeof item.user === 'string' ? item.user : (item.user?.name || 'System')}</strong> {item.action || item.message || ''}
                     </div>
                   </div>
                   <span style={{ fontSize: '0.65rem', color: 'var(--color-text-tertiary)', flexShrink: 0, whiteSpace: 'nowrap' }}>{item.time || formatTime(item.timestamp) || ''}</span>

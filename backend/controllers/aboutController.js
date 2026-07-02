@@ -31,8 +31,16 @@ exports.createAbout = async (req, res) => {
 
 exports.updateAbout = async (req, res) => {
   try {
+    const body = { ...req.body };
+    if (typeof body.keyAchievements === 'string') body.keyAchievements = JSON.parse(body.keyAchievements);
+    if (typeof body.stats === 'string') body.stats = JSON.parse(body.stats);
+    if (body.description) { body.biography = body.description; delete body.description; }
+    if (body.keyPoints) { body.keyAchievements = body.keyPoints; delete body.keyPoints; }
+    delete body.title;
+    delete body.image;
+    delete body.imageFile;
     const filter = req.params.id ? { _id: req.params.id } : { isActive: true };
-    const about = await About.findOneAndUpdate(filter, req.body, { new: true, runValidators: true, upsert: true });
+    const about = await About.findOneAndUpdate(filter, body, { new: true, runValidators: true, upsert: true });
     if (!about) return res.status(404).json({ success: false, message: 'About not found' });
     res.json({ success: true, data: about });
   } catch (error) {

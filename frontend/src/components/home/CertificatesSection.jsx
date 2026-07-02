@@ -12,7 +12,7 @@ function CertificatesSection() {
   useEffect(() => {
     publicApi.getCertificates()
       .then(({ data }) => {
-        const items = data.data || [];
+        const items = (data.data || []).slice(2);
         if (items.length > 0) {
           setCertificates(items.map(c => ({
             ...c,

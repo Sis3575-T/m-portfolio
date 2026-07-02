@@ -1,12 +1,30 @@
-import React, { useState, useEffect } from 'react';
-import { adminApi } from '../services/api';
+import React, { useState, useEffect, useRef } from 'react';
+import { adminApi, imageUrl } from '../services/api';
 import { Icons, Icon } from '../lib/icons';
 import { useToast } from '../components/Toast';
 import ConfirmDialog from '../components/ConfirmDialog';
 import PageLayout from '../components/PageLayout';
+import SectionStyles from '../components/SectionStyles';
 import Toolbar from '../components/Toolbar';
 
 const categoryOptions = ['Frontend', 'Backend', 'Database', 'Tools', 'Other'];
+
+const techIcons = [
+  { label: 'React', icon: '⚛️' }, { label: 'Vue', icon: '💚' }, { label: 'Angular', icon: '🔴' },
+  { label: 'JavaScript', icon: '🟨' }, { label: 'TypeScript', icon: '🔷' }, { label: 'HTML', icon: '🟧' },
+  { label: 'CSS', icon: '🎨' }, { label: 'Node.js', icon: '💚' }, { label: 'Python', icon: '🐍' },
+  { label: 'Java', icon: '☕' }, { label: 'Go', icon: '🔵' }, { label: 'Rust', icon: '🦀' },
+  { label: 'Docker', icon: '🐳' }, { label: 'Git', icon: '🔀' }, { label: 'Linux', icon: '🐧' },
+  { label: 'MongoDB', icon: '🍃' }, { label: 'PostgreSQL', icon: '🐘' }, { label: 'MySQL', icon: '🐬' },
+  { label: 'Redis', icon: '🔴' }, { label: 'Firebase', icon: '🔥' }, { label: 'AWS', icon: '☁️' },
+  { label: 'Figma', icon: '🖌️' }, { label: 'Sass', icon: '💅' }, { label: 'Tailwind', icon: '🌊' },
+  { label: 'Next.js', icon: '▲' }, { label: 'GraphQL', icon: '◈' }, { label: 'Webpack', icon: '📦' },
+  { label: 'Vite', icon: '⚡' }, { label: 'Electron', icon: '⚛️' }, { label: 'Flutter', icon: '🔷' },
+  { label: 'Django', icon: '🎸' }, { label: 'Kubernetes', icon: '☸️' }, { label: 'Nginx', icon: '🌐' },
+  { label: 'Postman', icon: '📮' }, { label: 'Jest', icon: '🃏' }, { label: 'C++', icon: '⚙️' },
+];
+
+const isCustomCategory = (cat) => cat && !['Frontend', 'Backend', 'Database', 'Tools', 'Other'].includes(cat);
 
 const getCategoryColor = (cat) => {
   const colors = { Frontend: '#3B82F6', Backend: '#10B981', Database: '#F59E0B', Tools: '#8B5CF6', Other: '#6B7280' };
@@ -24,7 +42,8 @@ export default function SkillsManagement() {
   const [saving, setSaving] = useState(false);
   const [searchVal, setSearchVal] = useState('');
   const [filterVal, setFilterVal] = useState({ category: '' });
-  const [form, setForm] = useState({ name: '', category: 'Frontend', proficiency: 80, icon: '', order: 0 });
+  const [form, setForm] = useState({ name: '', category: 'Frontend', icon: '', iconFile: null, order: 0, customCategory: '' });
+  const iconInputRef = useRef(null);
 
   useEffect(() => { fetchSkills(); }, []);
 
@@ -42,22 +61,37 @@ export default function SkillsManagement() {
 
   const openCreate = () => {
     setEditing(null);
-    setForm({ name: '', category: 'Frontend', proficiency: 80, icon: '', order: 0 });
+    setForm({ name: '', category: 'Frontend', icon: '', iconFile: null, order: 0, customCategory: '' });
     setShowModal(true);
   };
 
   const openEdit = (skill) => {
+    const cat = skill.category || 'Frontend';
+    const isCustom = isCustomCategory(cat);
     setEditing(skill);
-    setForm({ name: skill.name || '', category: skill.category || 'Frontend', proficiency: skill.proficiency ?? 80, icon: skill.icon || '', order: skill.order ?? 0 });
+    setForm({
+      name: skill.name || '',
+      category: isCustom ? 'Other' : cat,
+      icon: skill.icon || '',
+      iconFile: null,
+      order: skill.order ?? 0,
+      customCategory: isCustom ? cat : '',
+    });
     setShowModal(true);
   };
 
   const handleSave = async () => {
     if (!form.name.trim()) { toast.error('Name is required'); return; }
     setSaving(true);
+    const fd = new FormData();
+    fd.append('name', form.name);
+    fd.append('category', form.category === 'Other' && form.customCategory.trim() ? form.customCategory.trim() : form.category);
+    fd.append('order', form.order);
+    if (form.icon && !form.iconFile) fd.append('icon', form.icon);
+    if (form.iconFile) fd.append('icon', form.iconFile);
     try {
-      if (editing) await adminApi.updateSkill(editing._id, form);
-      else await adminApi.createSkill(form);
+      if (editing) await adminApi.updateSkill(editing._id, fd);
+      else await adminApi.createSkill(fd);
       toast.success(editing ? 'Skill updated' : 'Skill created');
       await fetchSkills();
       setShowModal(false);
@@ -160,7 +194,9 @@ export default function SkillsManagement() {
               <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: '0.75rem' }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
                   <div style={{ width: 40, height: 40, borderRadius: 10, background: `${getCategoryColor(skill.category)}18`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '1.5rem' }}>
-                    {skill.icon ? <span style={{ fontSize: '1.5rem' }}>{skill.icon}</span> : <Icon path={Icons.code} size={20} style={{ color: getCategoryColor(skill.category) }} />}
+                    {skill.icon ? (
+                      skill.icon.length <= 4 ? <span style={{ fontSize: '1.5rem' }}>{skill.icon}</span> : <img src={imageUrl(skill.icon)} alt="" style={{ width: 24, height: 24, objectFit: 'contain' }} onError={(e) => { e.target.style.display = 'none'; }} />
+                    ) : <Icon path={Icons.code} size={20} style={{ color: getCategoryColor(skill.category) }} />}
                   </div>
                   <div>
                     <div style={{ fontWeight: 600, fontSize: '0.95rem', color: 'var(--color-text)' }}>{skill.name}</div>
@@ -175,13 +211,6 @@ export default function SkillsManagement() {
                     <Icon path={Icons['chevron-down']} size={14} />
                   </button>
                 </div>
-              </div>
-
-              <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '0.75rem' }}>
-                <div style={{ flex: 1, height: 10, background: 'var(--color-bg)', borderRadius: 5, overflow: 'hidden' }}>
-                  <div style={{ width: `${skill.proficiency}%`, height: '100%', background: `linear-gradient(90deg, ${getCategoryColor(skill.category)}, ${getCategoryColor(skill.category)}dd)`, borderRadius: 5, transition: 'width 0.8s ease' }} />
-                </div>
-                <span style={{ fontSize: '0.78rem', fontWeight: 700, color: 'var(--color-text-secondary)', minWidth: 32, textAlign: 'right' }}>{skill.proficiency}%</span>
               </div>
 
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
@@ -210,14 +239,26 @@ export default function SkillsManagement() {
             <div className="modal-body">
               <div className="form-group">
                 <label>Name <span style={{ color: 'var(--color-danger)' }}>*</span></label>
-                <input value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} placeholder="React, Node.js, etc." />
+                <input value={form.name} onChange={(e) => {
+                  const name = e.target.value;
+                  const match = techIcons.find(t => t.label.toLowerCase() === name.trim().toLowerCase());
+                  setForm({ ...form, name, icon: match ? match.icon : form.icon, iconFile: match ? null : form.iconFile });
+                }} placeholder="React, Node.js, etc." />
               </div>
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
                 <div className="form-group">
                   <label>Category</label>
-                  <select value={form.category} onChange={(e) => setForm({ ...form, category: e.target.value })}>
+                  <select value={form.category} onChange={(e) => setForm({ ...form, category: e.target.value, customCategory: '' })}>
                     {categoryOptions.map(c => <option key={c}>{c}</option>)}
                   </select>
+                  {form.category === 'Other' && (
+                    <input
+                      value={form.customCategory}
+                      onChange={(e) => setForm({ ...form, customCategory: e.target.value })}
+                      placeholder="Type custom category..."
+                      style={{ marginTop: 8 }}
+                    />
+                  )}
                 </div>
                 <div className="form-group">
                   <label>Order</label>
@@ -225,19 +266,60 @@ export default function SkillsManagement() {
                 </div>
               </div>
               <div className="form-group">
-                <label>Proficiency: {form.proficiency}%</label>
-                <input type="range" min={0} max={100} value={form.proficiency} onChange={(e) => setForm({ ...form, proficiency: Number(e.target.value) })} style={{ width: '100%', accentColor: getCategoryColor(form.category) }} />
-                <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.7rem', color: 'var(--color-text-tertiary)' }}><span>0</span><span>50</span><span>100</span></div>
-              </div>
-              <div className="form-group">
-                <label>Icon (emoji or text)</label>
-                <input value={form.icon} onChange={(e) => setForm({ ...form, icon: e.target.value })} placeholder="e.g. ⚛️ or React" />
-                {form.icon && (
-                  <div style={{ marginTop: 8, display: 'flex', alignItems: 'center', gap: 8 }}>
-                    <span style={{ fontSize: '1.5rem' }}>{form.icon}</span>
-                    <span style={{ fontSize: 12, color: 'var(--color-text-tertiary)' }}>Preview</span>
+                <label>Icon <span style={{ fontSize: '0.72rem', color: 'var(--color-text-tertiary)', fontWeight: 400 }}>(upload image or pick emoji)</span></label>
+                <div
+                  onDragOver={(e) => { e.preventDefault(); e.currentTarget.style.borderColor = 'var(--color-primary)'; e.currentTarget.style.background = 'var(--color-primary-subtle)'; }}
+                  onDragLeave={(e) => { e.preventDefault(); e.currentTarget.style.borderColor = 'var(--color-border)'; e.currentTarget.style.background = 'var(--color-bg)'; }}
+                  onDrop={(e) => {
+                    e.preventDefault();
+                    e.currentTarget.style.borderColor = 'var(--color-border)';
+                    e.currentTarget.style.background = 'var(--color-bg)';
+                    const file = e.dataTransfer.files[0];
+                    if (file && file.type.startsWith('image/')) {
+                      setForm({ ...form, icon: URL.createObjectURL(file), iconFile: file });
+                    } else { toast.error('Please drop an image file'); }
+                  }}
+                  onClick={() => iconInputRef.current?.click()}
+                  style={{
+                    border: `2px dashed ${form.iconFile || (form.icon && form.icon.startsWith('blob:')) ? 'var(--color-primary)' : 'var(--color-border)'}`,
+                    borderRadius: 12, padding: '1.5rem', cursor: 'pointer', textAlign: 'center', transition: 'all 0.15s',
+                    background: form.iconFile || (form.icon && form.icon.startsWith('blob:')) ? 'var(--color-primary-subtle)' : 'var(--color-bg)',
+                    display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '0.5rem',
+                  }}
+                >
+                  {form.iconFile || (form.icon && form.icon.startsWith('blob:')) ? (
+                    <img src={form.icon} alt="icon preview" style={{ width: 48, height: 48, objectFit: 'contain', borderRadius: 8 }} />
+                  ) : form.icon && form.icon.length <= 4 ? (
+                    <span style={{ fontSize: '2.5rem' }}>{form.icon}</span>
+                  ) : form.icon ? (
+                    <img src={imageUrl(form.icon)} alt="icon preview" style={{ width: 48, height: 48, objectFit: 'contain', borderRadius: 8 }} onError={(e) => { e.target.style.display = 'none'; e.target.nextSibling.style.display = 'block'; }} />
+                  ) : null}
+                  <input ref={iconInputRef} type="file" accept="image/*" onChange={(e) => { const file = e.target.files?.[0]; if (file) setForm({ ...form, icon: URL.createObjectURL(file), iconFile: file }); }} style={{ display: 'none' }} />
+                  <span style={{ fontSize: '0.78rem', color: 'var(--color-text-tertiary)' }}>
+                    {form.iconFile || form.icon ? 'Click or drag to replace' : 'Click or drag image here'}
+                  </span>
+                </div>
+                <div style={{ marginTop: 8 }}>
+                  <div style={{ fontSize: '0.72rem', color: 'var(--color-text-tertiary)', marginBottom: 6, fontWeight: 500 }}>Or pick an emoji:</div>
+                  <div style={{ display: 'flex', flexWrap: 'wrap', gap: 4 }}>
+                    {techIcons.map(t => (
+                      <button
+                        key={t.icon}
+                        type="button"
+                        onClick={() => setForm({ ...form, icon: t.icon, iconFile: null })}
+                        title={t.label}
+                        style={{
+                          width: 36, height: 36, fontSize: '1.1rem', display: 'flex', alignItems: 'center', justifyContent: 'center',
+                          border: form.icon === t.icon && !form.iconFile ? '2px solid var(--color-primary)' : '1px solid var(--color-border)',
+                          borderRadius: 8, cursor: 'pointer', background: form.icon === t.icon && !form.iconFile ? 'var(--color-primary-subtle)' : 'var(--color-bg)',
+                          transition: 'all 0.15s',
+                        }}
+                      >
+                        {t.icon}
+                      </button>
+                    ))}
                   </div>
-                )}
+                </div>
               </div>
             </div>
             <div className="modal-footer">
@@ -260,6 +342,8 @@ export default function SkillsManagement() {
         type="danger"
         loading={deleting}
       />
+
+      <SectionStyles sectionKey="skills" label="Skills Section Styles" />
     </PageLayout>
   );
 }

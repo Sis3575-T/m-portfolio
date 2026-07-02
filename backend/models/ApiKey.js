@@ -12,7 +12,6 @@ const apiKeySchema = new mongoose.Schema({
 }, { timestamps: true });
 
 apiKeySchema.index({ user: 1 });
-apiKeySchema.index({ key: 1 });
 
 apiKeySchema.statics.generateKey = function () {
   return crypto.randomBytes(32).toString('hex');

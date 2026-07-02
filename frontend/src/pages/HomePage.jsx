@@ -88,6 +88,16 @@ function HomePage() {
 
   useEffect(() => {
     fetchData();
+    const onFocus = () => fetchData();
+    const interval = setInterval(fetchData, 30000);
+    window.addEventListener('focus', onFocus);
+    document.addEventListener('visibilitychange', () => {
+      if (!document.hidden) fetchData();
+    });
+    return () => {
+      window.removeEventListener('focus', onFocus);
+      clearInterval(interval);
+    };
   }, [fetchData]);
 
   if (data.loading) {
@@ -119,12 +129,13 @@ function HomePage() {
   const sectionsToRender = sections && sections.length > 0
     ? sections.filter(s => s.visible !== false && s.status === 'published')
     : null;
+  const hasSections = sectionsToRender && sectionsToRender.length > 0;
 
   return (
     <div className="page">
       <Navbar navItems={navItems} settings={settings} />
       <main>
-        {sectionsToRender ? (
+        {hasSections ? (
           sectionsToRender.map(section => {
             const mapping = SECTION_MAP[section.type];
             if (!mapping) return null;
@@ -139,6 +150,7 @@ function HomePage() {
                 settings={settings}
                 sectionTitle={content.title}
                 sectionSubtitle={content.subtitle}
+                navItems={navItems}
               />
             );
           })
@@ -146,13 +158,13 @@ function HomePage() {
           <>
             <Hero hero={hero} settings={settings} />
             <About settings={settings} />
-            <Skills skills={skills} />
-            <Experience experience={experience} />
-            <Education education={education} />
-            <Projects projects={projects} />
-            <Testimonials testimonials={testimonials} />
-            <Services services={services} />
-            <Blog posts={blog} />
+            <Skills skills={skills} settings={settings} />
+            <Experience experience={experience} settings={settings} />
+            <Education education={education} settings={settings} />
+            <Projects projects={projects} settings={settings} />
+            <Testimonials testimonials={testimonials} settings={settings} />
+            <Services services={services} settings={settings} />
+            <Blog posts={blog} settings={settings} />
             <Contact settings={settings} />
           </>
         )}

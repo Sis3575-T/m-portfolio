@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { websiteApi } from '../api';
 import Toast from './Toast';
 
@@ -40,8 +40,29 @@ function Contact({ settings, sectionTitle, sectionSubtitle }) {
     }
   };
 
+  const pageStyles = settings?.pageStyles?.contact || {};
+  const sectionStyle = {
+    ...(pageStyles.bgColor ? { backgroundColor: pageStyles.bgColor } : {}),
+    ...(pageStyles.textColor ? { color: pageStyles.textColor } : {}),
+    ...(pageStyles.fontFamily ? { fontFamily: pageStyles.fontFamily } : {}),
+    ...(pageStyles.paddingY === 'small' ? { paddingTop: '2rem', paddingBottom: '2rem' } : {}),
+    ...(pageStyles.paddingY === 'medium' ? { paddingTop: '4rem', paddingBottom: '4rem' } : {}),
+    ...(pageStyles.paddingY === 'large' ? { paddingTop: '6rem', paddingBottom: '6rem' } : {}),
+    ...(pageStyles.paddingY === 'xlarge' ? { paddingTop: '8rem', paddingBottom: '8rem' } : {}),
+  };
+
+  useEffect(() => {
+    if (pageStyles.customCss) {
+      const id = 'contact-custom-css';
+      let el = document.getElementById(id);
+      if (!el) { el = document.createElement('style'); el.id = id; document.head.appendChild(el); }
+      el.textContent = pageStyles.customCss;
+      return () => { const e = document.getElementById(id); if (e) e.remove(); };
+    }
+  }, [pageStyles.customCss]);
+
   return (
-    <section className="contact section" id="contact">
+    <section className="contact section" id="contact" style={sectionStyle}>
       <div className="container">
         <div className="section-header">
           <h2 className="section-title">{sectionTitle || 'Get In Touch'}</h2>

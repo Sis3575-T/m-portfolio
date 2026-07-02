@@ -45,7 +45,16 @@ function ServicesSection() {
           </p>
         </motion.div>
 
-        <div className="about-cards" style={{ marginTop: '3rem' }}>
+        <div
+          className="about-cards"
+          style={{
+            marginTop: '3rem',
+            display: 'grid',
+            gridTemplateColumns: 'repeat(2, minmax(0, 1fr))',
+            gap: '1rem',
+            alignItems: 'stretch',
+          }}
+        >
           {services.map((service, idx) => (
             <motion.div
               key={service._id}
@@ -54,6 +63,11 @@ function ServicesSection() {
               viewport={{ once: true, margin: '-80px' }}
               transition={{ duration: 0.5, delay: idx * 0.1 }}
               className="about-card"
+              style={{
+                padding: '1rem 1.1rem',
+                minHeight: 'auto',
+                width: '100%',
+              }}
             >
               {service.icon && (
                 <div className="card-icon-wrap" style={{ fontSize: '1.5rem' }}>{service.icon}</div>

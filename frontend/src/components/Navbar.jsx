@@ -14,6 +14,12 @@ function Navbar({ settings: propSettings, navItems: propNavItems }) {
   });
   const location = useLocation();
 
+  const navStyles = settings?.pageStyles?.navbar || {};
+  const navbarStyle = {
+    ...(navStyles.bgColor ? { '--navbar-bg': navStyles.bgColor } : {}),
+    ...(navStyles.textColor ? { '--navbar-text': navStyles.textColor } : {}),
+  };
+
   useEffect(() => {
     document.documentElement.setAttribute('data-theme', darkMode ? 'dark' : 'light');
     localStorage.setItem('theme', darkMode ? 'dark' : 'light');
@@ -42,8 +48,18 @@ function Navbar({ settings: propSettings, navItems: propNavItems }) {
     { name: 'Contact', slug: 'contact' },
   ])];
 
+  useEffect(() => {
+    if (navStyles.customCss) {
+      const id = 'navbar-custom-css';
+      let el = document.getElementById(id);
+      if (!el) { el = document.createElement('style'); el.id = id; document.head.appendChild(el); }
+      el.textContent = navStyles.customCss;
+      return () => { const e = document.getElementById(id); if (e) e.remove(); };
+    }
+  }, [navStyles.customCss]);
+
   return (
-    <nav className={`navbar${scrolled ? ' navbar-scrolled' : ''}`}>
+    <nav className={`navbar${scrolled ? ' navbar-scrolled' : ''}`} style={navbarStyle}>
       <div className="navbar-container">
         <Link to="/" className="navbar-logo">
           {logo ? (

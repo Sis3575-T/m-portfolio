@@ -24,7 +24,7 @@ function Footer() {
   const [about, setAbout] = useState(null);
   const year = new Date().getFullYear();
 
-  useEffect(() => {
+  const fetchData = () => {
     Promise.all([
       publicApi.getSettings().catch(() => ({ data: null })),
       publicApi.getHero().catch(() => ({ data: null })),
@@ -37,6 +37,20 @@ function Footer() {
       setHero(Array.isArray(h) ? h[0] : h);
       setAbout(Array.isArray(a) ? a[0] : a);
     });
+  };
+
+  useEffect(() => {
+    fetchData();
+
+    // Refetch when page becomes visible
+    const handleVisibilityChange = () => {
+      if (!document.hidden) {
+        fetchData();
+      }
+    };
+
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+    return () => document.removeEventListener('visibilitychange', handleVisibilityChange);
   }, []);
 
   useEffect(() => {

@@ -4,6 +4,7 @@ import { Icons, Icon } from '../lib/icons';
 import { useToast } from '../components/Toast';
 import ConfirmDialog from '../components/ConfirmDialog';
 import PageLayout from '../components/PageLayout';
+import SectionStyles from '../components/SectionStyles';
 import DataTable from '../components/DataTable';
 import Toolbar from '../components/Toolbar';
 
@@ -211,6 +212,8 @@ export default function EducationManagement() {
         type="danger"
         loading={deleting}
       />
+
+      <SectionStyles sectionKey="education" label="Education Section Styles" />
     </PageLayout>
   );
 }

@@ -22,6 +22,10 @@ const heroSchema = new mongoose.Schema({
     type: { type: String, enum: ['primary', 'outline'], default: 'primary' },
     file: { type: String, default: '' },
   }],
+  highlights: [{
+    value: { type: String, required: true },
+    label: { type: String, required: true },
+  }],
   isActive: { type: Boolean, default: true },
   status: { type: String, enum: ['draft', 'published', 'archived'], default: 'draft' },
   publishedAt: { type: Date, default: null },

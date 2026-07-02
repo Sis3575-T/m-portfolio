@@ -84,7 +84,6 @@ pageSchema.pre('save', function (next) {
   next();
 });
 
-pageSchema.index({ slug: 1 });
 pageSchema.index({ parent: 1 });
 pageSchema.index({ status: 1, publishedAt: -1 });
 

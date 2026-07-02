@@ -40,6 +40,8 @@ const settingsSchema = new mongoose.Schema({
   leetcode: { type: String, default: '' },
 
   maintenanceMode: { type: Boolean, default: false },
+
+  pageStyles: { type: mongoose.Schema.Types.Mixed, default: {} },
 }, { timestamps: true });
 
 module.exports = mongoose.model('Settings', settingsSchema);

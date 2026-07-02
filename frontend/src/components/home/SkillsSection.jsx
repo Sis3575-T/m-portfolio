@@ -196,16 +196,11 @@ function SkillsSection() {
               <div className="skill-group-label">{category}</div>
               <div className="skill-cards">
                 {items.map((skill) => (
-                  <div key={skill._id} className="skill-card" title={`${skill.name} (${skill.proficiency || 0}%)`}>
+                  <div key={skill._id} className="skill-card">
                     <div className="skill-svg" style={{ color: skillColor(skill.name) }}>
                       {skillIcon(skill.name)}
                     </div>
                     <span className="skill-card-name">{skill.name}</span>
-                    {skill.proficiency != null && (
-                      <div style={{ width: '100%', height: 3, background: 'var(--border-color)', borderRadius: 2, marginTop: 4, overflow: 'hidden' }}>
-                        <div style={{ width: `${skill.proficiency}%`, height: '100%', background: skillColor(skill.name), borderRadius: 2 }} />
-                      </div>
-                    )}
                   </div>
                 ))}
               </div>

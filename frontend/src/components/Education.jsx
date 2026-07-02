@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 
 function formatDate(dateStr) {
   if (!dateStr) return 'Present';
@@ -6,11 +6,32 @@ function formatDate(dateStr) {
   return d.toLocaleDateString('en-US', { year: 'numeric', month: 'short' });
 }
 
-function Education({ education, sectionTitle, sectionSubtitle }) {
+function Education({ education, settings, sectionTitle, sectionSubtitle }) {
   if (!education || education.length === 0) return null;
 
+  const pageStyles = settings?.pageStyles?.education || {};
+  const sectionStyle = {
+    ...(pageStyles.bgColor ? { backgroundColor: pageStyles.bgColor } : {}),
+    ...(pageStyles.textColor ? { color: pageStyles.textColor } : {}),
+    ...(pageStyles.fontFamily ? { fontFamily: pageStyles.fontFamily } : {}),
+    ...(pageStyles.paddingY === 'small' ? { paddingTop: '2rem', paddingBottom: '2rem' } : {}),
+    ...(pageStyles.paddingY === 'medium' ? { paddingTop: '4rem', paddingBottom: '4rem' } : {}),
+    ...(pageStyles.paddingY === 'large' ? { paddingTop: '6rem', paddingBottom: '6rem' } : {}),
+    ...(pageStyles.paddingY === 'xlarge' ? { paddingTop: '8rem', paddingBottom: '8rem' } : {}),
+  };
+
+  useEffect(() => {
+    if (pageStyles.customCss) {
+      const id = 'education-custom-css';
+      let el = document.getElementById(id);
+      if (!el) { el = document.createElement('style'); el.id = id; document.head.appendChild(el); }
+      el.textContent = pageStyles.customCss;
+      return () => { const e = document.getElementById(id); if (e) e.remove(); };
+    }
+  }, [pageStyles.customCss]);
+
   return (
-    <section className="education section" id="education">
+    <section className="education section" id="education" style={sectionStyle}>
       <div className="container">
         <div className="section-header">
           <h2 className="section-title">{sectionTitle || 'Education'}</h2>

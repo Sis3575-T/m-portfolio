@@ -33,7 +33,9 @@ exports.getSkillById = async (req, res) => {
 
 exports.createSkill = async (req, res) => {
   try {
-    const skill = await Skill.create(req.body);
+    const body = { ...req.body };
+    if (req.file) body.icon = req.file.path;
+    const skill = await Skill.create(body);
     res.status(201).json({ success: true, data: skill });
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });
@@ -42,7 +44,9 @@ exports.createSkill = async (req, res) => {
 
 exports.updateSkill = async (req, res) => {
   try {
-    const skill = await Skill.findByIdAndUpdate(req.params.id, req.body, { new: true, runValidators: true });
+    const body = { ...req.body };
+    if (req.file) body.icon = req.file.path;
+    const skill = await Skill.findByIdAndUpdate(req.params.id, body, { new: true, runValidators: true });
     if (!skill) return res.status(404).json({ success: false, message: 'Skill not found' });
     res.json({ success: true, data: skill });
   } catch (error) {

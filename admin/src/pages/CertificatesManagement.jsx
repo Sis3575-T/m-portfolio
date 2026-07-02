@@ -5,6 +5,7 @@ import { Icons, Icon } from '../lib/icons';
 import { useToast } from '../components/Toast';
 import ConfirmDialog from '../components/ConfirmDialog';
 import PageLayout from '../components/PageLayout';
+import SectionStyles from '../components/SectionStyles';
 import Toolbar from '../components/Toolbar';
 
 export default function CertificatesManagement() {
@@ -315,6 +316,8 @@ export default function CertificatesManagement() {
         type="danger"
         loading={deleting}
       />
+
+      <SectionStyles sectionKey="certificates" label="Certificates Section Styles" />
     </PageLayout>
   );
 }

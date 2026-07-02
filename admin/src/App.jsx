@@ -18,6 +18,13 @@ import SEOManagement from './pages/SEOManagement';
 import SettingsPage from './pages/SettingsPage';
 import ProfileManagement from './pages/ProfileManagement';
 import AppearancePage from './pages/AppearancePage';
+import HeroManagement from './pages/HeroManagement';
+import AboutManagement from './pages/AboutManagement';
+import ServicesManagement from './pages/ServicesManagement';
+import TestimonialsManagement from './pages/TestimonialsManagement';
+import NavbarManagement from './pages/NavbarManagement';
+import FooterManagement from './pages/FooterManagement';
+import LayoutManager from './pages/LayoutManager';
 import { AutoSaveProvider } from './components/AutoSaveProvider';
 import AutoSaveIndicator from './components/AutoSaveIndicator';
 import KeyboardShortcutsModal from './components/KeyboardShortcutsModal';
@@ -37,6 +44,12 @@ const navSections = [
   ]},
   { section: 'Components', icon: 'M4 7h3V4a2 2 0 012-2h2a2 2 0 012 2v3h3a2 2 0 012 2v2a2 2 0 01-2 2h-3v3a2 2 0 01-2 2H9a2 2 0 01-2-2v-3H4a2 2 0 01-2-2V9a2 2 0 012-2z', children: [
     { id: 'component-builder', label: 'All Components', icon: 'M4 7h3V4a2 2 0 012-2h2a2 2 0 012 2v3h3a2 2 0 012 2v2a2 2 0 01-2 2h-3v3a2 2 0 01-2 2H9a2 2 0 01-2-2v-3H4a2 2 0 01-2-2V9a2 2 0 012-2z' },
+  ]},
+  { section: 'Content', icon: 'M4 5a1 1 0 011-1h14a1 1 0 011 1v2a1 1 0 01-1 1H5a1 1 0 01-1-1V5z M4 13a1 1 0 011-1h4a1 1 0 011 1v6a1 1 0 01-1 1H5a1 1 0 01-1-1v-6z M14 13a1 1 0 011-1h4a1 1 0 011 1v6a1 1 0 01-1 1h-4a1 1 0 01-1-1v-6z', children: [
+    { id: 'hero', label: 'Hero Section', icon: 'M4 5a1 1 0 011-1h14a1 1 0 011 1v2a1 1 0 01-1 1H5a1 1 0 01-1-1V5z' },
+    { id: 'about', label: 'About Section', icon: 'M16 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2 M8 3a4 4 0 100 8 4 4 0 000-8z' },
+    { id: 'services', label: 'Services', icon: 'M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z' },
+    { id: 'testimonials', label: 'Testimonials', icon: 'M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z' },
   ]},
   { section: 'Projects', icon: 'M22 19a2 2 0 01-2 2H4a2 2 0 01-2-2V5a2 2 0 012-2h5l2 3h9a2 2 0 012 2z', children: [
     { id: 'projects', label: 'All Projects', icon: 'M22 19a2 2 0 01-2 2H4a2 2 0 01-2-2V5a2 2 0 012-2h5l2 3h9a2 2 0 012 2z' },
@@ -71,6 +84,10 @@ const navSections = [
   ]},
   { section: 'Appearance', icon: 'M12 20a8 8 0 100-16 8 8 0 000 16z M12 8a4 4 0 100 8 4 4 0 000-8z M12 8V4 M12 20v-4', children: [
     { id: 'appearance', label: 'Design Settings', icon: 'M12 20a8 8 0 100-16 8 8 0 000 16z M12 8a4 4 0 100 8 4 4 0 000-8z M12 8V4 M12 20v-4' },
+  ]},
+  { section: 'Layout', icon: 'M4 2h16a2 2 0 012 2v16a2 2 0 01-2 2H4a2 2 0 01-2-2V4a2 2 0 012-2z', children: [
+    { id: 'navigation', label: 'Navbar Management', icon: 'M4 6h16M4 10h16M4 14h16M4 18h16' },
+    { id: 'footer', label: 'Footer Management', icon: 'M4 16h16M4 20h16M4 2h16v12H4z' },
   ]},
   { section: 'SEO', icon: 'M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z M10 3v4 M3 10h4', children: [
     { id: 'seo', label: 'SEO Manager', icon: 'M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z M10 3v4 M3 10h4' },
@@ -113,6 +130,12 @@ const pageLabels = {
   'settings-social': 'Social Media',
   backup: 'Backup & Restore',
   'settings-integrations': 'Integrations',
+  hero: 'Hero Section',
+  about: 'About Section',
+  services: 'Services',
+  testimonials: 'Testimonials',
+  navigation: 'Navbar Management',
+  footer: 'Footer Management',
   profile: 'My Profile',
 };
 
@@ -437,6 +460,12 @@ function AdminRouter({ activePage, onNavigate }) {
     'settings-social': <SettingsPage onNavigate={onNavigate} />,
     backup: <SettingsPage onNavigate={onNavigate} />,
     'settings-integrations': <SettingsPage onNavigate={onNavigate} />,
+    hero: <HeroManagement />,
+    about: <AboutManagement />,
+    services: <ServicesManagement />,
+    testimonials: <TestimonialsManagement />,
+    navigation: <NavbarManagement />,
+    footer: <FooterManagement />,
     profile: <ProfileManagement />,
   };
   const page = components[activePage];

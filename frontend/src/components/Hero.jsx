@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { getImageUrl } from '../api';
 
 function Hero({ hero, settings }) {
@@ -12,6 +12,27 @@ function Hero({ hero, settings }) {
   const greeting = hero?.greeting || 'Hello, I\'m';
   const headline = hero?.headline || 'I build polished digital products that blend thoughtful design with reliable engineering.';
   const description = hero?.description || settings?.shortBio || 'I specialize in creating responsive, accessible web experiences with React, Node.js, and modern full-stack architecture.';
+
+  const heroStyles = settings?.pageStyles?.hero || {};
+  const heroStyle = {
+    ...(heroStyles.bgColor ? { backgroundColor: heroStyles.bgColor } : {}),
+    ...(heroStyles.textColor ? { color: heroStyles.textColor } : {}),
+    ...(heroStyles.textAlign ? { textAlign: heroStyles.textAlign } : {}),
+    ...(heroStyles.paddingY === 'small' ? { paddingTop: '2rem', paddingBottom: '2rem' } : {}),
+    ...(heroStyles.paddingY === 'medium' ? { paddingTop: '4rem', paddingBottom: '4rem' } : {}),
+    ...(heroStyles.paddingY === 'large' ? { paddingTop: '6rem', paddingBottom: '6rem' } : {}),
+    ...(heroStyles.paddingY === 'xlarge' ? { paddingTop: '8rem', paddingBottom: '8rem' } : {}),
+    ...(heroStyles.fontFamily ? { fontFamily: heroStyles.fontFamily } : {}),
+  };
+  useEffect(() => {
+    if (heroStyles.customCss) {
+      const id = 'hero-custom-css';
+      let el = document.getElementById(id);
+      if (!el) { el = document.createElement('style'); el.id = id; document.head.appendChild(el); }
+      el.textContent = heroStyles.customCss;
+      return () => { const e = document.getElementById(id); if (e) e.remove(); };
+    }
+  }, [heroStyles.customCss]);
 
   const settingsSocial = settings ? {
     github: settings.github,
@@ -34,14 +55,14 @@ function Hero({ hero, settings }) {
     index === self.findIndex(s => s.platform === item.platform)
   );
 
-  const highlights = [
+  const highlights = hero?.highlights?.length > 0 ? hero.highlights : [
     { value: '2+', label: 'Years building' },
     { value: '15+', label: 'Projects shipped' },
     { value: '100%', label: 'Remote-ready' },
   ];
 
   return (
-    <section className="hero section" id="home">
+    <section className="hero section" id="home" style={heroStyle}>
       <div className="hero-bg-shapes">
         <div className="hero-shape hero-shape-1" />
         <div className="hero-shape hero-shape-2" />
