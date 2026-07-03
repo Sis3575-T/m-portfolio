@@ -1,6 +1,6 @@
 import axios from 'axios';
 
-const defaultApiUrl = 'https://my-portfolio-4-kvzu.onrender.com/api/website';
+const defaultApiUrl = 'https://portfolio-api.onrender.com/api/website';
 
 const api = axios.create({
   baseURL: import.meta.env.VITE_API_URL || defaultApiUrl,
@@ -29,7 +29,7 @@ export const websiteApi = {
 export const getImageUrl = (path) => {
   if (!path) return '';
   if (path.startsWith('http')) return path;
-  const base = import.meta.env.VITE_API_URL?.replace('/api/website', '') || 'https://my-portfolio-4-kvzu.onrender.com';
+  const base = import.meta.env.VITE_API_URL?.replace('/api/website', '') || 'https://portfolio-api.onrender.com';
   return `${base}${path.startsWith('/') ? '' : '/'}${path}`;
 };
 

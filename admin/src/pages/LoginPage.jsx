@@ -178,7 +178,7 @@ export default function LoginPage() {
                       type="url"
                       value={serverUrl}
                       onChange={(e) => setServerUrl(e.target.value)}
-                      placeholder="https://your-api.onrender.com/api"
+                      placeholder="https://portfolio-api.onrender.com/api"
                       style={{ flex: 1 }}
                     />
                     <button type="button" className="btn btn-primary" onClick={testConnection} style={{ whiteSpace: 'nowrap' }}>
