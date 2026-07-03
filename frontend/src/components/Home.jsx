@@ -2,7 +2,7 @@ import { motion } from 'framer-motion';
 import profilePhoto from '../assets/profile-photo.jpg';
 import './Home.css';
 
-const cvUrl = 'https://portfolio2-sigma-pink.vercel.app/cv.pdf';
+const cvUrl = 'https://my-portfoliod-sigma.vercel.app/cv.pdf';
 const googleViewUrl = `https://docs.google.com/viewer?url=${encodeURIComponent(cvUrl)}`;
 
 const up = (delay = 0) => ({

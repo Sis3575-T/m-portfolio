@@ -85,7 +85,7 @@ app.use(cors({
       process.env.CLIENT_URL,
       'http://localhost:5173',
       'http://localhost:5154',
-      'https://portfolio-api.onrender.com',
+      'https://my-portfolio-4-s0bb.onrender.com', 'https://my-portfoliod-sigma.vercel.app',
     ].filter(Boolean);
     if (!origin || allowed.includes(origin)) return cb(null, true);
     cb(null, true);

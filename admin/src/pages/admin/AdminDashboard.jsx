@@ -145,7 +145,7 @@ const AdminDashboard = () => {
             <p className="admin-topbar-sub">Manage your portfolio content</p>
           </div>
           <div className="admin-topbar-right">
-            <a href="https://portfolio2-sigma-pink.vercel.app" target="_blank" rel="noopener noreferrer" className="admin-view-site">
+            <a href="https://my-portfoliod-sigma.vercel.app" target="_blank" rel="noopener noreferrer" className="admin-view-site">
               🌐 View Site
             </a>
             <button

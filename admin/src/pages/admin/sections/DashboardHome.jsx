@@ -82,7 +82,7 @@ const DashboardHome = () => {
           Your portfolio is deployed and accessible at:
         </p>
         <a
-          href="https://portfolio2-sigma-pink.vercel.app"
+          href="https://my-portfoliod-sigma.vercel.app"
           target="_blank"
           rel="noopener noreferrer"
           className="btn-admin btn-admin-primary"

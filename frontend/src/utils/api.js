@@ -1,6 +1,6 @@
 import axios from 'axios';
 
-const defaultApiBase = 'https://portfolio-api.onrender.com/api';
+const defaultApiBase = 'https://my-portfolio-4-s0bb.onrender.com/api';
 
 const api = axios.create({
   baseURL: import.meta.env.VITE_API_URL || defaultApiBase,
