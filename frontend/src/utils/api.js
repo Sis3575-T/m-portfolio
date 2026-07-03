@@ -1,9 +1,9 @@
 import axios from 'axios';
 
-const defaultApiBase = 'https://my-portfolio-4-s0bb.onrender.com/api';
+const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:5001/api';
 
 const api = axios.create({
-  baseURL: import.meta.env.VITE_API_URL || defaultApiBase,
+  baseURL: API_BASE,
   headers: { 'Content-Type': 'application/json' },
 });
 
@@ -124,7 +124,7 @@ export const adminApi = {
   updateSEO: (page, data) => api.put(`/seo/${page}`, data),
 };
 
-const apiHost = (import.meta.env.VITE_API_URL || defaultApiBase).replace(/\/api$/, '');
+const apiHost = (import.meta.env.VITE_API_URL || 'http://localhost:5001/api').replace(/\/api$/, '');
 
 export function imageUrl(url) {
   if (!url) return '';

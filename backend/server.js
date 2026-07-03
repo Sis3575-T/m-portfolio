@@ -12,13 +12,17 @@ const User = require('./models/User');
 const seedAdmin = async () => {
   try {
     if ((await User.countDocuments({ role: 'admin' })) === 0) {
+      if (!process.env.ADMIN_EMAIL || !process.env.ADMIN_PASSWORD) {
+        console.warn('ADMIN_EMAIL and ADMIN_PASSWORD must be set in .env to auto-seed admin');
+        return;
+      }
       await User.create({
         name: 'Admin',
-        email: process.env.ADMIN_EMAIL || 'admin@portfolio.com',
-        password: process.env.ADMIN_PASSWORD || 'Admin@123456',
+        email: process.env.ADMIN_EMAIL,
+        password: process.env.ADMIN_PASSWORD,
         role: 'admin',
       });
-      console.log('Admin auto-seeded:', process.env.ADMIN_EMAIL || 'admin@portfolio.com');
+      console.log('Admin auto-seeded:', process.env.ADMIN_EMAIL);
     }
   } catch (err) {
     console.error('Auto-seed error:', err.message);
@@ -82,10 +86,8 @@ app.use(helmet({ crossOriginResourcePolicy: { policy: 'cross-origin' } }));
 app.use(cors({
   origin: function (origin, cb) {
     const allowed = [
-      process.env.CLIENT_URL,
-      'http://localhost:5173',
-      'http://localhost:5154',
-      'https://my-portfolio-4-s0bb.onrender.com', 'https://my-portfoliod-sigma.vercel.app',
+      process.env.CLIENT_URL || 'http://localhost:5173',
+      process.env.ADMIN_URL || 'http://localhost:5154',
     ].filter(Boolean);
     if (!origin || allowed.includes(origin)) return cb(null, true);
     cb(null, true);

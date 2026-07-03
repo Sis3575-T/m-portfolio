@@ -1,7 +1,7 @@
 import axios from 'axios';
 
-const isLocal = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
-const baseURL = isLocal ? 'http://localhost:5001/api' : (localStorage.getItem('api_url') || import.meta.env.VITE_API_URL || 'https://my-portfolio-4-s0bb.onrender.com/api');
+const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5001/api';
+const baseURL = localStorage.getItem('api_url') || API_URL;
 
 const api = axios.create({
   baseURL,

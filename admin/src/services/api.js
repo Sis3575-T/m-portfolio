@@ -1,9 +1,8 @@
 import axios from 'axios';
 
 function getApiUrl() {
-  const isLocal = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
-  if (isLocal) return 'http://localhost:5001/api';
-  return localStorage.getItem('api_url') || import.meta.env.VITE_API_URL || 'https://my-portfolio-4-s0bb.onrender.com/api';
+  const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5001/api';
+  return localStorage.getItem('api_url') || API_URL;
 }
 
 const api = axios.create({

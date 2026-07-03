@@ -30,10 +30,13 @@ router.post('/reset', async (req, res) => {
   try {
     const User = require('../models/User');
     await User.deleteMany({ role: 'admin' });
+    if (!process.env.ADMIN_EMAIL || !process.env.ADMIN_PASSWORD) {
+      return res.status(400).json({ success: false, message: 'ADMIN_EMAIL and ADMIN_PASSWORD must be set in .env' });
+    }
     const user = await User.create({
       name: 'Admin',
-      email: process.env.ADMIN_EMAIL || 'admin@portfolio.com',
-      password: process.env.ADMIN_PASSWORD || 'Admin@123456',
+      email: process.env.ADMIN_EMAIL,
+      password: process.env.ADMIN_PASSWORD,
       role: 'admin',
     });
     res.json({ success: true, message: 'Admin re-seeded', email: user.email });
