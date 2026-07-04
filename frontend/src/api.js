@@ -151,6 +151,10 @@ export const getImageUrl = (path) => {
   if (!path) return '';
   if (path.startsWith('http')) return path;
   if (path.startsWith('/src/')) return path;
+  if (path.startsWith('/uploads/') && import.meta.env.PROD) {
+    const base = (import.meta.env.VITE_API_URL || 'https://m-portfolio-ecby.onrender.com').replace(/\/api$/, '').replace(/\/+$/, '');
+    return base + path;
+  }
   if (path.startsWith('/')) return path;
   return `/${path}`;
 };

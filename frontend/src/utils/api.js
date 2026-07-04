@@ -185,6 +185,12 @@ export const publicApi = {
 
 export function imageUrl(url) {
   if (!url) return '';
-  if (url.startsWith('http') || url.startsWith('/src/') || url.startsWith('/')) return url;
+  if (url.startsWith('http')) return url;
+  if (url.startsWith('/src/')) return url;
+  if (url.startsWith('/uploads/') && import.meta.env.PROD) {
+    const base = (import.meta.env.VITE_API_URL || 'https://m-portfolio-ecby.onrender.com').replace(/\/api$/, '').replace(/\/+$/, '');
+    return base + url;
+  }
+  if (url.startsWith('/')) return url;
   return `/${url}`;
 }
