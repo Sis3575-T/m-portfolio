@@ -1,5 +1,5 @@
 const API_BASE = import.meta.env.PROD
-  ? (import.meta.env.VITE_API_URL || 'https://m-portfolio-ecby.onrender.com/api')
+  ? ((import.meta.env.VITE_API_URL || 'https://m-portfolio-ecby.onrender.com').replace(/\/api$/, '').replace(/\/+$/, '') + '/api')
   : '/api';
 
 function getToken() {

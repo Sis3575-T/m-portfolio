@@ -2,7 +2,8 @@ import axios from 'axios';
 
 function getApiUrl() {
   if (import.meta.env.PROD) {
-    return import.meta.env.VITE_API_URL || 'https://m-portfolio-ecby.onrender.com/api';
+    const base = import.meta.env.VITE_API_URL || 'https://m-portfolio-ecby.onrender.com';
+    return base.replace(/\/api$/, '').replace(/\/+$/, '') + '/api';
   }
   return localStorage.getItem('api_url') || 'http://localhost:5001/api';
 }
