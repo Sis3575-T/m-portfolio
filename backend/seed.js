@@ -217,6 +217,7 @@ async function seed() {
 
     if ((await Setting.countDocuments()) === 0) {
       await Setting.create({
+        name: 'Sisay Temesgen',
         siteTitle: 'Sisay Temesgen — Portfolio',
         siteDescription: 'Full Stack Developer & AI Enthusiast',
         seoTitle: 'Sisay Temesgen | Full Stack Developer',

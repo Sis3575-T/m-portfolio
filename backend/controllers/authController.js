@@ -27,7 +27,7 @@ exports.login = async (req, res) => {
     user.loginCount += 1;
     await user.save();
 
-    const ip = req.ip || req.connection.remoteAddress;
+    const ip = req.ip || req.socket?.remoteAddress || req.connection?.remoteAddress || '';
     const ua = req.headers['user-agent'] || '';
     await ActivityLog.create({ user: user._id, action: 'auth.login', details: { ip, ua }, ip, browser: ua });
 

@@ -80,7 +80,7 @@ function HeroTerminal() {
         addLine('output', 'Passionate about building modern web applications.');
         break;
       case 'skills':
-        addLine('output', 'Frontend: React, TypeScript, Tailwind CSS');
+        addLine('output', 'Frontend: React, JavaScript, Tailwind CSS');
         addLine('output', 'Backend: Node.js, Express, Python');
         addLine('output', 'Database: MongoDB, PostgreSQL');
         addLine('output', 'Tools: Git, Docker, Vite');

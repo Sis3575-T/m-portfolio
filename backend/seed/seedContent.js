@@ -13,6 +13,7 @@ module.exports = async function seedContent() {
   // ── Settings ──────────────────────────────────────────────────────────────
   if ((await Settings.countDocuments()) === 0) {
     await Settings.create({
+      name: 'Sisay Temesgen',
       siteTitle: 'Sisay Temesgen — Full Stack Developer',
       siteDescription: 'Full Stack Developer crafting robust web applications with modern technologies. Specializing in MERN stack, REST APIs, and cloud-native solutions.',
       footerText: 'Crafting digital experiences with clean code and modern architecture.',
@@ -60,7 +61,7 @@ module.exports = async function seedContent() {
   // ── About ─────────────────────────────────────────────────────────────────
   if ((await About.countDocuments()) === 0) {
     await About.create({
-      biography: ``,
+      biography: `I'm a Full Stack Developer and Computer Science student at Bahir Dar University, passionate about building modern, accessible web applications that solve real-world problems. I specialize in the MERN stack and love exploring new technologies.`,
       careerJourney: `My development journey started with self-taught HTML and CSS, gradually expanding into JavaScript and modern frameworks. Through building real projects — from e-commerce platforms to admin dashboards — I've gained hands-on experience with the full software development lifecycle: requirements analysis, system design, implementation, testing, and deployment.
 
 I'm currently pursuing a degree in Computer Science at Bahir Dar University, where I complement academic learning with practical project experience.`,

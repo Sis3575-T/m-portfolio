@@ -1,6 +1,7 @@
 const mongoose = require('mongoose');
 
 const settingsSchema = new mongoose.Schema({
+  name: { type: String, default: 'Sisay Temesgen' },
   siteTitle: { type: String, default: 'Sisay Temesgen — Portfolio' },
   siteDescription: { type: String, default: 'Full Stack Developer & AI Enthusiast' },
   seoTitle: { type: String, default: '' },

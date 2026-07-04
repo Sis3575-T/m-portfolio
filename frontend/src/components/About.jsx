@@ -1,93 +1,77 @@
-import React, { useEffect } from 'react';
+import React from 'react';
 import { getImageUrl } from '../api';
+import './About.css';
+
+const cvUrl = import.meta.env.VITE_CV_URL || '/cv.pdf';
+const googleViewUrl = `https://docs.google.com/viewer?url=${encodeURIComponent(cvUrl)}`;
 
 function About({ settings, sectionTitle, sectionSubtitle }) {
-  const { profilePhoto, shortBio, longBio, professionalTitle, name, city, country, yearsOfExperience, freelanceAvailable, email } = settings || {};
+  const {
+    profilePhoto,
+    shortBio,
+    longBio,
+    name,
+    city,
+    country,
+    yearsOfExperience,
+    freelanceAvailable,
+    email,
+    phone,
+    address,
+  } = settings || {};
 
-  const pageStyles = settings?.pageStyles?.about || {};
-  const sectionStyle = {
-    ...(pageStyles.bgColor ? { backgroundColor: pageStyles.bgColor } : {}),
-    ...(pageStyles.textColor ? { color: pageStyles.textColor } : {}),
-    ...(pageStyles.textAlign ? { textAlign: pageStyles.textAlign } : {}),
-    ...(pageStyles.fontFamily ? { fontFamily: pageStyles.fontFamily } : {}),
-    ...(pageStyles.paddingY === 'small' ? { paddingTop: '2rem', paddingBottom: '2rem' } : {}),
-    ...(pageStyles.paddingY === 'medium' ? { paddingTop: '4rem', paddingBottom: '4rem' } : {}),
-    ...(pageStyles.paddingY === 'large' ? { paddingTop: '6rem', paddingBottom: '6rem' } : {}),
-    ...(pageStyles.paddingY === 'xlarge' ? { paddingTop: '8rem', paddingBottom: '8rem' } : {}),
-  };
-
-  useEffect(() => {
-    if (pageStyles.customCss) {
-      const id = 'about-custom-css';
-      let el = document.getElementById(id);
-      if (!el) { el = document.createElement('style'); el.id = id; document.head.appendChild(el); }
-      el.textContent = pageStyles.customCss;
-      return () => { const e = document.getElementById(id); if (e) e.remove(); };
-    }
-  }, [pageStyles.customCss]);
-
-  const summary = longBio || shortBio || 'I am a software engineer focused on building modern, accessible, and maintainable web applications with a strong emphasis on quality and user experience.';
-  const highlights = [
-    'I enjoy designing systems that are simple to maintain and pleasant to use.',
-    'My work spans front-end experiences, back-end APIs, and full product delivery.',
-    'I value clear communication, thoughtful architecture, and continuous improvement.',
-  ];
+  const initials = name
+    ? name.split(' ').map(n => n[0]).join('').slice(0, 2).toUpperCase()
+    : 'ST';
 
   return (
-    <section className="about section" id="about" style={sectionStyle}>
+    <section className="about section" id="about">
       <div className="container">
         <div className="section-header">
+          <span className="section-tag">About</span>
           <h2 className="section-title">{sectionTitle || 'About Me'}</h2>
-          {sectionSubtitle && <p className="section-subtitle">{sectionSubtitle}</p>}
-          <div className="section-divider" />
+          <div className="section-line" />
         </div>
-        <div className="about-content">
-          <div className="about-image-col">
-            <div className="about-image-wrapper">
-              {profilePhoto ? (
-                <img src={getImageUrl(profilePhoto)} alt={name || 'About'} className="about-image" />
-              ) : (
-                <div className="about-image-placeholder">
-                  {name ? name.split(' ').map(n => n[0]).join('').slice(0, 2).toUpperCase() : 'ME'}
-                </div>
-              )}
+
+        <div className="about-layout">
+          <p className="about-bio">
+            {longBio || shortBio || 'I build polished digital products that blend thoughtful design with reliable engineering.'}
+          </p>
+
+          <div className="about-facts">
+            <div className="about-fact">
+              <div className="fact-icon">📍</div>
+              <div>
+                <p className="fact-label">Location</p>
+                <p className="fact-value">{city || 'Bahir Dar'}, {country || 'Ethiopia'}</p>
+              </div>
+            </div>
+            <div className="about-fact">
+              <div className="fact-icon">📧</div>
+              <div>
+                <p className="fact-label">Email</p>
+                <p className="fact-value">{email || 'sisay3575@gmail.com'}</p>
+              </div>
+            </div>
+            <div className="about-fact">
+              <div className="fact-icon">💼</div>
+              <div>
+                <p className="fact-label">Experience</p>
+                <p className="fact-value">{yearsOfExperience || '2+'} Years</p>
+              </div>
+            </div>
+            <div className="about-fact">
+              <div className="fact-icon">🚀</div>
+              <div>
+                <p className="fact-label">Status</p>
+                <p className="fact-value">{freelanceAvailable !== false ? 'Open for work' : 'Busy'}</p>
+              </div>
             </div>
           </div>
-          <div className="about-text-col">
-            {name && <h3 className="about-name">{name}</h3>}
-            {professionalTitle && <p className="about-role">{professionalTitle}</p>}
-            <p className="about-bio">{summary}</p>
-            <ul className="about-highlights">
-              {highlights.map((item) => (
-                <li key={item}>{item}</li>
-              ))}
-            </ul>
-            <div className="about-stats-grid">
-              {yearsOfExperience && (
-                <div className="about-stat">
-                  <span className="about-stat-number">{yearsOfExperience}</span>
-                  <span className="about-stat-label">Years Experience</span>
-                </div>
-              )}
-              {freelanceAvailable !== undefined && (
-                <div className="about-stat">
-                  <span className="about-stat-number">{freelanceAvailable ? 'Open' : 'Busy'}</span>
-                  <span className="about-stat-label">Availability</span>
-                </div>
-              )}
-              {city && country && (
-                <div className="about-stat">
-                  <span className="about-stat-number">{city}</span>
-                  <span className="about-stat-label">{country}</span>
-                </div>
-              )}
-              {email && (
-                <div className="about-stat">
-                  <span className="about-stat-number">Email</span>
-                  <span className="about-stat-label">Available</span>
-                </div>
-              )}
-            </div>
+
+          <div className="about-actions">
+            <a href={googleViewUrl} target="_blank" rel="noopener noreferrer" className="btn btn-secondary">View CV</a>
+            <a href={cvUrl} download="Sisay_Temesgen_CV.pdf" className="btn btn-primary">Download CV</a>
           </div>
         </div>
       </div>

@@ -7,7 +7,7 @@ import {
   FaAngular, FaVuejs, FaAws, FaLinux, FaJava
 } from 'react-icons/fa';
 import {
-  SiTailwindcss, SiMongodb, SiPostgresql, SiExpress, SiTypescript, SiVite, SiPostman,
+  SiTailwindcss, SiMongodb, SiPostgresql, SiExpress, SiVite, SiPostman,
   SiNextdotjs, SiRedux, SiGraphql, SiFirebase, SiRedis, SiKubernetes, SiJenkins,
   SiTerraform, SiGo, SiRust, SiSwift, SiKotlin, SiFlutter, SiDart, SiMysql,
   SiSqlite, SiPrisma, SiOracle, SiMui, SiBootstrap, SiSass, SiJquery, SiWebpack,
@@ -20,7 +20,6 @@ function skillIcon(name) {
     'React': <FaReact />,
     'Angular': <FaAngular />,
     'Vue.js': <FaVuejs />,
-    'TypeScript': <SiTypescript />,
     'JavaScript': <FaJs />,
     'HTML5': <FaHtml5 />,
     'CSS3': <FaCss3Alt />,
@@ -87,7 +86,6 @@ function skillColor(name) {
     'React': '#61DAFB',
     'Angular': '#DD0031',
     'Vue.js': '#4FC08D',
-    'TypeScript': '#3178C6',
     'JavaScript': '#F7DF1E',
     'HTML5': '#E34F26',
     'CSS3': '#1572B6',

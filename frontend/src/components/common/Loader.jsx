@@ -35,7 +35,7 @@ function LoadingScreen() {
               width: 56,
               height: 56,
               borderRadius: 14,
-              background: 'linear-gradient(135deg, var(--primary-color), var(--accent-color))',
+              background: 'var(--primary-color)',
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
@@ -68,7 +68,7 @@ function LoadingScreen() {
             style={{
               height: 2,
               borderRadius: 1,
-              background: 'linear-gradient(90deg, var(--primary-color), var(--accent-color))',
+              background: 'var(--primary-color)',
             }}
           />
         </motion.div>

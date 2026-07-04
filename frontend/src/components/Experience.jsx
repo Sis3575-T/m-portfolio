@@ -1,78 +1,81 @@
-import React, { useEffect } from 'react';
+import { useState, useEffect } from 'react';
+import { motion } from 'framer-motion';
 
-function formatDate(dateStr) {
-  if (!dateStr) return 'Present';
-  const d = new Date(dateStr);
-  return d.toLocaleDateString('en-US', { year: 'numeric', month: 'short' });
+function formatDate(d) {
+  if (!d) return 'Present';
+  return new Date(d).toLocaleDateString('en-US', { year: 'numeric', month: 'short' });
 }
 
 function Experience({ experience, settings, sectionTitle, sectionSubtitle }) {
-  if (!experience || experience.length === 0) return null;
-
-  const pageStyles = settings?.pageStyles?.experience || {};
-  const sectionStyle = {
-    ...(pageStyles.bgColor ? { backgroundColor: pageStyles.bgColor } : {}),
-    ...(pageStyles.textColor ? { color: pageStyles.textColor } : {}),
-    ...(pageStyles.fontFamily ? { fontFamily: pageStyles.fontFamily } : {}),
-    ...(pageStyles.paddingY === 'small' ? { paddingTop: '2rem', paddingBottom: '2rem' } : {}),
-    ...(pageStyles.paddingY === 'medium' ? { paddingTop: '4rem', paddingBottom: '4rem' } : {}),
-    ...(pageStyles.paddingY === 'large' ? { paddingTop: '6rem', paddingBottom: '6rem' } : {}),
-    ...(pageStyles.paddingY === 'xlarge' ? { paddingTop: '8rem', paddingBottom: '8rem' } : {}),
-  };
+  const [items, setItems] = useState([]);
 
   useEffect(() => {
-    if (pageStyles.customCss) {
-      const id = 'experience-custom-css';
-      let el = document.getElementById(id);
-      if (!el) { el = document.createElement('style'); el.id = id; document.head.appendChild(el); }
-      el.textContent = pageStyles.customCss;
-      return () => { const e = document.getElementById(id); if (e) e.remove(); };
+    if (experience && experience.length > 0) {
+      const sorted = [...experience].sort((a, b) => new Date(b.startDate || 0) - new Date(a.startDate || 0));
+      setItems(sorted);
     }
-  }, [pageStyles.customCss]);
+  }, [experience]);
+
+  if (items.length === 0) return null;
 
   return (
-    <section className="experience section" id="experience" style={sectionStyle}>
-      <div className="container">
-        <div className="section-header">
-          <h2 className="section-title">{sectionTitle || 'Experience'}</h2>
-          {sectionSubtitle && <p className="section-subtitle">{sectionSubtitle}</p>}
-          <div className="section-divider" />
-        </div>
-        <div className="timeline">
-          {experience.map((item, index) => (
-            <div key={item._id} className={`timeline-item${index % 2 === 0 ? ' left' : ' right'}`}>
-              <div className="timeline-dot" />
-              <div className="timeline-content">
-                <div className="timeline-header">
-                  {item.logo && (
-                    <img src={item.logo.startsWith('http') ? item.logo : item.logo} alt={item.company} className="timeline-logo" />
-                  )}
-                  <div>
-                    <h3 className="timeline-position">{item.position}</h3>
-                    <p className="timeline-company">{item.company}</p>
-                  </div>
-                </div>
-                <div className="timeline-date">
-                  {formatDate(item.startDate)} — {item.current ? 'Present' : formatDate(item.endDate)}
-                </div>
-                {item.description && <p className="timeline-desc">{item.description}</p>}
-                {item.responsibilities && item.responsibilities.length > 0 && (
-                  <ul className="timeline-list">
-                    {item.responsibilities.map((r, i) => (
-                      <li key={i}>{r}</li>
-                    ))}
-                  </ul>
-                )}
-                {item.technologies && item.technologies.length > 0 && (
-                  <div className="timeline-tags">
-                    {item.technologies.map((tech, i) => (
-                      <span key={i} className="tag">{tech}</span>
-                    ))}
-                  </div>
-                )}
-              </div>
+    <section className="resume section" id="experience">
+      <div className="container resume-container">
+        <motion.div
+          initial={{ opacity: 0, y: 36 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true, margin: '-80px' }}
+          transition={{ duration: 0.6 }}
+        >
+          <div className="section-header">
+            <span className="section-tag">Experience</span>
+            <h2 className="section-title">{sectionTitle || 'My Journey'}</h2>
+            {sectionSubtitle && <p className="section-subtitle">{sectionSubtitle}</p>}
+            <div className="section-line" />
+          </div>
+        </motion.div>
+        <div className="resume-grid">
+          <div className="w-full" style={{ maxWidth: '600px' }}>
+            <div className="timeline">
+              {items.map((item, idx) => {
+                const period = `${formatDate(item.startDate)} — ${formatDate(item.endDate)}`;
+                const points = item.responsibilities?.length > 0
+                  ? item.responsibilities
+                  : item.achievements?.length > 0
+                    ? item.achievements
+                    : item.description
+                      ? [item.description]
+                      : [];
+
+                return (
+                  <motion.div
+                    key={item._id}
+                    initial={{ opacity: 0, x: -20 }}
+                    whileInView={{ opacity: 1, x: 0 }}
+                    viewport={{ once: true, margin: '-80px' }}
+                    transition={{ duration: 0.5, delay: idx * 0.1 }}
+                    className="timeline-item"
+                  >
+                    <div className="timeline-dot" />
+                    <div className="timeline-content">
+                      <span className="timeline-date">{period}</span>
+                      <h3 className="timeline-role">{item.position}</h3>
+                      <div className="timeline-company">
+                        {item.company}{item.location ? ` — ${item.location}` : ''}
+                      </div>
+                      {points.length > 0 && (
+                        <ul className="timeline-points">
+                          {points.slice(0, 5).map((point, i) => (
+                            <li key={i}>{point}</li>
+                          ))}
+                        </ul>
+                      )}
+                    </div>
+                  </motion.div>
+                );
+              })}
             </div>
-          ))}
+          </div>
         </div>
       </div>
     </section>

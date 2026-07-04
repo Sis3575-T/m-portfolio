@@ -73,7 +73,8 @@ router.get('/about', async (req, res) => {
 // Hero
 router.get('/hero', async (req, res) => {
   try {
-    const hero = await Hero.findOne({ status: 'published' });
+    let hero = await Hero.findOne({ status: 'published' });
+    if (!hero) hero = await Hero.findOne({ isActive: true });
     res.json({ success: true, data: hero });
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });

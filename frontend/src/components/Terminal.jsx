@@ -30,7 +30,7 @@ const FALLBACKS = {
   ],
 };
 
-function Terminal({ onClose }) {
+function Terminal({ onClose, inline = false }) {
   const navigate = useNavigate();
   const [lines, setLines] = useState([]);
   const [input, setInput] = useState('');
@@ -86,10 +86,11 @@ function Terminal({ onClose }) {
   const address = settings?.address || hero?.location || FALLBACKS.address;
 
   useEffect(() => {
+    if (inline) return;
     const onKey = (e) => { if (e.key === 'Escape') onClose(); };
     window.addEventListener('keydown', onKey);
     return () => window.removeEventListener('keydown', onKey);
-  }, [onClose]);
+  }, [onClose, inline]);
 
   const addLine = useCallback((text, type = 'output', onClick) => {
     setLines(prev => [...prev, { text, type, onClick }]);
@@ -357,6 +358,62 @@ function Terminal({ onClose }) {
     inputRef.current?.focus();
   };
 
+  const terminalContent = (
+    <div className={`terminal-window${inline ? ' terminal-window-inline' : ''}`} onClick={e => inline ? null : e.stopPropagation()}>
+      <div className="terminal-header">
+        <div className="terminal-dots">
+          <span className="terminal-dot red" />
+          <span className="terminal-dot yellow" />
+          <span className="terminal-dot green" />
+        </div>
+        <span className="terminal-title">
+          <FaTerminal size={12} /> Terminal — {name.toLowerCase().replace(/\s+/g, '')}@portfolio:~$
+        </span>
+        <button className="terminal-close" onClick={onClose} aria-label="Close terminal">
+          <FaTimes size={14} />
+        </button>
+      </div>
+
+      <div className="terminal-body" onClick={handleContainerClick}>
+        {lines.map((line, i) => (
+          <div key={i} className={`terminal-line terminal-line-${line.type || 'output'}`} onClick={line.onClick} style={line.onClick ? { cursor: 'pointer' } : undefined}>
+            {line.text}
+            {line.typing && <span className="terminal-cursor-blink">▊</span>}
+          </div>
+        ))}
+
+        {!bootDone && (
+          <div className="terminal-line terminal-line-boot">
+            <span className="terminal-cursor-blink">▊</span>
+          </div>
+        )}
+
+        {bootDone && (
+          <div className="terminal-input-line">
+            <span className="terminal-prompt">$ </span>
+            <input
+              ref={inputRef}
+              type="text"
+              className="terminal-input"
+              value={input}
+              onChange={e => setInput(e.target.value)}
+              onKeyDown={handleKeyDown}
+              autoFocus
+              spellCheck={false}
+              autoComplete="off"
+            />
+          </div>
+        )}
+
+        <div ref={endRef} />
+      </div>
+    </div>
+  );
+
+  if (inline) {
+    return terminalContent;
+  }
+
   return (
     <motion.div
       className="terminal-overlay"
@@ -366,55 +423,7 @@ function Terminal({ onClose }) {
       transition={{ duration: 0.3 }}
       onClick={handleContainerClick}
     >
-      <div className="terminal-window" onClick={e => e.stopPropagation()}>
-        <div className="terminal-header">
-          <div className="terminal-dots">
-            <span className="terminal-dot red" />
-            <span className="terminal-dot yellow" />
-            <span className="terminal-dot green" />
-          </div>
-          <span className="terminal-title">
-            <FaTerminal size={12} /> Terminal — {name.toLowerCase().replace(/\s+/g, '')}@portfolio:~$
-          </span>
-          <button className="terminal-close" onClick={onClose} aria-label="Close terminal">
-            <FaTimes size={14} />
-          </button>
-        </div>
-
-        <div className="terminal-body">
-          {lines.map((line, i) => (
-            <div key={i} className={`terminal-line terminal-line-${line.type || 'output'}`} onClick={line.onClick} style={line.onClick ? { cursor: 'pointer' } : undefined}>
-              {line.text}
-              {line.typing && <span className="terminal-cursor-blink">▊</span>}
-            </div>
-          ))}
-
-          {!bootDone && (
-            <div className="terminal-line terminal-line-boot">
-              <span className="terminal-cursor-blink">▊</span>
-            </div>
-          )}
-
-          {bootDone && (
-            <div className="terminal-input-line">
-              <span className="terminal-prompt">$ </span>
-              <input
-                ref={inputRef}
-                type="text"
-                className="terminal-input"
-                value={input}
-                onChange={e => setInput(e.target.value)}
-                onKeyDown={handleKeyDown}
-                autoFocus
-                spellCheck={false}
-                autoComplete="off"
-              />
-            </div>
-          )}
-
-          <div ref={endRef} />
-        </div>
-      </div>
+      {terminalContent}
     </motion.div>
   );
 }

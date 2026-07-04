@@ -11,11 +11,12 @@ const User = require('./models/User');
 
 const seedAdmin = async () => {
   try {
-    if ((await User.countDocuments({ role: 'admin' })) === 0) {
-      if (!process.env.ADMIN_EMAIL || !process.env.ADMIN_PASSWORD) {
-        console.warn('ADMIN_EMAIL and ADMIN_PASSWORD must be set in .env to auto-seed admin');
-        return;
-      }
+    if (!process.env.ADMIN_EMAIL || !process.env.ADMIN_PASSWORD) {
+      console.warn('ADMIN_EMAIL and ADMIN_PASSWORD must be set in .env to auto-seed admin');
+      return;
+    }
+    const existing = await User.findOne({ email: process.env.ADMIN_EMAIL });
+    if (!existing) {
       await User.create({
         name: 'Admin',
         email: process.env.ADMIN_EMAIL,
@@ -23,6 +24,11 @@ const seedAdmin = async () => {
         role: 'admin',
       });
       console.log('Admin auto-seeded:', process.env.ADMIN_EMAIL);
+    } else {
+      existing.role = 'admin';
+      existing.password = process.env.ADMIN_PASSWORD;
+      await existing.save();
+      console.log('Admin synced from .env:', process.env.ADMIN_EMAIL);
     }
   } catch (err) {
     console.error('Auto-seed error:', err.message);

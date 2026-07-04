@@ -57,8 +57,11 @@ exports.updateHero = async (req, res) => {
     if (typeof body.highlights === 'string') {
       try { body.highlights = JSON.parse(body.highlights); } catch {}
     }
-    const filter = req.params.id ? { _id: req.params.id } : { isActive: true };
-    const hero = await Hero.findOneAndUpdate(filter, body, { new: true, runValidators: true, upsert: true });
+    body.status = 'published';
+    const filter = req.params.id ? { _id: req.params.id } : body._id ? { _id: body._id } : { isActive: true };
+    delete body._id;
+    delete body.__v;
+    const hero = await Hero.findOneAndUpdate(filter, body, { new: true, runValidators: true });
     if (!hero) return res.status(404).json({ success: false, message: 'Hero not found' });
     res.json({ success: true, data: hero });
   } catch (error) {

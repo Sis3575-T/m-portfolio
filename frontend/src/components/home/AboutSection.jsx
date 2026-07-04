@@ -71,7 +71,7 @@ function AboutSection() {
     title: [t('about.cardFocus'), t('about.cardApproach'), t('about.cardEducation'), t('about.cardGoal'), t('about.cardAchievement'), t('about.cardMilestone')][i % 6],
     content: achievement,
   })) : [
-    { icon: <FiCode size={22} />, title: 'Focus', content: 'Full-Stack Web Development with modern JavaScript/TypeScript ecosystems.' },
+    { icon: <FiCode size={22} />, title: 'Focus', content: 'Full-Stack Web Development with modern JavaScript ecosystems.' },
     { icon: <FiLayers size={22} />, title: 'Approach', content: 'Break problems down, research solutions, iterate to quality, and ship with confidence.' },
     { icon: <FiDatabase size={22} />, title: 'Education', content: 'B.Sc. Computer Science at Bahir Dar University — building a strong CS foundation.' },
     { icon: <FiTrendingUp size={22} />, title: 'Goal', content: 'Create software that makes a meaningful impact through clean architecture.' },

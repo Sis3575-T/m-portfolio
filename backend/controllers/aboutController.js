@@ -39,8 +39,10 @@ exports.updateAbout = async (req, res) => {
     delete body.title;
     delete body.image;
     delete body.imageFile;
-    const filter = req.params.id ? { _id: req.params.id } : { isActive: true };
-    const about = await About.findOneAndUpdate(filter, body, { new: true, runValidators: true, upsert: true });
+    delete body._id;
+    delete body.__v;
+    const filter = req.params.id ? { _id: req.params.id } : body._id ? { _id: body._id } : { isActive: true };
+    const about = await About.findOneAndUpdate(filter, body, { new: true, runValidators: true });
     if (!about) return res.status(404).json({ success: false, message: 'About not found' });
     res.json({ success: true, data: about });
   } catch (error) {
