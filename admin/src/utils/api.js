@@ -1,7 +1,9 @@
 import axios from 'axios';
 
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5001/api';
-const baseURL = localStorage.getItem('api_url') || API_URL;
+const API_URL = import.meta.env.PROD
+  ? (import.meta.env.VITE_API_URL || 'https://m-portfolio-ecby.onrender.com/api')
+  : (localStorage.getItem('api_url') || 'http://localhost:5001/api');
+const baseURL = API_URL;
 
 const api = axios.create({
   baseURL,
