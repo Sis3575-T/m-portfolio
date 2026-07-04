@@ -23,6 +23,11 @@ exports.getHeroById = async (req, res) => {
 exports.createHero = async (req, res) => {
   try {
     const body = { ...req.body };
+    if (body.shortBio) {
+      body.introduction = body.shortBio;
+      delete body.shortBio;
+    }
+    if (body.title) body.role = body.title;
     if (req.file) {
       body.avatar = '/uploads/' + req.file.filename;
     }
@@ -45,6 +50,11 @@ exports.createHero = async (req, res) => {
 exports.updateHero = async (req, res) => {
   try {
     const body = { ...req.body };
+    if (body.shortBio) {
+      body.introduction = body.shortBio;
+      delete body.shortBio;
+    }
+    if (body.title) body.role = body.title;
     if (req.file) {
       body.avatar = '/uploads/' + req.file.filename;
     }
