@@ -1,4 +1,6 @@
-const API_BASE = import.meta.env.VITE_API_URL || '/api';
+const API_BASE = import.meta.env.PROD
+  ? (import.meta.env.VITE_API_URL || 'https://m-portfolio-ecby.onrender.com/api')
+  : '/api';
 
 function getToken() {
   return localStorage.getItem('portfolio_admin_token');
