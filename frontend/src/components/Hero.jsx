@@ -1,8 +1,26 @@
 import React, { useState, useEffect } from 'react';
 import { getImageUrl } from '../api';
+import { useTheme } from '../context/ThemeContext';
 import Terminal from './Terminal';
 
+function useSectionStyles(settings, key) {
+  const { theme } = useTheme();
+  const ps = settings?.pageStyles?.[key] || {};
+  useEffect(() => {
+    if (ps.customCss) {
+      const el = document.createElement('style');
+      el.id = `custom-css-${key}`;
+      el.textContent = ps.customCss;
+      document.head.appendChild(el);
+      return () => el.remove();
+    }
+  }, [ps.customCss, key]);
+  if (theme === 'dark') return { ...ps, bgColor: '' };
+  return ps;
+}
+
 function Hero({ hero, settings }) {
+  const ps = useSectionStyles(settings, 'hero');
   const [terminalOpen, setTerminalOpen] = useState(false);
   const [imgError, setImgError] = useState(false);
   const name = hero?.name || settings?.name || 'Sisay Temesgen';
@@ -49,7 +67,15 @@ function Hero({ hero, settings }) {
   }, [displayText, isDeleting, roleIndex, roles]);
 
   return (
-    <section className="hero section" id="home">
+    <section className="hero section" id="home" style={{
+      ...(ps.bgColor ? { backgroundColor: ps.bgColor } : {}),
+      ...(ps.textColor ? { color: ps.textColor } : {}),
+      ...(ps.fontFamily ? { fontFamily: ps.fontFamily } : {}),
+      ...(ps.paddingY === 'small' ? { paddingTop: '2rem', paddingBottom: '2rem' } : {}),
+      ...(ps.paddingY === 'medium' ? { paddingTop: '4rem', paddingBottom: '4rem' } : {}),
+      ...(ps.paddingY === 'large' ? { paddingTop: '6rem', paddingBottom: '6rem' } : {}),
+      ...(ps.paddingY === 'xlarge' ? { paddingTop: '8rem', paddingBottom: '8rem' } : {}),
+    }}>
       <div className="hero-blob hero-blob-1" />
       <div className="hero-blob hero-blob-2" />
       <div className="container hero-layout">

@@ -1,4 +1,5 @@
-const Visitor = require('../models/Visitor');
+const VisitorSession = require('../models/VisitorSession');
+const VisitorEvent = require('../models/VisitorEvent');
 const Message = require('../models/Message');
 const Project = require('../models/Project');
 
@@ -20,31 +21,42 @@ exports.getDashboardStats = async (req, res) => {
     const df = dateFilter(range);
     const todayStart = new Date(new Date().getFullYear(), new Date().getMonth(), new Date().getDate());
     const weekStart = new Date(todayStart.getTime() - 6 * 86400000);
+    const monthStart = new Date(new Date().getFullYear(), new Date().getMonth(), 1);
+    const fiveMinAgo = new Date(Date.now() - 300000);
 
     const [
-      totalVisitors, uniqueSessions, todayVisitors, weeklyVisitors, monthlyVisitors,
-      onlineNow, messages, projects,
+      totalSessions, uniqueVisitors, todaySessions, weeklySessions, monthlySessions,
+      onlineNow, allSessions, messages, projects,
     ] = await Promise.all([
-      Visitor.countDocuments().catch(() => 0),
-      Visitor.distinct('sessionId').catch(() => []),
-      Visitor.countDocuments({ createdAt: { $gte: todayStart } }).catch(() => 0),
-      Visitor.countDocuments({ createdAt: { $gte: weekStart } }).catch(() => 0),
-      Visitor.countDocuments({ createdAt: { $gte: new Date(new Date().getFullYear(), new Date().getMonth(), 1) } }).catch(() => 0),
-      Visitor.countDocuments({ lastActivity: { $gte: new Date(Date.now() - 300000) } }).catch(() => 0),
+      VisitorSession.countDocuments().catch(() => 0),
+      VisitorSession.distinct('visitorId').catch(() => []),
+      VisitorSession.countDocuments({ createdAt: { $gte: todayStart } }).catch(() => 0),
+      VisitorSession.countDocuments({ createdAt: { $gte: weekStart } }).catch(() => 0),
+      VisitorSession.countDocuments({ createdAt: { $gte: monthStart } }).catch(() => 0),
+      VisitorSession.countDocuments({ isActive: true, lastActiveAt: { $gte: fiveMinAgo } }).catch(() => 0),
+      VisitorSession.find({ createdAt: { $gte: df } }).select('duration pageViews isReturning').lean().catch(() => []),
       Message.countDocuments().catch(() => 0),
       Project.countDocuments({ isActive: true }).catch(() => 0),
     ]);
 
-    const returningVisitors = Math.max(0, totalVisitors - (uniqueSessions.length || 0));
-    const bounceRate = totalVisitors > 0 ? Math.round((returningVisitors / totalVisitors) * 100) : 0;
+    const returningVisitors = allSessions.filter(s => s.isReturning).length;
+    const totalPageViews = allSessions.reduce((sum, s) => sum + (s.pageViews || 0), 0);
+    const sessionsWithDuration = allSessions.filter(s => s.duration > 0);
+    const avgSessionDuration = sessionsWithDuration.length > 0
+      ? Math.round(sessionsWithDuration.reduce((sum, s) => sum + s.duration, 0) / sessionsWithDuration.length)
+      : 0;
+    const bounceRate = allSessions.length > 0
+      ? Math.round((allSessions.filter(s => (s.pageViews || 0) <= 1).length / allSessions.length) * 100)
+      : 0;
 
     res.json({
       success: true,
       data: {
-        totalVisitors, onlineNow, todayVisitors, weeklyVisitors, monthlyVisitors,
-        uniqueVisitors: uniqueSessions.length || 0,
+        totalVisitors: totalSessions, onlineNow, todayVisitors: todaySessions,
+        weeklyVisitors: weeklySessions, monthlyVisitors: monthlySessions,
+        uniqueVisitors: uniqueVisitors.length || 0,
         returningVisitors, bounceRate: Math.min(100, bounceRate),
-        totalPageViews: 0, avgSessionDuration: 0, totalDownloads: 0,
+        totalPageViews, avgSessionDuration, totalDownloads: 0,
         totalMessages: messages, activeProjects: projects,
       },
     });
@@ -63,9 +75,9 @@ exports.getVisitorStats = async (req, res) => {
     else if (range === '1y') { start = new Date(now.getTime() - 365 * 86400000); fmt = { $dateToString: { format: '%Y-%m', date: '$createdAt' } }; }
     else { start = new Date(now.getTime() - 30 * 86400000); fmt = { $dateToString: { format: '%Y-%m-%d', date: '$createdAt' } }; }
 
-    const stats = await Visitor.aggregate([
+    const stats = await VisitorSession.aggregate([
       { $match: { createdAt: { $gte: start } } },
-      { $group: { _id: fmt, count: { $sum: 1 }, unique: { $addToSet: '$sessionId' }, pageViews: { $sum: '$pageViews' } } },
+      { $group: { _id: fmt, count: { $sum: 1 }, unique: { $addToSet: '$visitorId' }, pageViews: { $sum: '$pageViews' } } },
       { $sort: { _id: 1 } },
     ]).catch(() => []);
 
@@ -77,11 +89,11 @@ exports.getVisitorStats = async (req, res) => {
 
 exports.getVisitorLocations = async (req, res) => {
   try {
-    const countries = await Visitor.aggregate([
-      { $group: { _id: '$country', count: { $sum: 1 }, unique: { $addToSet: '$sessionId' } } },
+    const countries = await VisitorSession.aggregate([
+      { $group: { _id: '$country', count: { $sum: 1 }, unique: { $addToSet: '$visitorId' } } },
       { $sort: { count: -1 } }, { $limit: 20 },
     ]).catch(() => []);
-    const cities = await Visitor.aggregate([
+    const cities = await VisitorSession.aggregate([
       { $group: { _id: { country: '$country', city: '$city' }, count: { $sum: 1 } } },
       { $sort: { count: -1 } }, { $limit: 20 },
     ]).catch(() => []);
@@ -101,9 +113,9 @@ exports.getVisitorLocations = async (req, res) => {
 exports.getDeviceStats = async (req, res) => {
   try {
     const df = dateFilter(req.query.range || '30d');
-    const devices = await Visitor.aggregate([
+    const devices = await VisitorSession.aggregate([
       { $match: { createdAt: { $gte: df } } },
-      { $group: { _id: '$device', value: { $sum: 1 } } },
+      { $group: { _id: '$deviceType', value: { $sum: 1 } } },
       { $sort: { value: -1 } },
     ]).catch(() => []);
     const total = devices.reduce((s, d) => s + d.value, 0);
@@ -116,7 +128,7 @@ exports.getDeviceStats = async (req, res) => {
 exports.getBrowserStats = async (req, res) => {
   try {
     const df = dateFilter(req.query.range || '30d');
-    const browsers = await Visitor.aggregate([
+    const browsers = await VisitorSession.aggregate([
       { $match: { createdAt: { $gte: df } } },
       { $group: { _id: '$browser', value: { $sum: 1 } } },
       { $sort: { value: -1 } },
@@ -131,7 +143,7 @@ exports.getBrowserStats = async (req, res) => {
 exports.getOSStats = async (req, res) => {
   try {
     const df = dateFilter(req.query.range || '30d');
-    const os = await Visitor.aggregate([
+    const os = await VisitorSession.aggregate([
       { $match: { createdAt: { $gte: df } } },
       { $group: { _id: '$os', value: { $sum: 1 } } },
       { $sort: { value: -1 } },
@@ -146,10 +158,10 @@ exports.getOSStats = async (req, res) => {
 exports.getPageStats = async (req, res) => {
   try {
     const df = dateFilter(req.query.range || '30d');
-    const pages = await Visitor.aggregate([
+    const pages = await VisitorSession.aggregate([
       { $match: { createdAt: { $gte: df } } },
       { $unwind: { path: '$pages', preserveNullAndEmptyArrays: false } },
-      { $group: { _id: '$pages.path', views: { $sum: 1 }, unique: { $addToSet: '$sessionId' }, totalDuration: { $sum: '$pages.duration' } } },
+      { $group: { _id: '$pages.url', views: { $sum: 1 }, unique: { $addToSet: '$visitorId' }, totalDuration: { $sum: '$pages.duration' } } },
       { $sort: { views: -1 } },
     ]).catch(() => []);
     res.json({ success: true, data: pages.map((p) => ({ path: p._id || '/', views: p.views, unique: p.unique.length, avgTime: p.views > 0 ? Math.round(p.totalDuration / p.views) : 0 })) });
@@ -161,7 +173,7 @@ exports.getPageStats = async (req, res) => {
 exports.getReferrerStats = async (req, res) => {
   try {
     const df = dateFilter(req.query.range || '30d');
-    const referrers = await Visitor.aggregate([
+    const referrers = await VisitorSession.aggregate([
       { $match: { createdAt: { $gte: df } } },
       { $group: { _id: '$referrer', value: { $sum: 1 } } },
       { $sort: { value: -1 } },
@@ -176,10 +188,10 @@ exports.getReferrerStats = async (req, res) => {
 exports.getSessionStats = async (req, res) => {
   try {
     const df = dateFilter(req.query.range || '30d');
-    const sessions = await Visitor.find(
-      { createdAt: { $gte: df }, sessionDuration: { $gt: 0 } },
-      'sessionId sessionDuration pageViews country device browser createdAt'
-    ).sort({ sessionDuration: -1 }).limit(100).lean().catch(() => []);
+    const sessions = await VisitorSession.find(
+      { createdAt: { $gte: df }, duration: { $gt: 0 } },
+      'sessionId duration pageViews country browser deviceType os createdAt'
+    ).sort({ duration: -1 }).limit(100).lean().catch(() => []);
     res.json({ success: true, data: { sessions, avgDuration: 0, maxDuration: 0, totalSessions: 0 } });
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });
@@ -189,18 +201,19 @@ exports.getSessionStats = async (req, res) => {
 exports.getActiveVisitors = async (req, res) => {
   try {
     const fiveMinAgo = new Date(Date.now() - 300000);
-    const active = await Visitor.find(
-      { lastActivity: { $gte: fiveMinAgo } },
-      'sessionId country city device browser pages lastActivity referrer ip'
-    ).sort({ lastActivity: -1 }).limit(50).lean().catch(() => []);
+    const active = await VisitorSession.find(
+      { isActive: true, lastActiveAt: { $gte: fiveMinAgo } },
+      'sessionId country city deviceType browser pages lastActiveAt referrer'
+    ).sort({ lastActiveAt: -1 }).limit(50).lean().catch(() => []);
     res.json({
       success: true,
       data: {
         count: active.length,
         visitors: active.map((v) => ({
           id: v._id, sessionId: v.sessionId, country: v.country, city: v.city,
-          device: v.device, browser: v.browser, currentPage: v.pages?.length > 0 ? v.pages[v.pages.length - 1].path : '/',
-          lastActivity: v.lastActivity, referrer: v.referrer, ip: v.ip,
+          device: v.deviceType, browser: v.browser,
+          currentPage: v.pages?.length > 0 ? v.pages[v.pages.length - 1].url : '/',
+          lastActivity: v.lastActiveAt, referrer: v.referrer,
         })),
       },
     });
@@ -212,18 +225,26 @@ exports.getActiveVisitors = async (req, res) => {
 exports.getLiveFeed = async (req, res) => {
   try {
     const tenMinAgo = new Date(Date.now() - 600000);
-    const recent = await Visitor.find(
+    const recent = await VisitorSession.find(
       { createdAt: { $gte: tenMinAgo } },
-      'country city device browser pages actions createdAt lastActivity downloads contactSubmissions'
+      'country city deviceType browser pages createdAt lastActiveAt resumeDownloads contactSubmissions'
     ).sort({ createdAt: -1 }).limit(30).lean().catch(() => []);
+
+    const recentEvents = await VisitorEvent.find(
+      { timestamp: { $gte: tenMinAgo } },
+      'sessionId eventType element value url timestamp'
+    ).sort({ timestamp: -1 }).limit(50).lean().catch(() => []);
+
     const events = [];
     recent.forEach((v) => {
-      const location = v.city !== 'Unknown' ? `${v.city}, ${v.country}` : v.country;
-      const cp = v.pages?.length > 0 ? v.pages[v.pages.length - 1].path : '/';
-      events.push({ type: 'visit', message: `Visitor from ${location} viewed ${cp || 'Home'} page`, timestamp: v.createdAt, country: v.country, city: v.city, device: v.device, browser: v.browser });
-      if (v.downloads > 0) events.push({ type: 'download', message: `Visitor from ${location} downloaded CV`, timestamp: v.lastActivity, country: v.country });
-      if (v.contactSubmissions > 0) events.push({ type: 'contact', message: `Visitor from ${location} submitted contact form`, timestamp: v.lastActivity, country: v.country });
-      (v.actions || []).forEach((a) => { events.push({ type: 'action', message: `Visitor from ${location} ${a.label || a.type || 'performed an action'}`, timestamp: a.timestamp || v.lastActivity, country: v.country }); });
+      const location = v.country || 'Unknown';
+      const cp = v.pages?.length > 0 ? v.pages[v.pages.length - 1].url : '/';
+      events.push({ type: 'visit', message: `Visitor from ${location} viewed ${cp || 'Home'} page`, timestamp: v.createdAt, country: v.country, city: v.city, device: v.deviceType, browser: v.browser });
+      if (v.resumeDownloads > 0) events.push({ type: 'download', message: `Visitor from ${location} downloaded CV`, timestamp: v.lastActiveAt, country: v.country });
+      if (v.contactSubmissions > 0) events.push({ type: 'contact', message: `Visitor from ${location} submitted contact form`, timestamp: v.lastActiveAt, country: v.country });
+    });
+    recentEvents.forEach((ev) => {
+      events.push({ type: 'action', message: `Event: ${ev.eventType} on ${ev.element || ev.url || '/'}`, timestamp: ev.timestamp });
     });
     events.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
     res.json({ success: true, data: events.slice(0, 50) });
@@ -234,19 +255,33 @@ exports.getLiveFeed = async (req, res) => {
 
 exports.getVisitorDetails = async (req, res) => {
   try {
-    const { page = 1, limit = 20, search, sortBy = 'createdAt', sortOrder = 'desc', startDate, endDate, country, device, browser } = req.query;
+    const { page = 1, limit = 20, search, sortBy = 'createdAt', sortOrder = 'desc', startDate, endDate, country, deviceType, browser } = req.query;
     const filter = {};
     if (startDate || endDate) { filter.createdAt = {}; if (startDate) filter.createdAt.$gte = new Date(startDate); if (endDate) filter.createdAt.$lte = new Date(endDate); }
     if (country) filter.country = country;
-    if (device) filter.device = device;
+    if (deviceType) filter.deviceType = deviceType;
     if (browser) filter.browser = browser;
-    if (search) filter.$or = [{ country: { $regex: search, $options: 'i' } }, { city: { $regex: search, $options: 'i' } }, { browser: { $regex: search, $options: 'i' } }, { os: { $regex: search, $options: 'i' } }, { referrer: { $regex: search, $options: 'i' } }, { ip: { $regex: search, $options: 'i' } }];
+    if (search) filter.$or = [{ country: { $regex: search, $options: 'i' } }, { city: { $regex: search, $options: 'i' } }, { browser: { $regex: search, $options: 'i' } }, { os: { $regex: search, $options: 'i' } }, { referrer: { $regex: search, $options: 'i' } }, { visitorId: { $regex: search, $options: 'i' } }];
     const sortObj = {}; sortObj[sortBy] = sortOrder === 'asc' ? 1 : -1;
     const [total, visitors] = await Promise.all([
-      Visitor.countDocuments(filter).catch(() => 0),
-      Visitor.find(filter).sort(sortObj).skip((parseInt(page) - 1) * parseInt(limit)).limit(parseInt(limit)).lean().catch(() => []),
+      VisitorSession.countDocuments(filter).catch(() => 0),
+      VisitorSession.find(filter).sort(sortObj).skip((parseInt(page) - 1) * parseInt(limit)).limit(parseInt(limit)).lean().catch(() => []),
     ]);
-    res.json({ success: true, data: { visitors: visitors.map((v) => ({ id: v._id, visitDate: v.createdAt, country: v.country, city: v.city, region: v.region, timezone: v.timezone, device: v.device, browser: v.browser, os: v.os, screenResolution: v.screenResolution, language: v.language, referrer: v.referrer, sessionDuration: v.sessionDuration, pageViews: v.pageViews, pages: v.pages, actions: v.actions, downloads: v.downloads, contactSubmissions: v.contactSubmissions, isOnline: v.isOnline, lastActivity: v.lastActivity })), total, page: parseInt(page), pages: Math.ceil(total / parseInt(limit)) } });
+    res.json({
+      success: true,
+      data: {
+        visitors: visitors.map((v) => ({
+          id: v._id, visitDate: v.createdAt, country: v.country, city: v.city,
+          timezone: v.timezone, device: v.deviceType, browser: v.browser,
+          os: v.os, screenResolution: v.screenResolution, language: v.language,
+          referrer: v.referrer, sessionDuration: v.duration,
+          pageViews: v.pageViews, pages: v.pages,
+          downloads: v.resumeDownloads, contactSubmissions: v.contactSubmissions,
+          isOnline: v.isActive, lastActivity: v.lastActiveAt,
+        })),
+        total, page: parseInt(page), pages: Math.ceil(total / parseInt(limit)),
+      },
+    });
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });
   }
@@ -256,10 +291,10 @@ exports.getProjectAnalytics = async (req, res) => {
   try {
     const projects = await Project.find({ isActive: true }).select('title slug').lean().catch(() => []);
     const slugs = projects.map((p) => `/projects/${p.slug}`);
-    const pageStats = await Visitor.aggregate([
+    const pageStats = await VisitorSession.aggregate([
       { $unwind: { path: '$pages', preserveNullAndEmptyArrays: false } },
-      { $match: { 'pages.path': { $in: slugs } } },
-      { $group: { _id: '$pages.path', views: { $sum: 1 }, unique: { $addToSet: '$sessionId' }, totalDuration: { $sum: '$pages.duration' } } },
+      { $match: { 'pages.url': { $in: slugs } } },
+      { $group: { _id: '$pages.url', views: { $sum: 1 }, unique: { $addToSet: '$visitorId' }, totalDuration: { $sum: '$pages.duration' } } },
     ]).catch(() => []);
     const projectData = projects.map((p) => {
       const s = pageStats.find((ps) => ps._id === `/projects/${p.slug}`);
@@ -275,11 +310,18 @@ exports.getProjectAnalytics = async (req, res) => {
 exports.getResumeAnalytics = async (req, res) => {
   try {
     const df = dateFilter(req.query.range || '30d');
-    const downloaders = await Visitor.find(
-      { downloads: { $gt: 0 }, createdAt: { $gte: df } },
-      'country city device browser createdAt os'
+    const downloaders = await VisitorSession.find(
+      { resumeDownloads: { $gt: 0 }, createdAt: { $gte: df } },
+      'country city deviceType browser createdAt os'
     ).sort({ createdAt: -1 }).limit(50).lean().catch(() => []);
-    res.json({ success: true, data: { totalDownloads: 0, daily: [], downloaders: downloaders.map((d) => ({ date: d.createdAt, country: d.country, city: d.city, device: d.device, browser: d.browser, os: d.os })) } });
+    res.json({
+      success: true,
+      data: {
+        totalDownloads: downloaders.reduce((s, d) => s + (d.resumeDownloads || 0), 0),
+        daily: [],
+        downloaders: downloaders.map((d) => ({ date: d.createdAt, country: d.country, city: d.city, device: d.deviceType, browser: d.browser, os: d.os })),
+      },
+    });
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });
   }
@@ -299,13 +341,13 @@ exports.getAnalyticsOverview = async (req, res) => {
   try {
     const df = dateFilter(req.query.range || '30d');
     const [locations, devices, browsers, referrers, pageStats, visitorTrend, active] = await Promise.all([
-      Visitor.aggregate([{ $match: { createdAt: { $gte: df } } }, { $group: { _id: '$country', count: { $sum: 1 } } }, { $sort: { count: -1 } }, { $limit: 10 }]).catch(() => []),
-      Visitor.aggregate([{ $match: { createdAt: { $gte: df } } }, { $group: { _id: '$device', value: { $sum: 1 } } }]).catch(() => []),
-      Visitor.aggregate([{ $match: { createdAt: { $gte: df } } }, { $group: { _id: '$browser', value: { $sum: 1 } } }]).catch(() => []),
-      Visitor.aggregate([{ $match: { createdAt: { $gte: df } } }, { $group: { _id: '$referrer', value: { $sum: 1 } } }, { $sort: { value: -1 } }]).catch(() => []),
-      Visitor.aggregate([{ $match: { createdAt: { $gte: df } } }, { $unwind: { path: '$pages', preserveNullAndEmptyArrays: false } }, { $group: { _id: '$pages.path', views: { $sum: 1 }, unique: { $addToSet: '$sessionId' } } }, { $sort: { views: -1 } }, { $limit: 10 }]).catch(() => []),
-      Visitor.aggregate([{ $match: { createdAt: { $gte: df } } }, { $group: { _id: { $dateToString: { format: '%Y-%m-%d', date: '$createdAt' } }, count: { $sum: 1 }, unique: { $addToSet: '$sessionId' }, pageViews: { $sum: '$pageViews' } } }, { $sort: { _id: 1 } }]).catch(() => []),
-      Visitor.find({ lastActivity: { $gte: new Date(Date.now() - 300000) } }, 'country city browser device pages lastActivity').sort({ lastActivity: -1 }).limit(10).lean().catch(() => []),
+      VisitorSession.aggregate([{ $match: { createdAt: { $gte: df } } }, { $group: { _id: '$country', count: { $sum: 1 } } }, { $sort: { count: -1 } }, { $limit: 10 }]).catch(() => []),
+      VisitorSession.aggregate([{ $match: { createdAt: { $gte: df } } }, { $group: { _id: '$deviceType', value: { $sum: 1 } } }]).catch(() => []),
+      VisitorSession.aggregate([{ $match: { createdAt: { $gte: df } } }, { $group: { _id: '$browser', value: { $sum: 1 } } }]).catch(() => []),
+      VisitorSession.aggregate([{ $match: { createdAt: { $gte: df } } }, { $group: { _id: '$referrer', value: { $sum: 1 } } }, { $sort: { value: -1 } }]).catch(() => []),
+      VisitorSession.aggregate([{ $match: { createdAt: { $gte: df } } }, { $unwind: { path: '$pages', preserveNullAndEmptyArrays: false } }, { $group: { _id: '$pages.url', views: { $sum: 1 }, unique: { $addToSet: '$visitorId' } } }, { $sort: { views: -1 } }, { $limit: 10 }]).catch(() => []),
+      VisitorSession.aggregate([{ $match: { createdAt: { $gte: df } } }, { $group: { _id: { $dateToString: { format: '%Y-%m-%d', date: '$createdAt' } }, count: { $sum: 1 }, unique: { $addToSet: '$visitorId' }, pageViews: { $sum: '$pageViews' } } }, { $sort: { _id: 1 } }]).catch(() => []),
+      VisitorSession.find({ isActive: true, lastActiveAt: { $gte: new Date(Date.now() - 300000) } }, 'country city browser deviceType pages lastActiveAt').sort({ lastActiveAt: -1 }).limit(10).lean().catch(() => []),
     ]);
     const tl = locations.reduce((s, l) => s + l.count, 0);
     const td = devices.reduce((s, d) => s + d.value, 0);
@@ -320,7 +362,7 @@ exports.getAnalyticsOverview = async (req, res) => {
         browsers: browsers.map((b) => ({ name: b._id, value: b.value, percentage: tb > 0 ? Math.round((b.value / tb) * 100) : 0 })),
         referrers: referrers.map((r) => ({ source: r._id || 'Direct', count: r.value, percentage: tr > 0 ? Math.round((r.value / tr) * 100) : 0 })),
         topPages: pageStats.map((p) => ({ path: p._id || '/', views: p.views, unique: p.unique?.length || 0 })),
-        recentVisitors: active.map((v) => ({ country: v.country, city: v.city, browser: v.browser, device: v.device, page: v.pages?.[v.pages.length - 1]?.path || '/', lastActivity: v.lastActivity })),
+        recentVisitors: active.map((v) => ({ country: v.country, city: v.city, browser: v.browser, device: v.deviceType, page: v.pages?.[v.pages.length - 1]?.url || '/', lastActivity: v.lastActiveAt })),
       },
     });
   } catch (error) {
@@ -330,30 +372,37 @@ exports.getAnalyticsOverview = async (req, res) => {
 
 exports.trackVisit = async (req, res) => {
   try {
-    const { sessionId, page, title, referrer, screenResolution, language, device, browser, os, country, city, region, timezone } = req.body;
+    const { sessionId, page, title, referrer, screenResolution, language, device, browser, os, country, city, timezone } = req.body;
     if (!sessionId) return res.status(400).json({ success: false, message: 'sessionId required' });
-    const ip = req.headers['x-forwarded-for']?.split(',')[0]?.trim() || req.ip || '';
-    let visitor = await Visitor.findOne({ sessionId });
+    let visitor = await VisitorSession.findOne({ sessionId });
     if (!visitor) {
-      visitor = new Visitor({ sessionId, ip, country: country || 'Unknown', city: city || 'Unknown', region: region || '', timezone: timezone || '', device: device || 'Desktop', browser: browser || 'Chrome', os: os || 'Windows', screenResolution: screenResolution || '', language: language || '', referrer: referrer || 'Direct', sessionStart: new Date(), isOnline: true });
+      visitor = new VisitorSession({
+        sessionId, visitorId: sessionId,
+        country: country || '', city: city || '', timezone: timezone || '',
+        deviceType: device === 'Mobile' ? 'mobile' : device === 'Tablet' ? 'tablet' : 'desktop',
+        browser: browser || '', os: os || '',
+        screenResolution: screenResolution || '', language: language || '',
+        referrer: referrer || '', landingPage: page || '/', startedAt: new Date(), isActive: true,
+      });
     }
     const now = new Date();
-    visitor.lastActivity = now;
-    visitor.isOnline = true;
-    visitor.ip = ip;
+    visitor.lastActiveAt = now;
+    visitor.isActive = true;
     if (country) visitor.country = country;
     if (city) visitor.city = city;
-    if (device) visitor.device = device;
+    if (device) visitor.deviceType = device === 'Mobile' ? 'mobile' : device === 'Tablet' ? 'tablet' : 'desktop';
     if (browser) visitor.browser = browser;
     if (os) visitor.os = os;
     if (referrer) visitor.referrer = referrer;
     if (screenResolution) visitor.screenResolution = screenResolution;
     if (language) visitor.language = language;
-    const existingPage = visitor.pages.find((p) => p.path === page);
-    if (existingPage) { existingPage.exitTime = now; if (existingPage.entryTime) existingPage.duration = Math.round((now - new Date(existingPage.entryTime)) / 1000); }
-    else if (page) visitor.pages.push({ path: page, title: title || '', entryTime: now });
+    if (page) {
+      const existingPage = visitor.pages.find((p) => p.url === page);
+      if (existingPage) { existingPage.leftAt = now; if (existingPage.enteredAt) existingPage.duration = Math.round((now - new Date(existingPage.enteredAt)) / 1000); }
+      else visitor.pages.push({ url: page, title: title || '', enteredAt: now });
+    }
     visitor.pageViews = visitor.pages.length;
-    if (visitor.sessionStart) visitor.sessionDuration = Math.round((now - new Date(visitor.sessionStart)) / 1000);
+    if (visitor.startedAt) visitor.duration = Math.round((now - new Date(visitor.startedAt)) / 1000);
     await visitor.save();
     res.json({ success: true, data: { visitorId: visitor._id } });
   } catch (error) {
@@ -365,13 +414,17 @@ exports.trackAction = async (req, res) => {
   try {
     const { sessionId, type, target, label } = req.body;
     if (!sessionId || !type) return res.status(400).json({ success: false, message: 'sessionId and type required' });
-    const visitor = await Visitor.findOne({ sessionId });
+    const visitor = await VisitorSession.findOne({ sessionId });
     if (!visitor) return res.status(404).json({ success: false, message: 'Session not found' });
-    visitor.actions.push({ type, target, label, timestamp: new Date() });
-    visitor.lastActivity = new Date();
-    if (type === 'download_cv' || type === 'resume_download') visitor.downloads = (visitor.downloads || 0) + 1;
+    visitor.lastActiveAt = new Date();
+    if (type === 'download_cv' || type === 'resume_download') visitor.resumeDownloads = (visitor.resumeDownloads || 0) + 1;
     if (type === 'contact_submit') visitor.contactSubmissions = (visitor.contactSubmissions || 0) + 1;
     await visitor.save();
+    await VisitorEvent.create({
+      sessionId, visitorId: visitor.visitorId,
+      eventType: type, element: target || '', value: label || '',
+      timestamp: new Date(),
+    }).catch(() => {});
     res.json({ success: true, message: 'Action tracked' });
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });
@@ -382,8 +435,13 @@ exports.endSession = async (req, res) => {
   try {
     const { sessionId } = req.body;
     if (!sessionId) return res.status(400).json({ success: false, message: 'sessionId required' });
-    const visitor = await Visitor.findOne({ sessionId });
-    if (visitor) { visitor.isOnline = false; visitor.sessionEnd = new Date(); if (visitor.sessionStart) visitor.sessionDuration = Math.round((new Date() - new Date(visitor.sessionStart)) / 1000); await visitor.save(); }
+    const visitor = await VisitorSession.findOne({ sessionId });
+    if (visitor) {
+      visitor.isActive = false;
+      visitor.endedAt = new Date();
+      if (visitor.startedAt) visitor.duration = Math.round((new Date() - new Date(visitor.startedAt)) / 1000);
+      await visitor.save();
+    }
     res.json({ success: true, message: 'Session ended' });
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });
@@ -396,10 +454,10 @@ exports.getExportData = async (req, res) => {
     const filter = {};
     if (startDate || endDate) { filter.createdAt = {}; if (startDate) filter.createdAt.$gte = new Date(startDate); if (endDate) filter.createdAt.$lte = new Date(endDate); }
     if (type === 'visitors') {
-      const visitors = await Visitor.find(filter).sort({ createdAt: -1 }).lean().catch(() => []);
+      const visitors = await VisitorSession.find(filter).sort({ createdAt: -1 }).lean().catch(() => []);
       if (format === 'csv') {
-        const headers = 'VisitDate,Country,City,Device,Browser,OS,PageViews,SessionDuration,Referrer';
-        const rows = visitors.map((v) => `"${v.createdAt}","${v.country}","${v.city}","${v.device}","${v.browser}","${v.os}",${v.pageViews},${v.sessionDuration},"${v.referrer}"`);
+        const headers = 'VisitDate,Country,City,Device,Browser,OS,PageViews,Duration,Referrer';
+        const rows = visitors.map((v) => `"${v.createdAt}","${v.country}","${v.city}","${v.deviceType}","${v.browser}","${v.os}",${v.pageViews},${v.duration},"${v.referrer}"`);
         res.setHeader('Content-Type', 'text/csv');
         res.setHeader('Content-Disposition', 'attachment; filename=visitors.csv');
         return res.send([headers, ...rows].join('\n'));

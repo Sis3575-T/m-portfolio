@@ -1,5 +1,6 @@
 const express = require('express');
 const router = express.Router();
+const Theme = require('../models/Theme');
 const { getThemes, getActiveTheme, createTheme, updateTheme, activateTheme, deleteTheme, duplicateTheme } = require('../controllers/themeController');
 const { protect, adminOnly } = require('../middleware/auth');
 

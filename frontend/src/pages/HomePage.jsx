@@ -6,8 +6,12 @@ import Hero from '../components/Hero';
 import About from '../components/About';
 import Skills from '../components/Skills';
 import Experience from '../components/Experience';
+import Education from '../components/Education';
+import Services from '../components/Services';
+import Certificates from '../components/Certificates';
 import Projects from '../components/Projects';
 import Contact from '../components/Contact';
+import Blog from '../components/Blog';
 import Footer from '../components/Footer';
 
 export function applyTheme(theme) {
@@ -36,12 +40,28 @@ export function applyTheme(theme) {
   }
 }
 
+function setMetaTag(name, content) {
+  if (!content) return;
+  let el = document.querySelector(`meta[name="${name}"], meta[property="${name}"]`);
+  if (!el) {
+    el = document.createElement('meta');
+    if (name.startsWith('og:')) el.setAttribute('property', name);
+    else el.setAttribute('name', name);
+    document.head.appendChild(el);
+  }
+  el.setAttribute('content', content);
+}
+
 const SECTION_MAP = {
   hero: [Hero, 'hero'],
   about: [About, null],
   skills: [Skills, 'skills'],
   experience: [Experience, 'experience'],
+  education: [Education, 'education'],
+  services: [Services, 'services'],
+  certificates: [Certificates, 'certificates'],
   projects: [Projects, 'projects'],
+  blog: [Blog, 'blog'],
   contact: [Contact, null],
 };
 
@@ -50,6 +70,7 @@ function HomePage() {
     loading: true,
     sections: null, settings: null, hero: null,
     navItems: [], projects: [], skills: [], experience: [],
+    education: [], services: [], certificates: [], blog: [],
   });
 
   useEffect(() => {
@@ -58,11 +79,15 @@ function HomePage() {
         const config = await backendApi.getSiteConfig();
         if (config?.success && config?.data) {
           const d = config.data;
-          const [heroRes, projectsRes, skillsRes, expRes] = await Promise.all([
+          const [heroRes, projectsRes, skillsRes, expRes, eduRes, svcRes, certRes, blogRes] = await Promise.all([
             backendApi.getHero().catch(() => ({ data: null })),
             backendApi.getProjects().catch(() => ({ data: [] })),
             backendApi.getSkills().catch(() => ({ data: [] })),
             backendApi.getExperience().catch(() => ({ data: [] })),
+            backendApi.getEducation().catch(() => ({ data: [] })),
+            backendApi.getServices().catch(() => ({ data: [] })),
+            backendApi.getCertificates().catch(() => ({ data: [] })),
+            backendApi.getBlog().catch(() => ({ data: [] })),
           ]);
           setData({
             loading: false,
@@ -73,6 +98,10 @@ function HomePage() {
             projects: Array.isArray(projectsRes.data) ? projectsRes.data : [],
             skills: Array.isArray(skillsRes.data) ? skillsRes.data : [],
             experience: Array.isArray(expRes.data) ? expRes.data : [],
+            education: Array.isArray(eduRes.data) ? eduRes.data : [],
+            services: Array.isArray(svcRes.data) ? svcRes.data : [],
+            certificates: Array.isArray(certRes.data) ? certRes.data : [],
+            blog: Array.isArray(blogRes.data) ? blogRes.data : [],
           });
           return;
         }
@@ -88,6 +117,10 @@ function HomePage() {
         projects: pd.projects || [],
         skills: pd.skills || [],
         experience: pd.experience || [],
+        education: pd.education || [],
+        services: pd.services || [],
+        certificates: pd.certificates || [],
+        blog: pd.blog || [],
       });
     };
     load();
@@ -99,10 +132,21 @@ function HomePage() {
     }).catch(() => {});
   }, []);
 
+  useEffect(() => {
+    if (data.settings) {
+      document.title = data.settings.seoTitle || data.settings.siteTitle || 'Sisay Temesgen — Portfolio';
+      const desc = data.settings.seoDescription || data.settings.siteDescription || 'Full Stack Developer & AI Enthusiast';
+      setMetaTag('description', desc);
+      setMetaTag('og:title', document.title);
+      setMetaTag('og:description', desc);
+      if (data.settings.profilePhoto) setMetaTag('og:image', data.settings.profilePhoto);
+    }
+  }, [data.settings]);
+
   if (data.loading) return null;
 
-  const { sections, settings, hero, projects, skills, experience, navItems } = data;
-  const dataMap = { hero, projects, skills, experience };
+  const { sections, settings, hero, projects, skills, experience, education, services, certificates, blog, navItems } = data;
+  const dataMap = { hero, projects, skills, experience, education, services, certificates, blog };
   const sectionsToRender = sections?.filter(s => s.visible !== false && s.status === 'published' && SECTION_MAP[s.type]) || null;
   const hasSections = sectionsToRender?.length > 0;
 
@@ -122,8 +166,10 @@ function HomePage() {
             <Hero hero={hero} settings={settings} />
             <About settings={settings} />
             <Skills skills={skills} settings={settings} />
+            <Services services={services} settings={settings} />
             <Experience experience={experience} settings={settings} />
             <Projects projects={projects} settings={settings} />
+            <Blog blog={blog} settings={settings} />
             <Contact settings={settings} />
           </>
         )}

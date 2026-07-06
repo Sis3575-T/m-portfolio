@@ -28,6 +28,10 @@ exports.createHero = async (req, res) => {
       delete body.shortBio;
     }
     if (body.title) body.role = body.title;
+    if (body.ctaButtons) {
+      try { body.buttons = typeof body.ctaButtons === 'string' ? JSON.parse(body.ctaButtons) : body.ctaButtons; } catch {}
+      delete body.ctaButtons;
+    }
     if (req.file) {
       body.avatar = '/uploads/' + req.file.filename;
     }
@@ -55,6 +59,10 @@ exports.updateHero = async (req, res) => {
       delete body.shortBio;
     }
     if (body.title) body.role = body.title;
+    if (body.ctaButtons) {
+      try { body.buttons = typeof body.ctaButtons === 'string' ? JSON.parse(body.ctaButtons) : body.ctaButtons; } catch {}
+      delete body.ctaButtons;
+    }
     if (req.file) {
       body.avatar = '/uploads/' + req.file.filename;
     }

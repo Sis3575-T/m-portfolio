@@ -2,10 +2,10 @@ const Notification = require('../models/Notification');
 
 exports.getNotifications = async (req, res) => {
   try {
-    const filter = { user: req.user._id };
+    const filter = { $or: [{ user: req.user._id }, { user: { $exists: false } }, { user: null }] };
     if (req.query.unread === 'true') filter.read = false;
     const notifications = await Notification.find(filter).sort({ createdAt: -1 }).limit(50);
-    const unreadCount = await Notification.countDocuments({ user: req.user._id, read: false });
+    const unreadCount = await Notification.countDocuments({ ...filter, read: false });
     res.json({ success: true, data: notifications, unreadCount });
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });
@@ -15,7 +15,7 @@ exports.getNotifications = async (req, res) => {
 exports.markAsRead = async (req, res) => {
   try {
     const notification = await Notification.findOneAndUpdate(
-      { _id: req.params.id, user: req.user._id },
+      { _id: req.params.id, $or: [{ user: req.user._id }, { user: { $exists: false } }, { user: null }] },
       { read: true },
       { new: true }
     );
@@ -28,7 +28,10 @@ exports.markAsRead = async (req, res) => {
 
 exports.markAllAsRead = async (req, res) => {
   try {
-    await Notification.updateMany({ user: req.user._id, read: false }, { read: true });
+    await Notification.updateMany(
+      { read: false, $or: [{ user: req.user._id }, { user: { $exists: false } }, { user: null }] },
+      { read: true }
+    );
     res.json({ success: true, message: 'All notifications marked as read' });
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });
@@ -37,7 +40,10 @@ exports.markAllAsRead = async (req, res) => {
 
 exports.deleteNotification = async (req, res) => {
   try {
-    await Notification.findOneAndDelete({ _id: req.params.id, user: req.user._id });
+    await Notification.findOneAndDelete({
+      _id: req.params.id,
+      $or: [{ user: req.user._id }, { user: { $exists: false } }, { user: null }],
+    });
     res.json({ success: true, message: 'Notification deleted' });
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });

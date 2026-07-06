@@ -42,7 +42,8 @@ const settingsSchema = new mongoose.Schema({
 
   maintenanceMode: { type: Boolean, default: false },
 
+  cvUrl: { type: String, default: '' },
   pageStyles: { type: mongoose.Schema.Types.Mixed, default: {} },
-}, { timestamps: true });
+}, { timestamps: true, strict: false });
 
 module.exports = mongoose.model('Settings', settingsSchema);

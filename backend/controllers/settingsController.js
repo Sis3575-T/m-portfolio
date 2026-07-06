@@ -14,7 +14,10 @@ const updateSettings = async (req, res) => {
   try {
     let settings = await Settings.findOne();
     if (!settings) settings = new Settings();
-    Object.assign(settings, req.body);
+    const body = { ...req.body };
+    if (body.contactEmail) { body.email = body.contactEmail; delete body.contactEmail; }
+    if (body.contactPhone) { body.phone = body.contactPhone; delete body.contactPhone; }
+    Object.assign(settings, body);
     if (req.files) {
       if (req.files.logo) settings.logo = req.files.logo[0].path;
       if (req.files.favicon) settings.favicon = req.files.favicon[0].path;

@@ -78,6 +78,7 @@ export const adminApi = {
   getVisitorsList: (params) => api.get('/analytics/visitors-list', { params }),
   getVisitorById: (id) => api.get(`/analytics/visitors/${id}`),
   getVisitorEvents: (id) => api.get(`/analytics/visitors/${id}/events`),
+  deleteVisitor: (id) => api.delete(`/analytics/visitors/${id}`),
   getCountries: () => api.get('/analytics/countries'),
   getBrowserStatsNew: () => api.get('/analytics/browsers-stats'),
   getDeviceStatsNew: () => api.get('/analytics/devices-stats'),
@@ -88,6 +89,10 @@ export const adminApi = {
   getBounceRate: (params) => api.get('/analytics/bounce-rate', { params }),
   getSessionDuration: (params) => api.get('/analytics/duration', { params }),
   getReport: (params) => api.get('/analytics/report', { params, responseType: params?.format === 'csv' ? 'blob' : 'json' }),
+  getDailyVisits: (params) => api.get('/analytics/daily-visits', { params }),
+  getWeeklyMonthly: () => api.get('/analytics/weekly-monthly'),
+  getReturningStats: () => api.get('/analytics/returning-stats'),
+  getCities: () => api.get('/analytics/cities'),
 
   // Hero
   getHero: () => api.get('/hero'),

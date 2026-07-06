@@ -1,5 +1,9 @@
 import backendApi from '../services/backendApi';
 
+const API_TRACK_BASE = import.meta.env.PROD
+  ? (import.meta.env.VITE_API_URL || 'https://m-portfolio-ecby.onrender.com').replace(/\/api$/, '').replace(/\/+$/, '') + '/api'
+  : '/api';
+
 function wrap(data) {
   return Promise.resolve({ data: { data } });
 }
@@ -20,11 +24,10 @@ export const publicApi = {
   },
   getAbout: async () => {
     try {
-      const res = await backendApi.getSettings();
+      const res = await backendApi.getAbout();
       return { data: { data: res.data } };
     } catch {
-      const { default: pd } = await import('../data/portfolioData');
-      return wrap(pd.settings);
+      return wrap({});
     }
   },
   getSkills: async () => {
@@ -96,7 +99,14 @@ export const publicApi = {
       return wrap(null);
     }
   },
-  getCertificates: () => wrap([]),
+  getCertificates: async () => {
+    try {
+      const res = await backendApi.getCertificates();
+      return { data: { data: toBackend(res.data) } };
+    } catch {
+      return wrap([]);
+    }
+  },
   getSettings: async () => {
     try {
       const res = await backendApi.getSettings();
@@ -176,10 +186,93 @@ export const publicApi = {
       return wrap([]);
     }
   },
-  trackVisit: () => Promise.resolve(),
-  trackAction: () => Promise.resolve(),
-  trackPerformance: () => Promise.resolve(),
-  endSession: () => Promise.resolve(),
+  getVisitorId: () => {
+    let vid = localStorage.getItem('portfolio_visitor_id');
+    if (!vid) {
+      vid = 'vis_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+      localStorage.setItem('portfolio_visitor_id', vid);
+    }
+    return vid;
+  },
+  trackVisit: async (data) => {
+    try {
+      const visitorId = publicApi.getVisitorId();
+      const body = {
+        visitorId, sessionId: data.sessionId,
+        browser: data.browser,
+        screen: data.screenResolution || data.screen || '',
+        viewport: data.viewport || '',
+        language: data.language || '',
+        timezone: Intl.DateTimeFormat().resolvedOptions().timeZone || '',
+        referrer: data.referrer || '',
+        url: data.page || data.url || '/',
+      };
+      await fetch(API_TRACK_BASE + '/track/identify', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body),
+      });
+      const pageBody = {
+        visitorId, sessionId: data.sessionId,
+        url: data.page || data.url || '/',
+        pageTitle: data.title || document.title || '',
+      };
+      await fetch(API_TRACK_BASE + '/track/page-view', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(pageBody),
+      });
+    } catch { return Promise.resolve(); }
+  },
+  trackAction: async (data) => {
+    try {
+      const visitorId = publicApi.getVisitorId();
+      const body = {
+        visitorId, sessionId: data.sessionId,
+        eventType: data.type || data.eventType || 'click',
+        element: data.target || data.element || '',
+        value: data.label || data.value || '',
+      };
+      await fetch(API_TRACK_BASE + '/track/event', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body),
+      });
+    } catch { return Promise.resolve(); }
+  },
+  trackPerformance: async (data) => {
+    try {
+      const res = await fetch(API_TRACK_BASE + '/performance/track', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(data),
+      });
+      return res.json();
+    } catch { return Promise.resolve(); }
+  },
+  trackVisitLight: async (data) => {
+    try {
+      const visitorId = publicApi.getVisitorId();
+      const deviceInfo = {
+        browser: data.browser || '',
+        os: data.os || '',
+        deviceType: data.device || data.deviceType || '',
+        screenResolution: data.screenResolution || data.screen || '',
+        language: data.language || navigator.language || '',
+        timezone: Intl.DateTimeFormat().resolvedOptions().timeZone || '',
+      };
+      const body = { visitorId, sessionId: data.sessionId, url: data.page || '/', referrer: data.referrer || '', ...deviceInfo };
+      await fetch(API_TRACK_BASE + '/analytics/visit', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body),
+      });
+    } catch { return Promise.resolve(); }
+  },
+  endSession: async (data) => {
+    try {
+      const visitorId = publicApi.getVisitorId();
+      const body = { visitorId, ...data };
+      const res = await fetch(API_TRACK_BASE + '/track/exit', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(body),
+      });
+      return res.json();
+    } catch { return Promise.resolve(); }
+  },
   getTranslations: () => wrap({}),
 };
 

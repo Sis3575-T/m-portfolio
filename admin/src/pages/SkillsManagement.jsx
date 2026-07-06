@@ -10,18 +10,18 @@ import Toolbar from '../components/Toolbar';
 const categoryOptions = ['Frontend', 'Backend', 'Database', 'Tools', 'Other'];
 
 const techIcons = [
-  { label: 'React', icon: '⚛️' }, { label: 'Vue', icon: '💚' }, { label: 'Angular', icon: '🔴' },
-  { label: 'JavaScript', icon: '🟨' }, { label: 'TypeScript', icon: '🔷' }, { label: 'HTML', icon: '🟧' },
-  { label: 'CSS', icon: '🎨' }, { label: 'Node.js', icon: '💚' }, { label: 'Python', icon: '🐍' },
-  { label: 'Java', icon: '☕' }, { label: 'Go', icon: '🔵' }, { label: 'Rust', icon: '🦀' },
-  { label: 'Docker', icon: '🐳' }, { label: 'Git', icon: '🔀' }, { label: 'Linux', icon: '🐧' },
-  { label: 'MongoDB', icon: '🍃' }, { label: 'PostgreSQL', icon: '🐘' }, { label: 'MySQL', icon: '🐬' },
-  { label: 'Redis', icon: '🔴' }, { label: 'Firebase', icon: '🔥' }, { label: 'AWS', icon: '☁️' },
-  { label: 'Figma', icon: '🖌️' }, { label: 'Sass', icon: '💅' }, { label: 'Tailwind', icon: '🌊' },
-  { label: 'Next.js', icon: '▲' }, { label: 'GraphQL', icon: '◈' }, { label: 'Webpack', icon: '📦' },
-  { label: 'Vite', icon: '⚡' }, { label: 'Electron', icon: '⚛️' }, { label: 'Flutter', icon: '🔷' },
-  { label: 'Django', icon: '🎸' }, { label: 'Kubernetes', icon: '☸️' }, { label: 'Nginx', icon: '🌐' },
-  { label: 'Postman', icon: '📮' }, { label: 'Jest', icon: '🃏' }, { label: 'C++', icon: '⚙️' },
+  { label: 'React', icon: 'react' }, { label: 'Vue', icon: 'vue' }, { label: 'Angular', icon: 'angular' },
+  { label: 'JavaScript', icon: 'javascript' }, { label: 'TypeScript', icon: 'typescript' }, { label: 'HTML', icon: 'html' },
+  { label: 'CSS', icon: 'css' }, { label: 'Node.js', icon: 'nodejs' }, { label: 'Python', icon: 'python' },
+  { label: 'Java', icon: 'java' }, { label: 'Go', icon: 'go' }, { label: 'Rust', icon: 'rust' },
+  { label: 'Docker', icon: 'docker' }, { label: 'Git', icon: 'git' }, { label: 'Linux', icon: 'linux' },
+  { label: 'MongoDB', icon: 'mongodb' }, { label: 'PostgreSQL', icon: 'postgresql' }, { label: 'MySQL', icon: 'mysql' },
+  { label: 'Redis', icon: 'redis' }, { label: 'Firebase', icon: 'firebase' }, { label: 'AWS', icon: 'aws' },
+  { label: 'Figma', icon: 'figma' }, { label: 'Sass', icon: 'sass' }, { label: 'Tailwind', icon: 'tailwind' },
+  { label: 'Next.js', icon: 'nextjs' }, { label: 'GraphQL', icon: 'graphql' }, { label: 'Webpack', icon: 'webpack' },
+  { label: 'Vite', icon: 'vite' }, { label: 'Electron', icon: 'electron' }, { label: 'Flutter', icon: 'flutter' },
+  { label: 'Django', icon: 'django' }, { label: 'Kubernetes', icon: 'kubernetes' }, { label: 'Nginx', icon: 'nginx' },
+  { label: 'Postman', icon: 'postman' }, { label: 'Jest', icon: 'jest' }, { label: 'C++', icon: 'cpp' },
 ];
 
 const isCustomCategory = (cat) => cat && !['Frontend', 'Backend', 'Database', 'Tools', 'Other'].includes(cat);
@@ -87,6 +87,7 @@ export default function SkillsManagement() {
     fd.append('name', form.name);
     fd.append('category', form.category === 'Other' && form.customCategory.trim() ? form.customCategory.trim() : form.category);
     fd.append('order', form.order);
+    fd.append('status', 'published');
     if (form.icon && !form.iconFile) fd.append('icon', form.icon);
     if (form.iconFile) fd.append('icon', form.iconFile);
     try {
@@ -195,7 +196,7 @@ export default function SkillsManagement() {
                 <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
                   <div style={{ width: 40, height: 40, borderRadius: 10, background: `${getCategoryColor(skill.category)}18`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '1.5rem' }}>
                     {skill.icon ? (
-                      skill.icon.length <= 4 ? <span style={{ fontSize: '1.5rem' }}>{skill.icon}</span> : <img src={imageUrl(skill.icon)} alt="" style={{ width: 24, height: 24, objectFit: 'contain' }} onError={(e) => { e.target.style.display = 'none'; }} />
+                      <span style={{ fontSize: '1.1rem', fontWeight: 700, textTransform: 'uppercase', color: getCategoryColor(skill.category) }}>{skill.icon.slice(0, 3)}</span>
                     ) : <Icon path={Icons.code} size={20} style={{ color: getCategoryColor(skill.category) }} />}
                   </div>
                   <div>
@@ -289,10 +290,8 @@ export default function SkillsManagement() {
                 >
                   {form.iconFile || (form.icon && form.icon.startsWith('blob:')) ? (
                     <img src={form.icon} alt="icon preview" style={{ width: 48, height: 48, objectFit: 'contain', borderRadius: 8 }} />
-                  ) : form.icon && form.icon.length <= 4 ? (
-                    <span style={{ fontSize: '2.5rem' }}>{form.icon}</span>
                   ) : form.icon ? (
-                    <img src={imageUrl(form.icon)} alt="icon preview" style={{ width: 48, height: 48, objectFit: 'contain', borderRadius: 8 }} onError={(e) => { e.target.style.display = 'none'; e.target.nextSibling.style.display = 'block'; }} />
+                    <span style={{ fontSize: '1.5rem', fontWeight: 700, textTransform: 'uppercase' }}>{form.icon.slice(0, 3)}</span>
                   ) : null}
                   <input ref={iconInputRef} type="file" accept="image/*" onChange={(e) => { const file = e.target.files?.[0]; if (file) setForm({ ...form, icon: URL.createObjectURL(file), iconFile: file }); }} style={{ display: 'none' }} />
                   <span style={{ fontSize: '0.78rem', color: 'var(--color-text-tertiary)' }}>

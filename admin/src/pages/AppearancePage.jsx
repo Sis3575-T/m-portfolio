@@ -278,6 +278,15 @@ export default function AppearancePage() {
                           onChange={e => updateColor(field.key, e.target.value)}
                           className="color-hex"
                         />
+                        {theme.colors[field.key] && (
+                          <button
+                            className="btn btn-ghost btn-sm"
+                            onClick={() => updateColor(field.key, '')}
+                            title="Clear color"
+                          >
+                            <Icon path={Icons.x} size={14} />
+                          </button>
+                        )}
                       </div>
                     </div>
                   ))}

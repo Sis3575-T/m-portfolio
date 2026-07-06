@@ -1,62 +1,114 @@
-const SKILL_ICONS = {
-  react: (
-    <svg viewBox="0 0 24 24" fill="currentColor">
-      <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 17.93c-3.94-.49-7-3.85-7-7.93s3.06-7.44 7-7.93v15.86zm2 0V4.07c3.94.49 7 3.85 7 7.93s-3.06 7.44-7 7.93z" />
-    </svg>
-  ),
-  javascript: (
-    <svg viewBox="0 0 24 24" fill="currentColor">
-      <path d="M3 3h18v18H3V3zm4.73 15.04c.4.58 1.05.82 1.77.82.82 0 1.67-.46 1.67-1.3v-5.7h-1.5v5.36c0 .25-.2.63-.63.63-.45 0-.76-.26-.97-.56l-.34.75zm5.52.82c.94 0 1.93-.48 2.36-1.24l-.95-.6c-.33.56-.87.87-1.45.87-.7 0-1.3-.47-1.48-1.18h4.1c.04-.16.07-.5.07-.73 0-1.26-.82-2.52-2.73-2.52-1.52 0-2.67 1.07-2.67 2.55 0 1.46 1.12 2.46 2.75 2.46v-.6zm-2.32-3.34c.05-.67.6-1.14 1.4-1.14.73 0 1.28.42 1.33 1.14h-2.73z" />
-    </svg>
-  ),
-  html: (
-    <svg viewBox="0 0 24 24" fill="currentColor">
-      <path d="M12 2L2 7l1.2 11.7L12 22l8.8-3.3L22 7 12 2zm1 15.5l-5-1.9-.2-2.5h1.4l.1 1.4 3.4 1.3 3.7-1.3.3-3.9H7.7l-.2-1.5h8.5l.2-1.6H6.7L6.5 8.8h11l-.4 5.5-5.1 2z" />
-    </svg>
-  ),
-  tailwind: (
-    <svg viewBox="0 0 24 24" fill="currentColor">
-      <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm4.64 6.8c-.15 1.58-.8 2.86-1.96 3.85-1.16.99-2.55 1.48-4.18 1.48-1.32 0-2.42-.32-3.3-.96.28 1.24.84 2.28 1.68 3.12.84.84 1.86 1.4 3.06 1.68.28.08.56.12.84.12.56 0 1.12-.12 1.68-.36.42-.18.78-.42 1.08-.72.06-.06.1-.12.14-.18.02-.02.04-.04.06-.06.12-.14.22-.3.3-.48.02-.04.04-.08.06-.12l-.02-.02c.14-.28.22-.58.24-.9.02-.48-.06-.94-.24-1.38-.02-.06-.04-.12-.08-.18-.02-.04-.04-.08-.06-.12-.12-.28-.28-.52-.48-.74-.02-.02-.04-.04-.06-.06-.06-.06-.1-.12-.16-.18l.02-.02c-.6-.6-1.36-1.02-2.28-1.26-.56-.14-1.12-.2-1.68-.18.56-.28 1.16-.5 1.8-.66.64-.16 1.28-.24 1.92-.24.84 0 1.64.1 2.4.3.76.2 1.42.5 1.98.9l.02-.02c.06.04.12.08.18.12l.02.02c.12.08.24.18.36.28.02.02.04.04.06.06.06.06.12.12.18.18.02.02.04.04.06.06.08.1.16.2.22.32.02.04.04.06.06.1z" />
-    </svg>
-  ),
-  nodejs: (
-    <svg viewBox="0 0 24 24" fill="currentColor">
-      <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 15l-4-2.3V8.3l4-2.3 4 2.3v6.4l-4 2.3zm0-12.6L8 5.7l4 2.3 4-2.3-4-2.3z" />
-    </svg>
-  ),
-  python: (
-    <svg viewBox="0 0 24 24" fill="currentColor">
-      <path d="M19.14 7.5A2.86 2.86 0 0016.29 4H7.71a2.86 2.86 0 00-2.85 3.5l2.64 8.82A2.86 2.86 0 0010.36 19h3.28a2.86 2.86 0 002.86-2.68l.78-7.69A2.86 2.86 0 0019.14 7.5zM16.29 7a.36.36 0 01.36.36v.57L14 16.5h-4l-2.65-8.57V7.36A.36.36 0 017.71 7h8.58zM11 10h2v2h-2v-2zm0-3h2v2h-2V7z" />
-    </svg>
-  ),
-  mongodb: (
-    <svg viewBox="0 0 24 24" fill="currentColor">
-      <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 15.5c-1.5-.5-2.5-2-2.5-3.5s1-3 2.5-3.5v7zm6-5.5c0 3.5-2.5 6.5-5.5 7.5V4.5c3 .5 5.5 3.5 5.5 7z" />
-    </svg>
-  ),
-  postgresql: (
-    <svg viewBox="0 0 24 24" fill="currentColor">
-      <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm6 13.5c-.3.8-1.1 1.4-1.9 1.5-.7.1-1.4.1-2.1-.1-.2-.1-.4-.1-.6-.1-.4 0-.8.1-1.2.3-.5.2-1 .5-1.5.7-.4.2-.8.3-1.2.3-.3 0-.6-.1-.9-.2-.3-.1-.6-.3-.8-.5-.2-.2-.4-.5-.5-.8-.1-.3-.1-.6-.1-.9l.2-1.1c.1-.5.2-1.1.2-1.6 0-.6-.1-1.1-.3-1.6-.2-.5-.5-.9-.9-1.2-.4-.3-.8-.5-1.3-.6-.5-.1-1-.1-1.5 0-.2 0-.4.1-.5.2-.1.1-.2.2-.2.4 0 .2.1.4.2.5.1.1.3.2.5.2.3 0 .5.1.7.3.2.2.3.4.3.7 0 .2.1.4.1.6 0 .2-.1.5-.2.7-.1.2-.3.4-.5.5-.2.1-.4.2-.6.2-.2 0-.4-.1-.5-.2-.1-.1-.2-.3-.2-.5 0-.1-.1-.2-.1-.3 0-.4-.1-.8-.3-1.1-.2-.3-.5-.6-.8-.8-.3-.2-.7-.3-1.1-.3-.4 0-.8.1-1.1.3-.3.2-.6.5-.8.8-.2.3-.3.7-.3 1.1v.1c0 .5.1 1 .4 1.5.3.5.6.9 1.1 1.2.5.3 1 .5 1.6.6.6.1 1.2.1 1.7-.1.5-.2.9-.4 1.3-.7.3-.2.6-.5.8-.8.2-.3.4-.6.5-1 .1-.3.2-.7.2-1 0-.6-.2-1.2-.7-1.6-.5-.4-1.1-.6-1.8-.6-.4 0-.7.1-1 .2-.3.1-.5.3-.6.5-.1.2-.1.4 0 .6.1.2.2.3.4.3.2 0 .3-.1.4-.2.1-.1.2-.2.3-.2.1 0 .2 0 .3.1.1.1.2.2.2.4 0 .2-.1.4-.2.5-.1.1-.3.2-.5.2-.2 0-.4-.1-.6-.2-.2-.1-.3-.3-.4-.5-.1-.2-.1-.4-.1-.6 0-.3.1-.6.3-.8.2-.2.4-.4.7-.5.3-.1.6-.2.9-.2.6 0 1.2.2 1.6.6.4.4.7.9.9 1.5.2.6.3 1.2.3 1.9 0 .5-.1 1-.3 1.5-.2.5-.4.9-.7 1.3-.3.4-.7.7-1.1.9-.4.2-.9.4-1.4.5-.5.1-1 .1-1.5 0-.5-.1-1-.3-1.4-.6-.4-.3-.8-.7-1-1.1-.2-.4-.4-.9-.4-1.4 0-.3.1-.5.2-.7.1-.2.2-.3.4-.3.2 0 .3.1.4.2.1.1.1.3.1.5 0 .3.1.5.2.8.1.3.3.5.5.7.2.2.5.4.8.5.3.1.6.1.9.1.3 0 .5-.1.8-.2.5-.2 1-.5 1.5-.8.5-.3.9-.7 1.3-1.1.4-.4.7-.9.9-1.4.2-.5.3-1.1.3-1.6 0-.6-.1-1.2-.4-1.7-.3-.5-.6-1-1.1-1.3-.5-.3-1-.5-1.6-.5-.6 0-1.1.1-1.6.3-.5.2-.9.5-1.3.9-.4.4-.7.8-.9 1.3-.2.5-.3 1-.3 1.5 0 .5.1 1 .3 1.5.2.5.5.9.9 1.2.4.3.8.5 1.3.6.5.1 1 .1 1.5 0z" />
-    </svg>
-  ),
-  git: (
-    <svg viewBox="0 0 24 24" fill="currentColor">
-      <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm5.5 13.5c-.3.8-1.1 1.4-1.9 1.5-.7.1-1.4.1-2.1-.1-.2-.1-.4-.1-.6-.1-.4 0-.8.1-1.2.3-.5.2-1 .5-1.5.7-.4.2-.8.3-1.2.3-.3 0-.6-.1-.9-.2-.3-.1-.6-.3-.8-.5-.2-.2-.4-.5-.5-.8-.1-.3-.1-.6-.1-.9l.2-1.1c.1-.5.2-1.1.2-1.6 0-.6-.1-1.1-.3-1.6-.2-.5-.5-.9-.9-1.2-.4-.3-.8-.5-1.3-.6-.5-.1-1-.1-1.5 0-.2 0-.4.1-.5.2-.1.1-.2.2-.2.4 0 .2.1.4.2.5.1.1.3.2.5.2.3 0 .5.1.7.3.2.2.3.4.3.7 0 .2.1.4.1.6 0 .2-.1.5-.2.7-.1.2-.3.4-.5.5-.2.1-.4.2-.6.2-.2 0-.4-.1-.5-.2-.1-.1-.2-.3-.2-.5 0-.1-.1-.2-.1-.3 0-.4-.1-.8-.3-1.1-.2-.3-.5-.6-.8-.8-.3-.2-.7-.3-1.1-.3-.4 0-.8.1-1.1.3-.3.2-.6.5-.8.8-.2.3-.3.7-.3 1.1v.1c0 .5.1 1 .4 1.5.3.5.6.9 1.1 1.2.5.3 1 .5 1.6.6.6.1 1.2.1 1.7-.1.5-.2.9-.4 1.3-.7.3-.2.6-.5.8-.8.2-.3.4-.6.5-1 .1-.3.2-.7.2-1 0-.6-.2-1.2-.7-1.6-.5-.4-1.1-.6-1.8-.6-.4 0-.7.1-1 .2-.3.1-.5.3-.6.5-.1.2-.1.4 0 .6.1.2.2.3.4.3.2 0 .3-.1.4-.2.1-.1.2-.2.3-.2.1 0 .2 0 .3.1.1.1.2.2.2.4 0 .2-.1.4-.2.5-.1.1-.3.2-.5.2-.2 0-.4-.1-.6-.2-.2-.1-.3-.3-.4-.5-.1-.2-.1-.4-.1-.6 0-.3.1-.6.3-.8.2-.2.4-.4.7-.5.3-.1.6-.2.9-.2.6 0 1.2.2 1.6.6.4.4.7.9.9 1.5.2.6.3 1.2.3 1.9 0 .5-.1 1-.3 1.5-.2.5-.4.9-.7 1.3-.3.4-.7.7-1.1.9-.4.2-.9.4-1.4.5-.5.1-1 .1-1.5 0-.5-.1-1-.3-1.4-.6-.4-.3-.8-.7-1-1.1-.2-.4-.4-.9-.4-1.4 0-.3.1-.5.2-.7.1-.2.2-.3.4-.3.2 0 .3.1.4.2.1.1.1.3.1.5 0 .3.1.5.2.8.1.3.3.5.5.7.2.2.5.4.8.5.3.1.6.1.9.1.3 0 .5-.1.8-.2.5-.2 1-.5 1.5-.8.5-.3.9-.7 1.3-1.1.4-.4.7-.9.9-1.4.2-.5.3-1.1.3-1.6 0-.6-.1-1.2-.4-1.7-.3-.5-.6-1-1.1-1.3-.5-.3-1-.5-1.6-.5-.6 0-1.1.1-1.6.3-.5.2-.9.5-1.3.9-.4.4-.7.8-.9 1.3-.2.5-.3 1-.3 1.5 0 .5.1 1 .3 1.5.2.5.5.9.9 1.2.4.3.8.5 1.3.6.5.1 1 .1 1.5 0z" />
-    </svg>
-  ),
-  docker: (
-    <svg viewBox="0 0 24 24" fill="currentColor">
-      <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm5.5 13.5c-.3.8-1.1 1.4-1.9 1.5-.7.1-1.4.1-2.1-.1-.2-.1-.4-.1-.6-.1-.4 0-.8.1-1.2.3-.5.2-1 .5-1.5.7-.4.2-.8.3-1.2.3-.3 0-.6-.1-.9-.2-.3-.1-.6-.3-.8-.5-.2-.2-.4-.5-.5-.8-.1-.3-.1-.6-.1-.9l.2-1.1c.1-.5.2-1.1.2-1.6 0-.6-.1-1.1-.3-1.6-.2-.5-.5-.9-.9-1.2-.4-.3-.8-.5-1.3-.6-.5-.1-1-.1-1.5 0-.2 0-.4.1-.5.2-.1.1-.2.2-.2.4 0 .2.1.4.2.5.1.1.3.2.5.2.3 0 .5.1.7.3.2.2.3.4.3.7 0 .2.1.4.1.6 0 .2-.1.5-.2.7-.1.2-.3.4-.5.5-.2.1-.4.2-.6.2-.2 0-.4-.1-.5-.2-.1-.1-.2-.3-.2-.5 0-.1-.1-.2-.1-.3 0-.4-.1-.8-.3-1.1-.2-.3-.5-.6-.8-.8-.3-.2-.7-.3-1.1-.3-.4 0-.8.1-1.1.3-.3.2-.6.5-.8.8-.2.3-.3.7-.3 1.1v.1c0 .5.1 1 .4 1.5.3.5.6.9 1.1 1.2.5.3 1 .5 1.6.6.6.1 1.2.1 1.7-.1.5-.2.9-.4 1.3-.7.3-.2.6-.5.8-.8.2-.3.4-.6.5-1 .1-.3.2-.7.2-1 0-.6-.2-1.2-.7-1.6-.5-.4-1.1-.6-1.8-.6-.4 0-.7.1-1 .2-.3.1-.5.3-.6.5-.1.2-.1.4 0 .6.1.2.2.3.4.3.2 0 .3-.1.4-.2.1-.1.2-.2.3-.2.1 0 .2 0 .3.1.1.1.2.2.2.4 0 .2-.1.4-.2.5-.1.1-.3.2-.5.2-.2 0-.4-.1-.6-.2-.2-.1-.3-.3-.4-.5-.1-.2-.1-.4-.1-.6 0-.3.1-.6.3-.8.2-.2.4-.4.7-.5.3-.1.6-.2.9-.2.6 0 1.2.2 1.6.6.4.4.7.9.9 1.5.2.6.3 1.2.3 1.9 0 .5-.1 1-.3 1.5-.2.5-.4.9-.7 1.3-.3.4-.7.7-1.1.9-.4.2-.9.4-1.4.5-.5.1-1 .1-1.5 0-.5-.1-1-.3-1.4-.6-.4-.3-.8-.7-1-1.1-.2-.4-.4-.9-.4-1.4 0-.3.1-.5.2-.7.1-.2.2-.3.4-.3.2 0 .3.1.4.2.1.1.1.3.1.5 0 .3.1.5.2.8.1.3.3.5.5.7.2.2.5.4.8.5.3.1.6.1.9.1.3 0 .5-.1.8-.2.5-.2 1-.5 1.5-.8.5-.3.9-.7 1.3-1.1.4-.4.7-.9.9-1.4.2-.5.3-1.1.3-1.6 0-.6-.1-1.2-.4-1.7-.3-.5-.6-1-1.1-1.3-.5-.3-1-.5-1.6-.5-.6 0-1.1.1-1.6.3-.5.2-.9.5-1.3.9-.4.4-.7.8-.9 1.3-.2.5-.3 1-.3 1.5 0 .5.1 1 .3 1.5.2.5.5.9.9 1.2.4.3.8.5 1.3.6.5.1 1 .1 1.5 0z" />
-    </svg>
-  ),
-  figma: (
-    <svg viewBox="0 0 24 24" fill="currentColor">
-      <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 15.5c-1.5-.5-2.5-2-2.5-3.5s1-3 2.5-3.5v7zm6-5.5c0 3.5-2.5 6.5-5.5 7.5V4.5c3 .5 5.5 3.5 5.5 7z" />
-    </svg>
-  ),
+import { useEffect } from 'react';
+import { motion } from 'framer-motion';
+import {
+  FaReact, FaNodeJs, FaHtml5, FaCss3Alt, FaJs, FaPython, FaGitAlt, FaDocker, FaFigma,
+  FaAngular, FaVuejs, FaAws, FaJava,
+} from 'react-icons/fa';
+import {
+  SiTailwindcss, SiMongodb, SiPostgresql, SiExpress, SiNextdotjs, SiRedux, SiVite, SiPostman,
+  SiFirebase, SiRedis, SiKubernetes, SiTypescript, SiSass, SiWebpack, SiBabel,
+  SiFlutter, SiGo, SiRust, SiMysql, SiGraphql, SiJenkins,
+} from 'react-icons/si';
+import { DiMsqlServer } from 'react-icons/di';
+import { useTheme } from '../context/ThemeContext';
+
+function useSectionStyles(settings, key) {
+  const { theme } = useTheme();
+  const ps = settings?.pageStyles?.[key] || {};
+  useEffect(() => {
+    if (ps.customCss) {
+      const el = document.createElement('style');
+      el.id = `custom-css-${key}`;
+      el.textContent = ps.customCss;
+      document.head.appendChild(el);
+      return () => el.remove();
+    }
+  }, [ps.customCss, key]);
+  if (theme === 'dark') return { ...ps, bgColor: '' };
+  return ps;
+}
+
+const ICON_MAP = {
+  react: <FaReact />,
+  angular: <FaAngular />,
+  vue: <FaVuejs />,
+  vuejs: <FaVuejs />,
+  javascript: <FaJs />,
+  js: <FaJs />,
+  typescript: <SiTypescript />,
+  ts: <SiTypescript />,
+  html: <FaHtml5 />,
+  html5: <FaHtml5 />,
+  css: <FaCss3Alt />,
+  css3: <FaCss3Alt />,
+  tailwind: <SiTailwindcss />,
+  tailwindcss: <SiTailwindcss />,
+  nodejs: <FaNodeJs />,
+  node: <FaNodeJs />,
+  express: <SiExpress />,
+  python: <FaPython />,
+  java: <FaJava />,
+  go: <SiGo />,
+  rust: <SiRust />,
+  mongodb: <SiMongodb />,
+  mongo: <SiMongodb />,
+  postgresql: <SiPostgresql />,
+  postgres: <SiPostgresql />,
+  mysql: <SiMysql />,
+  sqlite: <DiMsqlServer />,
+  redis: <SiRedis />,
+  firebase: <SiFirebase />,
+  aws: <FaAws />,
+  git: <FaGitAlt />,
+  docker: <FaDocker />,
+  kubernetes: <SiKubernetes />,
+  k8s: <SiKubernetes />,
+  figma: <FaFigma />,
+  nextjs: <SiNextdotjs />,
+  next: <SiNextdotjs />,
+  redux: <SiRedux />,
+  vite: <SiVite />,
+  postman: <SiPostman />,
+  graphql: <SiGraphql />,
+  sass: <SiSass />,
+  scss: <SiSass />,
+  webpack: <SiWebpack />,
+  babel: <SiBabel />,
+  flutter: <SiFlutter />,
+  dart: <SiFlutter />,
+  jenkins: <SiJenkins />,
+  csharp: <SiJenkins />,
+  dotnet: <SiJenkins />,
+};
+
+function resolveIcon(skill) {
+  const icon = skill.icon?.trim();
+  const name = skill.name?.trim().toLowerCase();
+
+  if (icon) {
+    const key = icon.toLowerCase().replace(/^(fa|si|di)/, '');
+    if (ICON_MAP[key]) return ICON_MAP[key];
+    if (ICON_MAP[icon.toLowerCase()]) return ICON_MAP[icon.toLowerCase()];
+    if (icon.length <= 4) return <span style={{ fontSize: '1.3rem' }}>{icon}</span>;
+  }
+
+  if (name && ICON_MAP[name]) return ICON_MAP[name];
+
+  return <FaReact />;
+}
+
+const sectionVariants = {
+  hidden: { opacity: 0 },
+  visible: { opacity: 1, transition: { staggerChildren: 0.08 } },
+};
+
+const itemVariants = {
+  hidden: { opacity: 0, y: 24 },
+  visible: { opacity: 1, y: 0, transition: { duration: 0.5, ease: 'easeOut' } },
 };
 
 function Skills({ skills, settings, sectionTitle, sectionSubtitle }) {
+  const ps = useSectionStyles(settings, 'skills');
   if (!skills || skills.length === 0) return null;
 
   const groupedSkills = skills.reduce((acc, skill) => {
@@ -67,43 +119,54 @@ function Skills({ skills, settings, sectionTitle, sectionSubtitle }) {
   }, {});
 
   return (
-    <section className="skills section" id="skills">
-      <div className="container skills-container">
-        <div className="section-header">
+    <motion.section
+      className="skills section" id="skills"
+      initial="hidden"
+      whileInView="visible"
+      viewport={{ once: true, margin: '-80px' }}
+      variants={sectionVariants}
+      style={{
+        ...(ps.bgColor ? { backgroundColor: ps.bgColor } : {}),
+        ...(ps.textColor ? { color: ps.textColor } : {}),
+        ...(ps.fontFamily ? { fontFamily: ps.fontFamily } : {}),
+        ...(ps.paddingY === 'small' ? { paddingTop: '2rem', paddingBottom: '2rem' } : {}),
+        ...(ps.paddingY === 'medium' ? { paddingTop: '4rem', paddingBottom: '4rem' } : {}),
+        ...(ps.paddingY === 'large' ? { paddingTop: '6rem', paddingBottom: '6rem' } : {}),
+        ...(ps.paddingY === 'xlarge' ? { paddingTop: '8rem', paddingBottom: '8rem' } : {}),
+      }}
+    >
+      <div className="skills-container">
+        <motion.div variants={itemVariants} className="text-center">
           <span className="section-tag">Skills</span>
           <h2 className="section-title">{sectionTitle || 'Skills & Technologies'}</h2>
-          <div className="section-line" />
-        </div>
-        <div className="skill-groups">
+          {sectionSubtitle && <p className="section-subtitle">{sectionSubtitle}</p>}
+          <div className="section-line" style={{ margin: '0.5rem auto 0' }} />
+        </motion.div>
+
+        <div className="skill-groups" style={{ marginTop: '3rem' }}>
           {Object.entries(groupedSkills).map(([category, catSkills]) => (
-            <div key={category} className="skill-group">
+            <motion.div key={category} variants={itemVariants}>
               <div className="skill-group-label">{category}</div>
               <div className="skill-cards">
-                {catSkills.map(skill => (
-                  <div key={skill._id} className="skill-card">
-                    <svg className="skill-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-                      {skill.icon === 'react' && <><circle cx="12" cy="12" r="2.5"/><path d="M12 2a10 10 0 0 1 10 10"/><path d="M12 22a10 10 0 0 1 10-10"/><path d="M2 12a10 10 0 0 1 10 10"/><path d="M2 12a10 10 0 0 1 10-10"/></>}
-                      {skill.icon === 'javascript' && <><path d="M4 4h16v16H4z"/><path d="M9 15.5c.3.5.8.8 1.4.8.6 0 1-.3 1-.9 0-.5-.3-.8-1-1.2l-.5-.2c-1-.4-1.7-1-1.7-2 0-1 .8-1.8 2-1.8.7 0 1.2.2 1.6.6"/><path d="M15 15.5c.3.5.7.8 1.3.8.6 0 1-.3 1-.9 0-.5-.3-.8-1-1.2l-.5-.2c-1-.4-1.6-1-1.6-2 0-1 .7-1.8 1.9-1.8.7 0 1.2.2 1.6.6"/></>}
-                      {skill.icon === 'html' && <><path d="M4 2l1.5 18L12 22l6.5-2L20 2H4z"/><path d="M8 6h8v2H8v2h6v2H8"/><path d="M16 10v2h-2"/></>}
-                      {skill.icon === 'tailwind' && <><path d="M12 3c-4 0-6 2-6 4s2 3 4 3c-2 0-4 1-4 3s2 3 4 3c-2 0-4 1-4 3 0 2 4 3 6 3 4 0 6-2 6-4s-2-3-4-3c2 0 4-1 4-3s-2-3-4-3c2 0 4-1 4-3 0-2-4-3-6-3z"/></>}
-                      {skill.icon === 'nodejs' && <><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></>}
-                      {skill.icon === 'python' && <><path d="M8 4h8v4H8z"/><path d="M8 16h8v4H8z"/><path d="M4 8h16v8H4z"/><path d="M8 8v8"/><path d="M16 8v8"/></>}
-                      {skill.icon === 'mongodb' && <><ellipse cx="12" cy="5" rx="9" ry="3"/><path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3"/><path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"/></>}
-                      {skill.icon === 'postgresql' && <><ellipse cx="12" cy="5" rx="9" ry="3"/><path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3"/><path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"/></>}
-                      {skill.icon === 'git' && <><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="4"/><line x1="12" y1="2" x2="12" y2="8"/><line x1="12" y1="16" x2="12" y2="22"/><line x1="2" y1="12" x2="8" y2="12"/><line x1="16" y1="12" x2="22" y2="12"/></>}
-                      {skill.icon === 'docker' && <><rect x="4" y="4" width="16" height="16" rx="2"/><path d="M9 8v8"/><path d="M15 8v8"/><path d="M4 12h16"/></>}
-                      {skill.icon === 'figma' && <><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="4"/><path d="M12 2v10"/><path d="M12 22V12"/></>}
-                      {!skill.icon && <><polyline points="16 18 22 12 16 6" /><polyline points="8 6 2 12 8 18" /></>}
-                    </svg>
+                {catSkills.map((skill, i) => (
+                  <motion.div
+                    key={skill._id || i}
+                    className="skill-card"
+                    whileHover={{ y: -6, scale: 1.05 }}
+                    transition={{ type: 'spring', stiffness: 300, damping: 18 }}
+                  >
+                    <span className="skill-svg" style={{ color: 'var(--primary-color)' }}>
+                      {resolveIcon(skill)}
+                    </span>
                     <span className="skill-card-name">{skill.name}</span>
-                  </div>
+                  </motion.div>
                 ))}
               </div>
-            </div>
+            </motion.div>
           ))}
         </div>
       </div>
-    </section>
+    </motion.section>
   );
 }
 

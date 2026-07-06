@@ -1,6 +1,5 @@
 import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { useSearchParams, Link } from 'react-router-dom';
-import { Helmet } from 'react-helmet-async';
 import { FiSearch, FiArrowRight, FiFileText, FiCode } from 'react-icons/fi';
 import { FaFolder, FaGithub, FaExternalLinkAlt, FaBlog } from 'react-icons/fa';
 import { motion } from 'framer-motion';
@@ -76,13 +75,14 @@ function SearchPage() {
     }
   }, [query, setSearchParams]);
 
+  useEffect(() => {
+    document.title = query ? `${t('search.title')}: ${query} | Sisay Temesgen` : `${t('search.title')} | Sisay Temesgen`;
+  }, [query, t]);
+
   const totalResults = results.projects.length + results.blogs.length + results.skills.length;
 
   return (
     <div className="min-h-screen pt-24 pb-16 px-6">
-      <Helmet>
-        <title>{query ? `${t('search.title')}: ${query} | Sisay Temesgen` : `${t('search.title')} | Sisay Temesgen`}</title>
-      </Helmet>
 
       <div className="max-w-4xl mx-auto">
         <form onSubmit={handleSearch} className="mb-10">

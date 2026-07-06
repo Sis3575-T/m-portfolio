@@ -1,5 +1,22 @@
 import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
+import { useTheme } from '../context/ThemeContext';
+
+function useSectionStyles(settings, key) {
+  const { theme } = useTheme();
+  const ps = settings?.pageStyles?.[key] || {};
+  useEffect(() => {
+    if (ps.customCss) {
+      const el = document.createElement('style');
+      el.id = `custom-css-${key}`;
+      el.textContent = ps.customCss;
+      document.head.appendChild(el);
+      return () => el.remove();
+    }
+  }, [ps.customCss, key]);
+  if (theme === 'dark') return { ...ps, bgColor: '' };
+  return ps;
+}
 
 function formatDate(d) {
   if (!d) return 'Present';
@@ -7,6 +24,7 @@ function formatDate(d) {
 }
 
 function Experience({ experience, settings, sectionTitle, sectionSubtitle }) {
+  const ps = useSectionStyles(settings, 'experience');
   const [items, setItems] = useState([]);
 
   useEffect(() => {
@@ -19,7 +37,15 @@ function Experience({ experience, settings, sectionTitle, sectionSubtitle }) {
   if (items.length === 0) return null;
 
   return (
-    <section className="resume section" id="experience">
+    <section className="resume section" id="experience" style={{
+      ...(ps.bgColor ? { backgroundColor: ps.bgColor } : {}),
+      ...(ps.textColor ? { color: ps.textColor } : {}),
+      ...(ps.fontFamily ? { fontFamily: ps.fontFamily } : {}),
+      ...(ps.paddingY === 'small' ? { paddingTop: '2rem', paddingBottom: '2rem' } : {}),
+      ...(ps.paddingY === 'medium' ? { paddingTop: '4rem', paddingBottom: '4rem' } : {}),
+      ...(ps.paddingY === 'large' ? { paddingTop: '6rem', paddingBottom: '6rem' } : {}),
+      ...(ps.paddingY === 'xlarge' ? { paddingTop: '8rem', paddingBottom: '8rem' } : {}),
+    }}>
       <div className="container resume-container">
         <motion.div
           initial={{ opacity: 0, y: 36 }}
@@ -60,9 +86,7 @@ function Experience({ experience, settings, sectionTitle, sectionSubtitle }) {
                     <div className="timeline-content">
                       <span className="timeline-date">{period}</span>
                       <h3 className="timeline-role">{item.position}</h3>
-                      <div className="timeline-company">
-                        {item.company}{item.location ? ` — ${item.location}` : ''}
-                      </div>
+                      <div className="timeline-company">{item.company}</div>
                       {points.length > 0 && (
                         <ul className="timeline-points">
                           {points.slice(0, 5).map((point, i) => (

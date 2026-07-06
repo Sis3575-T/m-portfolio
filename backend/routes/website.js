@@ -124,7 +124,7 @@ router.get('/education', async (req, res) => {
 // Certificates
 router.get('/certificates', async (req, res) => {
   try {
-    const items = await Certificate.find({ status: 'published' }).sort({ order: 1 });
+    const items = await Certificate.find({ $or: [{ status: 'published' }, { status: 'verified' }] }).sort({ order: 1 });
     res.json({ success: true, data: items });
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });

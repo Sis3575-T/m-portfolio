@@ -106,7 +106,7 @@ function Navbar({ settings: propSettings, navItems: propNavItems }) {
             </a>
           </span>
           <button
-            className="theme-toggle-btn"
+            className="theme-toggle"
             onClick={() => setDarkMode(prev => !prev)}
             aria-label="Toggle theme"
           >

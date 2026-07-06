@@ -22,6 +22,11 @@ function formatNumber(n) {
   return n.toLocaleString();
 }
 
+function formatDateLabel(dateStr) {
+  const d = new Date(dateStr + 'T00:00:00');
+  return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+}
+
 const Flag = ({ country }) => {
   if (!country || country === '—') return <span style={{ fontSize: 16 }}>🌍</span>;
   const codeMap = {
@@ -61,6 +66,7 @@ export default function AnalyticsPage() {
   const [overviewData, setOverviewData] = useState(null);
   const [liveVisitors, setLiveVisitors] = useState([]);
   const [visitors, setVisitors] = useState([]);
+  const [totalVisitorCount, setTotalVisitorCount] = useState(0);
   const [visitorLoading, setVisitorLoading] = useState(false);
   const [pageViews, setPageViews] = useState([]);
   const [browsers, setBrowsers] = useState([]);
@@ -71,6 +77,11 @@ export default function AnalyticsPage() {
   const [bounceRate, setBounceRate] = useState(0);
   const [avgDuration, setAvgDuration] = useState(0);
   const [dateRange, setDateRange] = useState('30d');
+  const [dailyVisits, setDailyVisits] = useState([]);
+  const [returningStats, setReturningStats] = useState({ new: 0, returning: 0, newPercent: 0, returningPercent: 0 });
+  const [cities, setCities] = useState([]);
+  const [weeklyMonthly, setWeeklyMonthly] = useState({ weekly: [], monthly: [] });
+  const [wmView, setWmView] = useState('monthly');
 
   const fetchData = useCallback(async () => {
     setLoading(true);
@@ -78,7 +89,8 @@ export default function AnalyticsPage() {
     try {
       const [
         liveRes, visitorsRes, browsersRes, devicesRes,
-        sourcesRes, countriesRes, pagesRes, bounceRes, durationRes,
+        sourcesRes, countriesRes, pagesRes, bounceRes, durationRes, statsRes,
+        dailyRes, returningRes, citiesRes, wmRes,
       ] = await Promise.all([
         adminApi.getLiveVisitors().catch(() => ({ data: { data: [] } })),
         adminApi.getVisitorsList({ page: 1, limit: 15 }).catch(() => ({ data: { data: { visitors: [] } } })),
@@ -89,6 +101,11 @@ export default function AnalyticsPage() {
         adminApi.getPagesStats().catch(() => ({ data: { data: [] } })),
         adminApi.getBounceRate({ range: dateRange }).catch(() => ({ data: { data: { rate: 0 } } })),
         adminApi.getSessionDuration({ range: dateRange }).catch(() => ({ data: { data: { average: 0 } } })),
+        adminApi.getDashboardStats().catch(() => ({ data: { data: {} } })),
+        adminApi.getDailyVisits({ range: dateRange }).catch(() => ({ data: { data: [] } })),
+        adminApi.getReturningStats().catch(() => ({ data: { data: { new: 0, returning: 0, newPercent: 0, returningPercent: 0 } } })),
+        adminApi.getCities().catch(() => ({ data: { data: [] } })),
+        adminApi.getWeeklyMonthly().catch(() => ({ data: { data: { weekly: [], monthly: [] } } })),
       ]);
 
       const live = liveRes.data?.data || [];
@@ -102,9 +119,22 @@ export default function AnalyticsPage() {
 
       const visitorList = visitorsRes.data?.data?.visitors || [];
       setVisitors(Array.isArray(visitorList) ? visitorList : []);
+      const uniqueCount = statsRes.data?.data?.uniqueVisitors || 0;
+      setTotalVisitorCount(uniqueCount);
 
       setBounceRate(bounceRes.data?.data?.rate || 0);
       setAvgDuration(durationRes.data?.data?.average || 0);
+
+      const dailyData = dailyRes.data?.data || [];
+      setDailyVisits(Array.isArray(dailyData) ? dailyData : []);
+
+      setReturningStats(returningRes.data?.data || { new: 0, returning: 0, newPercent: 0, returningPercent: 0 });
+
+      const cityData = citiesRes.data?.data || [];
+      setCities(Array.isArray(cityData) ? cityData : []);
+
+      const wmData = wmRes.data?.data || { weekly: [], monthly: [] };
+      setWeeklyMonthly(wmData);
     } catch (err) {
       setError(err.message || 'Failed to load analytics data');
     } finally {
@@ -119,8 +149,14 @@ export default function AnalyticsPage() {
   }, [fetchData]);
 
   useEffect(() => {
-    // Generate daily page views from visitors data
-    if (visitors.length > 0) {
+    if (dailyVisits.length > 0) {
+      setPageViews(dailyVisits.map(d => ({
+        date: formatDateLabel(d.date),
+        visits: d.visits || 0,
+        unique: d.unique || 0,
+        pageViews: d.pageViews || 0,
+      })));
+    } else if (visitors.length > 0) {
       const dayMap = {};
       visitors.forEach(v => {
         if (v.createdAt) {
@@ -131,24 +167,11 @@ export default function AnalyticsPage() {
       const sorted = Object.entries(dayMap)
         .map(([date, views]) => ({ date, views }))
         .sort((a, b) => new Date(a.date) - new Date(b.date));
-      setPageViews(sorted.length > 0 ? sorted : generateFallbackPageViews());
+      setPageViews(sorted.length > 0 ? sorted : []);
     } else {
-      setPageViews(generateFallbackPageViews());
+      setPageViews([]);
     }
-  }, [visitors]);
-
-  const generateFallbackPageViews = () => {
-    const data = [];
-    for (let i = 29; i >= 0; i--) {
-      const d = new Date();
-      d.setDate(d.getDate() - i);
-      data.push({
-        date: d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' }),
-        views: Math.floor(Math.random() * 50) + 5,
-      });
-    }
-    return data;
-  };
+  }, [dailyVisits, visitors]);
 
   const handleExport = async () => {
     try {
@@ -173,24 +196,30 @@ export default function AnalyticsPage() {
     return new Date(v.createdAt).toDateString() === new Date().toDateString();
   }).length;
   const activeNow = liveVisitors.length;
-  const totalVisitors = visitors.length;
+  const totalVisitors = totalVisitorCount;
 
+  const totalPageViews = pageViews.reduce((s, p) => s + (p.pageViews || p.views || 0), 0);
   const statsRow = [
     { icon: Icons['user-plus'], label: "Today's Visitors", value: formatNumber(todayVisitors), color: 'blue' },
     { icon: Icons.users, label: 'Total Visitors', value: formatNumber(totalVisitors), color: 'green' },
     { icon: Icons.activity, label: 'Online Now', value: activeNow, color: 'purple' },
-    { icon: Icons.clock, label: 'Avg Session Duration', value: formatDuration(avgDuration), color: 'blue' },
+    { icon: Icons['user-check'], label: 'Returning', value: `${returningStats.returningPercent}%`, color: 'emerald' },
+    { icon: Icons.clock, label: 'Avg Duration', value: formatDuration(avgDuration), color: 'blue' },
     { icon: Icons['trending-up'], label: 'Bounce Rate', value: `${bounceRate}%`, color: 'red' },
-    { icon: Icons['bar-chart'], label: 'Page Views', value: formatNumber(pageViews.reduce((s, p) => s + p.views, 0)), color: 'green' },
+    { icon: Icons['bar-chart'], label: 'Page Views', value: formatNumber(totalPageViews), color: 'green' },
   ];
 
   const visitorColumns = [
-    { key: 'country', label: 'Country', width: 100, render: (_, row) => <><Flag country={row?.country} /> {row?.country || '—'}</> },
-    { key: 'browser', label: 'Browser', width: 100, render: (_, row) => <><BrowserIcon browser={row?.browser} /> {row?.browser || '—'}</> },
-    { key: 'deviceType', label: 'Device', width: 90 },
-    { key: 'landingPage', label: 'Landing Page', width: 180 },
-    { key: 'duration', label: 'Duration', width: 90, render: (v) => formatDuration(v) },
-    { key: 'createdAt', label: 'Time', width: 160, render: (v) => v ? new Date(v).toLocaleString() : '—' },
+    { key: 'visitorId', label: 'Visitor', width: 130, render: (row) => row?.visitorId ? <span title={row.visitorId}><span style={{ color: 'var(--color-text-tertiary)', fontSize: '0.75rem' }}>Guest </span><code style={{ fontSize: '0.75rem', color: 'var(--color-primary)', background: 'var(--color-primary-bg)', padding: '2px 6px', borderRadius: 4 }}>{row.visitorId.slice(-8)}</code></span> : '—' },
+    { key: 'city', label: 'City', width: 100, render: (row) => row?.city || '—' },
+    { key: 'country', label: 'Country', width: 100, render: (row) => <><Flag country={row?.country} /> {row?.country || '—'}</> },
+    { key: 'browser', label: 'Browser', width: 90, render: (row) => <><BrowserIcon browser={row?.browser} /> {row?.browser || '—'}</> },
+    { key: 'os', label: 'OS', width: 80, render: (row) => row?.os || '—' },
+    { key: 'deviceType', label: 'Device', width: 80, render: (row) => row?.deviceType || '—' },
+    { key: 'pageViews', label: 'Views', width: 60, render: (row) => row?.pageViews || 0 },
+    { key: 'landingPage', label: 'Landing Page', width: 150, render: (row) => row?.landingPage || '/' },
+    { key: 'duration', label: 'Duration', width: 80, render: (row) => formatDuration(row?.duration) },
+    { key: 'createdAt', label: 'Time', width: 150, render: (row) => row?.createdAt ? new Date(row.createdAt).toLocaleString() : '—' },
   ];
 
   return (
@@ -276,7 +305,7 @@ export default function AnalyticsPage() {
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.5rem', marginBottom: '1.5rem' }}>
             {/* Page Views Trend */}
             <div style={{ background: 'var(--color-card)', border: '1px solid var(--color-border)', borderRadius: 14, padding: '1.5rem' }}>
-              <h3 style={{ fontSize: '0.9rem', fontWeight: 700, color: 'var(--color-text)', margin: 0, marginBottom: '1rem' }}>Page Views (30 Days)</h3>
+              <h3 style={{ fontSize: '0.9rem', fontWeight: 700, color: 'var(--color-text)', margin: 0, marginBottom: '1rem' }}>Daily Traffic</h3>
               {pageViews.length === 0 ? (
                 <p style={{ color: 'var(--color-text-tertiary)', fontSize: '0.85rem', textAlign: 'center', padding: '2rem 0' }}>No data available</p>
               ) : (
@@ -292,7 +321,8 @@ export default function AnalyticsPage() {
                     <XAxis dataKey="date" tick={{ fontSize: 10, fill: 'var(--color-text-tertiary)' }} interval="preserveStartEnd" />
                     <YAxis tick={{ fontSize: 10, fill: 'var(--color-text-tertiary)' }} />
                     <Tooltip contentStyle={{ background: 'var(--color-card)', border: '1px solid var(--color-border)', borderRadius: 8, fontSize: 12 }} />
-                    <Area type="monotone" dataKey="views" stroke="var(--color-primary)" fill="url(#colorViews)" strokeWidth={2} />
+                    <Area type="monotone" dataKey="pageViews" stroke="var(--color-primary)" fill="url(#colorViews)" strokeWidth={2} name="Page Views" />
+                    <Area type="monotone" dataKey="unique" stroke="#10B981" fill="none" strokeWidth={2} strokeDasharray="4 4" name="Unique Visitors" />
                   </AreaChart>
                 </ResponsiveContainer>
               )}
@@ -386,9 +416,99 @@ export default function AnalyticsPage() {
               )}
             </div>
 
-            {/* Top Pages */}
+          {/* Returning vs New Visitors */}
+          <div style={{ background: 'var(--color-card)', border: '1px solid var(--color-border)', borderRadius: 14, padding: '1.5rem' }}>
+            <h3 style={{ fontSize: '0.9rem', fontWeight: 700, color: 'var(--color-text)', margin: 0, marginBottom: '1rem' }}>Returning vs New Visitors</h3>
+            {returningStats.total === 0 ? (
+              <p style={{ color: 'var(--color-text-tertiary)', fontSize: '0.85rem', textAlign: 'center', padding: '2rem 0' }}>No data available</p>
+            ) : (
+              <ResponsiveContainer width="100%" height={260}>
+                <PieChart>
+                  <Pie data={[
+                    { name: 'New', value: returningStats.new || 0 },
+                    { name: 'Returning', value: returningStats.returning || 0 },
+                  ]} cx="50%" cy="50%" innerRadius={60} outerRadius={90} paddingAngle={4} dataKey="value" nameKey="name">
+                    <Cell fill="var(--color-primary)" />
+                    <Cell fill="#10B981" />
+                  </Pie>
+                  <Tooltip contentStyle={{ background: 'var(--color-card)', border: '1px solid var(--color-border)', borderRadius: 8, fontSize: 12 }} />
+                  <Legend layout="vertical" align="right" verticalAlign="middle" iconType="circle" iconSize={8}
+                    formatter={(value) => <span style={{ color: 'var(--color-text-secondary)', fontSize: 11 }}>{value}</span>}
+                  />
+                </PieChart>
+              </ResponsiveContainer>
+            )}
+            <div style={{ display: 'flex', justifyContent: 'center', gap: '2rem', marginTop: '0.5rem' }}>
+              <div style={{ textAlign: 'center' }}>
+                <div style={{ fontSize: '1.3rem', fontWeight: 700, color: 'var(--color-primary)' }}>{formatNumber(returningStats.new || 0)}</div>
+                <div style={{ fontSize: '0.7rem', color: 'var(--color-text-tertiary)' }}>New ({returningStats.newPercent || 0}%)</div>
+              </div>
+              <div style={{ textAlign: 'center' }}>
+                <div style={{ fontSize: '1.3rem', fontWeight: 700, color: '#10B981' }}>{formatNumber(returningStats.returning || 0)}</div>
+                <div style={{ fontSize: '0.7rem', color: 'var(--color-text-tertiary)' }}>Returning ({returningStats.returningPercent || 0}%)</div>
+              </div>
+            </div>
+          </div>
+
+          {/* Weekly / Monthly Trend */}
+          <div style={{ background: 'var(--color-card)', border: '1px solid var(--color-border)', borderRadius: 14, padding: '1.5rem' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
+              <h3 style={{ fontSize: '0.9rem', fontWeight: 700, color: 'var(--color-text)', margin: 0 }}>
+                {wmView === 'monthly' ? 'Monthly Trend' : 'Weekly Trend'}
+              </h3>
+              <div style={{ display: 'flex', gap: '0.3rem' }}>
+                {['weekly', 'monthly'].map(v => (
+                  <button key={v} onClick={() => setWmView(v)}
+                    style={{
+                      padding: '0.2rem 0.6rem', borderRadius: 6, border: `1px solid ${wmView === v ? 'var(--color-primary)' : 'var(--color-border)'}`,
+                      background: wmView === v ? 'var(--color-primary)' : 'transparent',
+                      color: wmView === v ? '#fff' : 'var(--color-text-secondary)',
+                      fontWeight: 600, fontSize: '0.7rem', cursor: 'pointer',
+                    }}
+                  >{v === 'monthly' ? 'Monthly' : 'Weekly'}</button>
+                ))}
+              </div>
+            </div>
+            {weeklyMonthly[wmView].length === 0 ? (
+              <p style={{ color: 'var(--color-text-tertiary)', fontSize: '0.85rem', textAlign: 'center', padding: '2rem 0' }}>No data available</p>
+            ) : (
+              <ResponsiveContainer width="100%" height={260}>
+                <BarChart data={weeklyMonthly[wmView].slice(-12)}>
+                  <CartesianGrid strokeDasharray="3 3" stroke="var(--color-border-light)" />
+                  <XAxis dataKey="label" tick={{ fontSize: 9, fill: 'var(--color-text-tertiary)' }} interval={0} angle={-30} textAnchor="end" height={40} />
+                  <YAxis tick={{ fontSize: 10, fill: 'var(--color-text-tertiary)' }} />
+                  <Tooltip contentStyle={{ background: 'var(--color-card)', border: '1px solid var(--color-border)', borderRadius: 8, fontSize: 12 }} />
+                  <Bar dataKey="visits" radius={[3, 3, 0, 0]} fill="var(--color-primary)" />
+                </BarChart>
+              </ResponsiveContainer>
+            )}
+          </div>
+
+          {/* Top Cities */}
+          {cities.length > 0 && (
             <div style={{ background: 'var(--color-card)', border: '1px solid var(--color-border)', borderRadius: 14, padding: '1.5rem' }}>
-              <h3 style={{ fontSize: '0.9rem', fontWeight: 700, color: 'var(--color-text)', margin: 0, marginBottom: '1rem' }}>Top Pages</h3>
+              <h3 style={{ fontSize: '0.9rem', fontWeight: 700, color: 'var(--color-text)', margin: 0, marginBottom: '1rem' }}>Top Cities</h3>
+              <ResponsiveContainer width="100%" height={260}>
+                <BarChart data={cities.slice(0, 10)} layout="vertical">
+                  <CartesianGrid strokeDasharray="3 3" stroke="var(--color-border-light)" />
+                  <XAxis type="number" tick={{ fontSize: 10, fill: 'var(--color-text-tertiary)' }} />
+                  <YAxis dataKey="city" type="category" tick={{ fontSize: 10, fill: 'var(--color-text-tertiary)' }} width={90} />
+                  <Tooltip contentStyle={{ background: 'var(--color-card)', border: '1px solid var(--color-border)', borderRadius: 8, fontSize: 12 }}
+                    formatter={(value, name, props) => [value, `${props.payload.city}, ${props.payload.country || ''}`]}
+                  />
+                  <Bar dataKey="count" radius={[0, 4, 4, 0]}>
+                    {cities.slice(0, 10).map((_, idx) => (
+                      <Cell key={idx} fill={COLORS[idx % COLORS.length]} />
+                    ))}
+                  </Bar>
+                </BarChart>
+              </ResponsiveContainer>
+            </div>
+          )}
+
+          {/* Top Pages */}
+          <div style={{ background: 'var(--color-card)', border: '1px solid var(--color-border)', borderRadius: 14, padding: '1.5rem' }}>
+            <h3 style={{ fontSize: '0.9rem', fontWeight: 700, color: 'var(--color-text)', margin: 0, marginBottom: '1rem' }}>Top Pages</h3>
               {topPages.length === 0 ? (
                 <p style={{ color: 'var(--color-text-tertiary)', fontSize: '0.85rem', textAlign: 'center', padding: '2rem 0' }}>No page data available</p>
               ) : (
@@ -421,7 +541,17 @@ export default function AnalyticsPage() {
             loading={loading || visitorLoading}
             emptyMessage="No visitors data available yet. Wait for real visitors to visit your portfolio."
             emptyIcon={Icons.users}
-            actions={false}
+            actions={[
+              { label: 'Delete', variant: 'danger', icon: Icons.trash2, onClick: async (row) => {
+                if (!confirm('Delete this visitor record?')) return;
+                try {
+                  await adminApi.deleteVisitor(row._id);
+                  setVisitors(prev => prev.filter(v => v._id !== row._id));
+                } catch (e) {
+                  alert('Failed to delete visitor');
+                }
+              }},
+            ]}
             pageSize={10}
           />
         </>

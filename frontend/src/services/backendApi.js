@@ -46,6 +46,10 @@ export const backendApi = {
   updateSettings: (data) =>
     request('/settings', { method: 'PUT', body: JSON.stringify(data) }),
 
+  // About
+  getAbout: () =>
+    request('/website/about'),
+
   // Hero
   getHero: () =>
     request('/website/hero'),
@@ -155,6 +159,10 @@ export const backendApi = {
   // Testimonials
   getTestimonials: () =>
     request('/website/testimonials'),
+
+  // Certificates
+  getCertificates: () =>
+    request('/website/certificates'),
 
   // Blog
   getBlog: () =>

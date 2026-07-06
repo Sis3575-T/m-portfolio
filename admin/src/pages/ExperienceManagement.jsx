@@ -64,6 +64,7 @@ export default function ExperienceManagement() {
     try {
       const payload = {
         ...form,
+        status: 'published',
         technologies: form.technologies.split(',').map(t => t.trim()).filter(Boolean),
         endDate: form.current ? '' : form.endDate,
       };

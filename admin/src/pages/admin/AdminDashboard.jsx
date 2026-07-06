@@ -145,7 +145,7 @@ const AdminDashboard = () => {
             <p className="admin-topbar-sub">Manage your portfolio content</p>
           </div>
           <div className="admin-topbar-right">
-            <a href={import.meta.env.VITE_SITE_URL || 'http://localhost:5173'} target="_blank" rel="noopener noreferrer" className="admin-view-site">
+            <a href={import.meta.env.VITE_SITE_URL || 'https://portfolio2-khxf.vercel.app'} target="_blank" rel="noopener noreferrer" className="admin-view-site">
               🌐 View Site
             </a>
             <button

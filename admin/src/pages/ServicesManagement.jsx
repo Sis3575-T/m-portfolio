@@ -56,7 +56,7 @@ export default function ServicesManagement() {
     if (!form.title.trim()) { toast.error('Title is required'); return; }
     setSaving(true);
     try {
-      const payload = { ...form, order: Number(form.order) };
+      const payload = { ...form, order: Number(form.order), status: 'published' };
       if (editing) {
         await adminApi.updateService(editing._id, payload);
         toast.success('Service updated');

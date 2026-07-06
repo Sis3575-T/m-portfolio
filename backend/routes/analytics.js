@@ -146,6 +146,20 @@ router.get('/visitors/:id', protect, async (req, res) => {
   }
 });
 
+router.delete('/visitors/:id', protect, async (req, res) => {
+  try {
+    const session = await VisitorSession.findById(req.params.id);
+    if (!session) return res.status(404).json({ success: false, message: 'Session not found' });
+    await Promise.all([
+      VisitorEvent.deleteMany({ sessionId: session.sessionId }),
+      VisitorSession.findByIdAndDelete(req.params.id),
+    ]);
+    res.json({ success: true, message: 'Visitor deleted' });
+  } catch (err) {
+    res.status(500).json({ success: false, message: err.message });
+  }
+});
+
 router.get('/visitors/:id/events', protect, async (req, res) => {
   try {
     const session = await VisitorSession.findById(req.params.id).select('sessionId').lean();
@@ -413,6 +427,122 @@ router.get('/report', protect, async (req, res) => {
           generatedAt: new Date().toISOString(),
         },
       },
+    });
+  } catch (err) {
+    res.status(500).json({ success: false, message: err.message });
+  }
+});
+
+// ── Enhanced Analytics Endpoints ──
+
+router.get('/daily-visits', protect, async (req, res) => {
+  try {
+    const range = req.query.range || '30d';
+    const now = new Date();
+    let startDate;
+    if (range === 'today') startDate = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+    else if (range === '7d') startDate = new Date(now.getTime() - 7 * 86400000);
+    else if (range === '90d') startDate = new Date(now.getTime() - 90 * 86400000);
+    else startDate = new Date(now.getTime() - 30 * 86400000);
+
+    const visits = await VisitorSession.aggregate([
+      { $match: { createdAt: { $gte: startDate } } },
+      { $group: { _id: { $dateToString: { format: '%Y-%m-%d', date: '$createdAt' } }, visits: { $sum: 1 }, unique: { $addToSet: '$visitorId' }, pageViews: { $sum: '$pageViews' } } },
+      { $sort: { _id: 1 } },
+    ]);
+
+    res.json({
+      success: true,
+      data: visits.map(v => ({
+        date: v._id,
+        visits: v.visits,
+        unique: v.unique.length,
+        pageViews: v.pageViews,
+      })),
+    });
+  } catch (err) {
+    res.status(500).json({ success: false, message: err.message });
+  }
+});
+
+router.get('/weekly-monthly', protect, async (req, res) => {
+  try {
+    const now = new Date();
+    const sixMonthsAgo = new Date(now.getTime() - 180 * 86400000);
+
+    const weekly = await VisitorSession.aggregate([
+      { $match: { createdAt: { $gte: sixMonthsAgo } } },
+      { $group: { _id: { week: { $isoWeek: '$createdAt' }, year: { $isoWeekYear: '$createdAt' } }, visits: { $sum: 1 }, unique: { $addToSet: '$visitorId' } } },
+      { $sort: { '_id.year': 1, '_id.week': 1 } },
+    ]);
+
+    const monthly = await VisitorSession.aggregate([
+      { $group: { _id: { $dateToString: { format: '%Y-%m', date: '$createdAt' } }, visits: { $sum: 1 }, unique: { $addToSet: '$visitorId' } } },
+      { $sort: { _id: 1 } },
+      { $limit: 12 },
+    ]);
+
+    res.json({
+      success: true,
+      data: {
+        weekly: weekly.map(w => ({
+          label: `${w._id.year}-W${w._id.week}`,
+          visits: w.visits,
+          unique: w.unique.length,
+        })),
+        monthly: monthly.map(m => ({
+          label: m._id,
+          visits: m.visits,
+          unique: m.unique.length,
+        })),
+      },
+    });
+  } catch (err) {
+    res.status(500).json({ success: false, message: err.message });
+  }
+});
+
+router.get('/returning-stats', protect, async (req, res) => {
+  try {
+    const [newVisitors, returningVisitors] = await Promise.all([
+      VisitorSession.countDocuments({ isReturning: false }),
+      VisitorSession.countDocuments({ isReturning: true }),
+    ]);
+    const total = newVisitors + returningVisitors;
+
+    res.json({
+      success: true,
+      data: {
+        new: newVisitors,
+        returning: returningVisitors,
+        newPercent: total > 0 ? Math.round((newVisitors / total) * 100) : 0,
+        returningPercent: total > 0 ? Math.round((returningVisitors / total) * 100) : 0,
+        total,
+      },
+    });
+  } catch (err) {
+    res.status(500).json({ success: false, message: err.message });
+  }
+});
+
+router.get('/cities', protect, async (req, res) => {
+  try {
+    const cities = await VisitorSession.aggregate([
+      { $match: { city: { $ne: '', $exists: true } } },
+      { $group: { _id: { city: '$city', country: '$country', countryCode: '$countryCode' }, count: { $sum: 1 }, unique: { $addToSet: '$visitorId' } } },
+      { $sort: { count: -1 } },
+      { $limit: 50 },
+    ]);
+
+    res.json({
+      success: true,
+      data: cities.map(c => ({
+        city: c._id.city,
+        country: c._id.country,
+        countryCode: c._id.countryCode,
+        count: c.count,
+        unique: c.unique.length,
+      })),
     });
   } catch (err) {
     res.status(500).json({ success: false, message: err.message });

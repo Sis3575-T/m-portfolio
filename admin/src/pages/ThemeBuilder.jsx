@@ -249,6 +249,15 @@ p { margin-bottom: 1rem; }
                         <input type="text" value={form.colors[field.key] || ''}
                           onChange={(e) => updateColor(field.key, e.target.value)}
                           style={{ width: '100%', border: '1px solid var(--color-border)', borderRadius: 4, padding: '0.2rem 0.4rem', fontSize: '0.72rem', background: 'var(--color-bg)', color: 'var(--color-text)', fontFamily: 'monospace' }} />
+                        {form.colors[field.key] && (
+                          <button
+                            onClick={() => updateColor(field.key, '')}
+                            style={{ padding: 4, border: 'none', background: 'none', cursor: 'pointer', color: 'var(--color-text-tertiary)', display: 'flex' }}
+                            title="Clear color"
+                          >
+                            <Icon path={Icons.x} size={12} />
+                          </button>
+                        )}
                       </div>
                     </div>
                   ))}

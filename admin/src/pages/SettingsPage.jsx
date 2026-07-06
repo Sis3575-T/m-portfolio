@@ -10,6 +10,7 @@ const initialForm = {
   github: '', linkedin: '', twitter: '', instagram: '', facebook: '',
   smtpHost: '', smtpPort: '587', smtpUser: '', smtpPass: '', smtpFrom: '',
   gaId: '', gtmId: '', fbPixel: '', recaptchaSiteKey: '', recaptchaSecretKey: '', cloudinaryCloud: '', cloudinaryKey: '', cloudinarySecret: '',
+  seoTitle: '', seoDescription: '', cvUrl: '',
 };
 
 export default function SettingsPage() {
@@ -61,6 +62,9 @@ export default function SettingsPage() {
         cloudinaryCloud: s.cloudinaryCloud || '',
         cloudinaryKey: s.cloudinaryKey || '',
         cloudinarySecret: s.cloudinarySecret || '',
+        seoTitle: s.seoTitle || '',
+        seoDescription: s.seoDescription || '',
+        cvUrl: s.cvUrl || '',
       });
     } catch {
       toast.error('Failed to load settings');
@@ -202,6 +206,13 @@ export default function SettingsPage() {
                 </div>
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
                   {renderField('Site Description', 'siteDescription', { placeholder: 'A brief description of your site' })}
+                  {renderField('SEO Title', 'seoTitle', { placeholder: 'My Portfolio - Welcome' })}
+                </div>
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
+                  {renderField('SEO Description', 'seoDescription', { type: 'textarea', rows: 2, placeholder: 'SEO meta description for search engines' })}
+                  {renderField('CV/Resume URL', 'cvUrl', { placeholder: 'https://example.com/resume.pdf' })}
+                </div>
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
                   {renderField('Timezone', 'timezone', { type: 'select', options: [
                     { value: 'UTC', label: 'UTC' }, { value: 'America/New_York', label: 'America/New_York' },
                     { value: 'America/Chicago', label: 'America/Chicago' }, { value: 'America/Los_Angeles', label: 'America/Los_Angeles' },

@@ -1,8 +1,10 @@
 import React, { lazy, Suspense, useState, useEffect } from 'react';
 import { Routes, Route } from 'react-router-dom';
 import { PortfolioProvider } from './context/PortfolioContext';
+import { ThemeProvider } from './context/ThemeContext';
 import LoadingSkeleton from './components/LoadingSkeleton';
 import AdminPage from './pages/AdminPage';
+import AnalyticsTracker from './components/common/AnalyticsTracker';
 import './pages/Admin.css';
 
 const HomePage = lazy(() => import('./pages/HomePage'));
@@ -47,21 +49,24 @@ function LoadingFallback() {
 
 function App() {
   return (
-    <PortfolioProvider>
-      <ScrollProgress />
-      <Suspense fallback={<LoadingFallback />}>
-        <Routes>
-          <Route path="/" element={<HomePage />} />
-          <Route path="/admin" element={<AdminPage />} />
-          <Route path="/projects/:slug" element={<ProjectDetail />} />
-          <Route path="/blog" element={<BlogList />} />
-          <Route path="/blog/:slug" element={<BlogPost />} />
-          <Route path="/contact" element={<ContactPage />} />
-          <Route path="/gallery" element={<Gallery />} />
-          <Route path="*" element={<NotFound />} />
-        </Routes>
-      </Suspense>
-    </PortfolioProvider>
+    <ThemeProvider>
+      <PortfolioProvider>
+        <AnalyticsTracker />
+        <ScrollProgress />
+        <Suspense fallback={<LoadingFallback />}>
+          <Routes>
+            <Route path="/" element={<HomePage />} />
+            <Route path="/admin" element={<AdminPage />} />
+            <Route path="/projects/:slug" element={<ProjectDetail />} />
+            <Route path="/blog" element={<BlogList />} />
+            <Route path="/blog/:slug" element={<BlogPost />} />
+            <Route path="/contact" element={<ContactPage />} />
+            <Route path="/gallery" element={<Gallery />} />
+            <Route path="*" element={<NotFound />} />
+          </Routes>
+        </Suspense>
+      </PortfolioProvider>
+    </ThemeProvider>
   );
 }
 

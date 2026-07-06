@@ -61,8 +61,9 @@ export default function EducationManagement() {
     if (!form.institution.trim()) { toast.error('Institution is required'); return; }
     setSaving(true);
     try {
-      if (editing) await adminApi.updateEducation(editing._id, form);
-      else await adminApi.createEducation(form);
+      const payload = { ...form, status: 'published' };
+      if (editing) await adminApi.updateEducation(editing._id, payload);
+      else await adminApi.createEducation(payload);
       toast.success(editing ? 'Education updated' : 'Education created');
       await fetchItems();
       setShowModal(false);

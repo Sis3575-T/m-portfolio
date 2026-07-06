@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from 'react';
 import { useI18n } from '../../utils/i18n.jsx';
-import { Helmet } from 'react-helmet-async';
 import { FiArrowRight, FiMail, FiDownload, FiChevronDown, FiMapPin } from 'react-icons/fi';
 import { FaGithub, FaLinkedin, FaTwitter, FaTelegram, FaGlobe, FaYoutube } from 'react-icons/fa';
 import { motion } from 'framer-motion';
@@ -86,6 +85,24 @@ function HeroSection() {
   const roles = title.includes(',') ? title.split(',').map(r => r.trim()) : [title];
   const introduction = hero?.introduction || 'Computer Science student at Bahir Dar University — building modern, accessible web applications with React, Node.js & MongoDB.';
   const location = hero?.location || '';
+
+  useEffect(() => {
+    if (!loading) {
+      document.title = `${name} | ${title}`;
+      setMetaTag('description', introduction);
+    }
+  }, [loading, name, title, introduction]);
+
+  function setMetaTag(name, content) {
+    if (!content) return;
+    let el = document.querySelector(`meta[name="${name}"], meta[property="${name}"]`);
+    if (!el) {
+      el = document.createElement('meta');
+      el.setAttribute('name', name);
+      document.head.appendChild(el);
+    }
+    el.setAttribute('content', content);
+  }
   const availability = hero?.availability || {};
   const avatar = hero?.avatar ? imageUrl(hero.avatar) : null;
   const socialLinks = hero?.socialLinks || [];
@@ -101,11 +118,6 @@ function HeroSection() {
 
   return (
     <section id="home" className="hero">
-      <Helmet>
-        <title>{name} | {title}</title>
-        <meta name="description" content={introduction} />
-      </Helmet>
-
       <div className="hero-blob hero-blob-1" />
       <div className="hero-blob hero-blob-2" />
 

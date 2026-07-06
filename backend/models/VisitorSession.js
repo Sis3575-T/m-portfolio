@@ -11,7 +11,14 @@ const visitorSessionSchema = new mongoose.Schema({
 
   ipHash: { type: String },
   country: { type: String },
+  countryCode: { type: String },
+  region: { type: String },
   city: { type: String },
+  postalCode: { type: String },
+  latitude: { type: Number },
+  longitude: { type: Number },
+  currency: { type: String },
+  isp: { type: String },
   timezone: { type: String },
   language: { type: String },
 
@@ -43,6 +50,7 @@ const visitorSessionSchema = new mongoose.Schema({
   maxScrollDepth: { type: Number, default: 0 },
   isReturning: { type: Boolean, default: false },
   isActive: { type: Boolean, default: true },
+  visitCount: { type: Number, default: 1 },
 
   theme: { type: String },
   languageSelected: { type: String },
@@ -55,5 +63,8 @@ visitorSessionSchema.index({ country: 1 });
 visitorSessionSchema.index({ browser: 1 });
 visitorSessionSchema.index({ deviceType: 1 });
 visitorSessionSchema.index({ isActive: 1, lastActiveAt: -1 });
+visitorSessionSchema.index({ visitorId: 1, createdAt: -1 });
+visitorSessionSchema.index({ city: 1 });
+visitorSessionSchema.index({ os: 1 });
 
 module.exports = mongoose.model('VisitorSession', visitorSessionSchema);

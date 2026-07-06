@@ -82,7 +82,7 @@ const DashboardHome = () => {
           Your portfolio is deployed and accessible at:
         </p>
         <a
-          href={import.meta.env.VITE_SITE_URL || 'http://localhost:5173'}
+          href={import.meta.env.VITE_SITE_URL || 'https://portfolio2-khxf.vercel.app'}
           target="_blank"
           rel="noopener noreferrer"
           className="btn-admin btn-admin-primary"

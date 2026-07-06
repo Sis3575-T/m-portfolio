@@ -1,7 +1,9 @@
 import React, { useEffect } from 'react';
 import { getImageUrl } from '../api';
+import { useTheme } from '../context/ThemeContext';
 
 function Testimonials({ testimonials, settings, sectionTitle, sectionSubtitle }) {
+  const { theme } = useTheme();
   if (!testimonials || testimonials.length === 0) return null;
 
   const featured = testimonials.filter(t => t.featured);
@@ -9,7 +11,7 @@ function Testimonials({ testimonials, settings, sectionTitle, sectionSubtitle })
 
   const pageStyles = settings?.pageStyles?.testimonials || {};
   const sectionStyle = {
-    ...(pageStyles.bgColor ? { backgroundColor: pageStyles.bgColor } : {}),
+    ...(theme === 'light' && pageStyles.bgColor ? { backgroundColor: pageStyles.bgColor } : {}),
     ...(pageStyles.textColor ? { color: pageStyles.textColor } : {}),
     ...(pageStyles.fontFamily ? { fontFamily: pageStyles.fontFamily } : {}),
     ...(pageStyles.paddingY === 'small' ? { paddingTop: '2rem', paddingBottom: '2rem' } : {}),

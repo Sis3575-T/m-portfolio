@@ -22,7 +22,13 @@ exports.getAboutById = async (req, res) => {
 
 exports.createAbout = async (req, res) => {
   try {
-    const about = await About.create(req.body);
+    const body = { ...req.body };
+    if (req.file) body.image = '/uploads/' + req.file.filename;
+    if (typeof body.keyAchievements === 'string') body.keyAchievements = JSON.parse(body.keyAchievements);
+    if (typeof body.stats === 'string') body.stats = JSON.parse(body.stats);
+    if (body.description) { body.biography = body.description; delete body.description; }
+    if (body.keyPoints) { body.keyAchievements = body.keyPoints; delete body.keyPoints; }
+    const about = await About.create(body);
     res.status(201).json({ success: true, data: about });
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });
@@ -32,12 +38,11 @@ exports.createAbout = async (req, res) => {
 exports.updateAbout = async (req, res) => {
   try {
     const body = { ...req.body };
+    if (req.file) body.image = '/uploads/' + req.file.filename;
     if (typeof body.keyAchievements === 'string') body.keyAchievements = JSON.parse(body.keyAchievements);
     if (typeof body.stats === 'string') body.stats = JSON.parse(body.stats);
     if (body.description) { body.biography = body.description; delete body.description; }
     if (body.keyPoints) { body.keyAchievements = body.keyPoints; delete body.keyPoints; }
-    delete body.title;
-    delete body.image;
     delete body.imageFile;
     delete body._id;
     delete body.__v;

@@ -57,6 +57,7 @@ export default function AnalyticsTracker() {
     };
 
     publicApi.trackVisit(data).catch(() => {});
+    publicApi.trackVisitLight(data).catch(() => {});
 
     const handleScroll = () => {
       const scrollPercent = window.scrollY / (document.documentElement.scrollHeight - window.innerHeight) * 100;
