@@ -13,6 +13,7 @@ import Projects from '../components/Projects';
 import Contact from '../components/Contact';
 import Blog from '../components/Blog';
 import Footer from '../components/Footer';
+import ResumeSection from '../components/home/ResumeSection';
 
 export function applyTheme(theme) {
   if (!theme) return;
@@ -63,6 +64,7 @@ const SECTION_MAP = {
   projects: [Projects, 'projects'],
   blog: [Blog, 'blog'],
   contact: [Contact, null],
+  resume: [ResumeSection, null],
 };
 
 function HomePage() {

@@ -10,6 +10,7 @@ import EducationSection from '../components/home/EducationSection';
 import CertificatesSection from '../components/home/CertificatesSection';
 import ServicesSection from '../components/home/ServicesSection';
 import ContactSection from '../components/home/ContactSection';
+import ResumeSection from '../components/home/ResumeSection';
 
 const componentMap = {
   hero: HeroSection,
@@ -22,6 +23,7 @@ const componentMap = {
   certificates: CertificatesSection,
   services: ServicesSection,
   contact: ContactSection,
+  resume: ResumeSection,
 };
 
 function getAnimationProps(advanced) {

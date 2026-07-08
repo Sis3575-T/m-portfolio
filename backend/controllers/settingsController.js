@@ -21,6 +21,7 @@ const updateSettings = async (req, res) => {
     if (req.files) {
       if (req.files.logo) settings.logo = req.files.logo[0].path;
       if (req.files.favicon) settings.favicon = req.files.favicon[0].path;
+      if (req.files.cv) settings.cvUrl = req.files.cv[0].path;
     }
     await settings.save();
     res.json({ success: true, data: settings });

@@ -23,6 +23,7 @@ export default function SettingsPage() {
   const [changingPassword, setChangingPassword] = useState(false);
   const logoInputRef = useRef(null);
   const faviconInputRef = useRef(null);
+  const cvInputRef = useRef(null);
 
   useEffect(() => { fetchSettings(); }, []);
 
@@ -121,6 +122,21 @@ export default function SettingsPage() {
     }
   };
 
+  const handleCvUpload = async (file) => {
+    const fd = new FormData();
+    fd.append('cv', file);
+    try {
+      await adminApi.updateSettings(fd);
+      // Reload settings to get the updated cvUrl
+      const { data } = await adminApi.getSettings();
+      const s = data.data || data || {};
+      setForm(prev => ({ ...prev, cvUrl: s.cvUrl || '' }));
+      toast.success('CV uploaded successfully');
+    } catch {
+      toast.error('CV upload failed');
+    }
+  };
+
   const tabs = [
     { id: 'general', label: 'General', icon: Icons.settings },
     { id: 'contact', label: 'Contact', icon: Icons.mail },
@@ -210,7 +226,27 @@ export default function SettingsPage() {
                 </div>
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
                   {renderField('SEO Description', 'seoDescription', { type: 'textarea', rows: 2, placeholder: 'SEO meta description for search engines' })}
-                  {renderField('CV/Resume URL', 'cvUrl', { placeholder: 'https://example.com/resume.pdf' })}
+                </div>
+                <div>
+                  <label style={{ fontSize: '0.82rem', fontWeight: 600, color: 'var(--color-text)', marginBottom: '0.5rem', display: 'block' }}>CV / Resume</label>
+                  <div style={{ display: 'flex', gap: '0.75rem', alignItems: 'center' }}>
+                    {form.cvUrl ? (
+                      <>
+                        <a href={imageUrl(form.cvUrl)} target="_blank" rel="noopener noreferrer" style={{ padding: '0.5rem 1rem', borderRadius: 8, border: '1px solid var(--color-border)', background: 'var(--color-bg-subtle)', color: 'var(--color-primary)', textDecoration: 'none', fontSize: '0.85rem', display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+                          <Icon path={Icons['external-link']} size={14} /> View Current CV
+                        </a>
+                        <button type="button" onClick={() => setForm({ ...form, cvUrl: '' })} style={{ padding: '0.5rem 0.75rem', borderRadius: 8, border: '1px solid var(--color-border)', background: 'none', cursor: 'pointer', color: 'var(--color-danger)', fontSize: '0.85rem' }}>
+                          <Icon path={Icons.trash2} size={14} />
+                        </button>
+                      </>
+                    ) : (
+                      <span style={{ fontSize: '0.85rem', color: 'var(--color-text-secondary)' }}>No CV uploaded</span>
+                    )}
+                    <button type="button" onClick={() => cvInputRef.current?.click()} style={{ padding: '0.5rem 1rem', borderRadius: 8, border: '1px solid var(--color-border)', background: 'var(--color-bg-subtle)', cursor: 'pointer', color: 'var(--color-text)', fontSize: '0.85rem', display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+                      <Icon path={Icons.upload} size={14} /> Upload CV
+                    </button>
+                    <input ref={cvInputRef} type="file" accept=".pdf,.doc,.docx" style={{ display: 'none' }} onChange={(e) => e.target.files?.[0] && handleCvUpload(e.target.files[0])} />
+                  </div>
                 </div>
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
                   {renderField('Timezone', 'timezone', { type: 'select', options: [

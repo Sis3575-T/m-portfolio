@@ -5,6 +5,6 @@ const { protect, adminOnly } = require('../middleware/auth');
 const upload = require('../middleware/upload');
 
 router.get('/', getSettings);
-router.put('/', protect, adminOnly, upload.fields([{ name: 'logo' }, { name: 'favicon' }]), updateSettings);
+router.put('/', protect, adminOnly, upload.fields([{ name: 'logo' }, { name: 'favicon' }, { name: 'cv' }]), updateSettings);
 
 module.exports = router;
