@@ -257,7 +257,7 @@ function Sidebar({ activePage, onNavigate, collapsed, onToggle, mobileOpen, onMo
   );
 }
 
-function Topbar({ title, activePage, onToggleMobile, onOpenCmd, onTogglePanel }) {
+function Topbar({ title, activePage, onNavigate, onToggleMobile, onOpenCmd, onTogglePanel }) {
   const { user, logout } = useAuth();
   const [profileOpen, setProfileOpen] = useState(false);
   const profileRef = useRef(null);
@@ -310,9 +310,9 @@ function Topbar({ title, activePage, onToggleMobile, onOpenCmd, onTogglePanel })
             </div>
           </div>
           {profileOpen && (
-            <div className="dropdown-menu" style={{ position: 'absolute', top: '100%', right: 0, marginTop: 8, width: 220, background: 'var(--card)', border: '1px solid var(--border)', borderRadius: 'var(--radius-lg)', padding: 6, boxShadow: 'var(--shadow-lg)' }}>
-              <div className="dropdown-item" onClick={() => { setProfileOpen(false); }}>Profile</div>
-              <div className="dropdown-item" onClick={() => { setProfileOpen(false); }}>Settings</div>
+            <div className="dropdown-menu">
+              <div className="dropdown-item" onClick={() => { onNavigate('profile'); setProfileOpen(false); }}>Profile</div>
+              <div className="dropdown-item" onClick={() => { onNavigate('settings'); setProfileOpen(false); }}>Settings</div>
               <div style={{ borderTop: '1px solid var(--border)', margin: '4px 0' }} />
               <div className="dropdown-item" style={{ color: 'var(--danger)' }} onClick={() => { logout(); setProfileOpen(false); }}>Sign out</div>
             </div>
@@ -534,6 +534,7 @@ function AdminLayout() {
         <Topbar
           title={title}
           activePage={activePage}
+          onNavigate={handleNavigate}
           onToggleMobile={() => setMobileOpen(!mobileOpen)}
           onOpenCmd={() => setCmdOpen(true)}
           onTogglePanel={() => setPanelOpen(!panelOpen)}

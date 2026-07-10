@@ -3,6 +3,7 @@ import { motion } from 'framer-motion';
 import { FiMapPin, FiMail, FiBriefcase, FiClock } from 'react-icons/fi';
 import { FaUserTie, FaAward, FaLaptopCode, FaRocket } from 'react-icons/fa';
 import { backendApi } from '../services/backendApi';
+import { imageUrl } from '../utils/api';
 import { useTheme } from '../context/ThemeContext';
 
 function useSectionStyles(settings, key) {
@@ -39,9 +40,29 @@ const cardVariants = {
 const statIcons = [FaAward, FaLaptopCode, FaRocket, FiClock];
 
 function About({ settings, sectionTitle, sectionSubtitle }) {
-  const envCvUrl = import.meta.env.VITE_CV_URL || '/cv.pdf';
-  const cvUrl = settings?.cvUrl || envCvUrl;
-  const googleViewUrl = `https://docs.google.com/viewer?url=${encodeURIComponent(cvUrl)}`;
+  const API_BASE = import.meta.env.PROD
+    ? ((import.meta.env.VITE_API_URL || 'https://m-portfolio-ecby.onrender.com').replace(/\/api$/, '').replace(/\/+$/, '') + '/api')
+    : '/api';
+  const cvFileUrl = settings?.cvUrl ? imageUrl(settings.cvUrl) : null;
+  const downloadUrl = settings?.cvUrl ? `${API_BASE}/website/cv` : null;
+  const viewUrl = cvFileUrl;
+
+  const handleDownload = async () => {
+    try {
+      const res = await fetch(downloadUrl);
+      if (!res.ok) return;
+      const blob = await res.blob();
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = 'cv.pdf';
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+    } catch {}
+  };
+
   const ps = useSectionStyles(settings, 'about');
 
   const {
@@ -120,14 +141,16 @@ function About({ settings, sectionTitle, sectionSubtitle }) {
               ))}
             </div>
 
-            <div style={{ display: 'flex', gap: '0.75rem', marginTop: '1.5rem', flexWrap: 'wrap' }}>
-              <a href={googleViewUrl} target="_blank" rel="noopener noreferrer" className="btn btn-secondary">
-                View CV
-              </a>
-              <a href={cvUrl} download className="btn btn-primary">
-                Download CV
-              </a>
-            </div>
+            {settings?.cvUrl && (
+              <div style={{ display: 'flex', gap: '0.75rem', marginTop: '1.5rem', flexWrap: 'wrap' }}>
+                <a href={viewUrl} target="_blank" rel="noopener noreferrer" className="btn btn-secondary">
+                  View CV
+                </a>
+                <button onClick={handleDownload} className="btn btn-primary" style={{ border: 'none', cursor: 'pointer' }} data-track="resume-download">
+                  Download CV
+                </button>
+              </div>
+            )}
           </motion.div>
 
           <motion.div variants={cardVariants} className="about-info-grid">

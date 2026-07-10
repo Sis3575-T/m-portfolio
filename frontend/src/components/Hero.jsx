@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { Link } from 'react-router-dom';
 import { getImageUrl } from '../api';
 import { useTheme } from '../context/ThemeContext';
 import Terminal from './Terminal';
@@ -36,6 +37,13 @@ function Hero({ hero, settings }) {
   const city = settings?.city || 'Your City';
   const country = settings?.country || 'Your Country';
 
+  const isInternalUrl = (url) => url && (url.startsWith('/') && !url.startsWith('//') || url.startsWith('#'));
+  const handleAnchorClick = (e, url) => {
+    if (url?.startsWith('#')) {
+      const el = document.getElementById(url.slice(1));
+      if (el) { e.preventDefault(); el.scrollIntoView({ behavior: 'smooth', block: 'start' }); }
+    }
+  };
   const roles = hero?.roles || [role];
   const [roleIndex, setRoleIndex] = useState(0);
   const [displayText, setDisplayText] = useState('');
@@ -152,17 +160,17 @@ function Hero({ hero, settings }) {
         <div className="hero-bottom">
           {buttons.length > 0 && (
             <div className="hero-buttons">
-              {buttons.map((btn, i) => (
-                <a
-                  key={i}
-                  href={btn.url || '#projects'}
-                  className={btn.type === 'primary' ? 'btn btn-primary' : 'btn btn-secondary'}
-                  target={btn.url ? '_blank' : undefined}
-                  rel="noopener noreferrer"
-                >
-                  {btn.label}
-                </a>
-              ))}
+              {buttons.map((btn, i) => {
+                const url = btn.url || '#projects';
+                const cls = btn.type === 'primary' ? 'btn btn-primary' : 'btn btn-secondary';
+                if (isInternalUrl(url) && !url.startsWith('#')) {
+                  return <Link key={i} to={url} className={cls}>{btn.label}</Link>;
+                }
+                if (url.startsWith('#')) {
+                  return <a key={i} href={url} className={cls} onClick={(e) => handleAnchorClick(e, url)}>{btn.label}</a>;
+                }
+                return <a key={i} href={url} className={cls} target="_blank" rel="noopener noreferrer">{btn.label}</a>;
+              })}
             </div>
           )}
           {socialLinks.length > 0 && (

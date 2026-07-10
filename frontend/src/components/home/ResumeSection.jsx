@@ -6,6 +6,9 @@ import { imageUrl } from '../../utils/api';
 function ResumeSection() {
   const [cvUrl, setCvUrl] = useState('');
   const [loading, setLoading] = useState(true);
+  const API_BASE = import.meta.env.PROD
+    ? ((import.meta.env.VITE_API_URL || 'https://m-portfolio-ecby.onrender.com').replace(/\/api$/, '').replace(/\/+$/, '') + '/api')
+    : '/api';
 
   useEffect(() => {
     backendApi.getSettings().then(res => {
@@ -17,7 +20,24 @@ function ResumeSection() {
   if (loading) return null;
   if (!cvUrl) return null;
 
-  const googleViewUrl = `https://docs.google.com/viewer?url=${encodeURIComponent(imageUrl(cvUrl))}`;
+  const viewUrl = imageUrl(cvUrl);
+  const downloadUrl = `${API_BASE}/website/cv`;
+
+  const handleDownload = async () => {
+    try {
+      const res = await fetch(downloadUrl);
+      if (!res.ok) return;
+      const blob = await res.blob();
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = 'cv.pdf';
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+    } catch {}
+  };
 
   return (
     <section id="resume" className="resume-section">
@@ -46,21 +66,21 @@ function ResumeSection() {
           </p>
           <div style={{ display: 'flex', gap: '1rem', justifyContent: 'center', flexWrap: 'wrap' }}>
             <a
-              href={googleViewUrl}
+              href={viewUrl}
               target="_blank"
               rel="noopener noreferrer"
               className="btn btn-secondary"
             >
               View CV
             </a>
-            <a
-              href={imageUrl(cvUrl)}
-              download
+            <button
+              onClick={handleDownload}
               className="btn btn-primary"
+              style={{ border: 'none', cursor: 'pointer' }}
               data-track="resume-download"
             >
               Download CV
-            </a>
+            </button>
           </div>
         </motion.div>
       </div>

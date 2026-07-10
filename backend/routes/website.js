@@ -1,9 +1,12 @@
 const express = require('express');
 const router = express.Router();
+const fs = require('fs');
+const path = require('path');
 
 const Page = require('../models/Page');
 const Section = require('../models/Section');
 const Settings = require('../models/Settings');
+const Media = require('../models/Media');
 const Hero = require('../models/Hero');
 const About = require('../models/About');
 const Project = require('../models/Project');
@@ -178,6 +181,36 @@ router.get('/site-config', async (req, res) => {
     const settings = await Settings.findOne().select('-__v').lean();
     const navItems = await Page.find({ status: 'published' }).select('name slug').sort('order').lean();
     res.json({ success: true, data: { sections, settings, navItems } });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+});
+
+// CV download
+router.get('/cv', async (req, res) => {
+  try {
+    const settings = await Settings.findOne();
+    if (!settings || !settings.cvUrl) {
+      return res.status(404).json({ success: false, message: 'CV not found' });
+    }
+    const cvFilename = settings.cvUrl.replace(/^\/uploads\//, '');
+    const cvPath = path.join(__dirname, '..', 'uploads', cvFilename);
+    if (!fs.existsSync(cvPath)) {
+      return res.status(404).json({ success: false, message: 'CV file not found' });
+    }
+    res.download(cvPath, 'cv.pdf');
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+});
+
+// Public media gallery (get all images)
+router.get('/media', async (req, res) => {
+  try {
+    const media = await Media.find({ category: 'image' })
+      .select('name url mimeType size')
+      .sort({ createdAt: -1 });
+    res.json({ success: true, data: media });
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });
   }

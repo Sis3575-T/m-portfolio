@@ -8,10 +8,10 @@ import '../LoginPage.css';
 export default function LoginPage() {
   const { login } = useAuth();
   const navigate = useNavigate();
-  const [email, setEmail] = useState(() => localStorage.getItem('remember_me') || '');
+  const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
-  const [remember, setRemember] = useState(!!localStorage.getItem('remember_me'));
+  const [remember, setRemember] = useState(false);
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const isLocal = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
@@ -111,14 +111,15 @@ export default function LoginPage() {
           <form className="login-form" onSubmit={handleSubmit}>
             <div className="login-field">
               <label>Email Address</label>
-              <input
-                type="email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                placeholder="admin@example.com"
-                autoComplete="email"
-                autoFocus
-              />
+                <input
+                  type="email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  placeholder="admin@example.com"
+                  autoComplete="off"
+                  autoFocus
+                  required
+                />
             </div>
 
             <div className="login-field">
@@ -129,7 +130,8 @@ export default function LoginPage() {
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   placeholder="Enter your password"
-                  autoComplete="current-password"
+                  autoComplete="new-password"
+                  required
                 />
                 <button
                   type="button"

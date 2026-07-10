@@ -76,11 +76,13 @@ exports.updateHero = async (req, res) => {
       try { body.highlights = JSON.parse(body.highlights); } catch {}
     }
     body.status = 'published';
-    const filter = req.params.id ? { _id: req.params.id } : body._id ? { _id: body._id } : { isActive: true };
     delete body._id;
     delete body.__v;
-    const hero = await Hero.findOneAndUpdate(filter, body, { new: true, runValidators: true });
-    if (!hero) return res.status(404).json({ success: false, message: 'Hero not found' });
+    const filter = req.params.id ? { _id: req.params.id } : { isActive: true };
+    let hero = await Hero.findOneAndUpdate(filter, body, { new: true, runValidators: true });
+    if (!hero) {
+      hero = await Hero.create(body);
+    }
     res.json({ success: true, data: hero });
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });

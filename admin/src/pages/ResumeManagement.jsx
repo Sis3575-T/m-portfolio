@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { adminApi, imageUrl } from '../services/api';
 import { Icons, Icon } from '../lib/icons';
 import { useToast } from '../components/Toast';
@@ -12,6 +12,7 @@ const SECTIONS = [
   { key: 'experience', label: 'Experience', icon: Icons.briefcase },
   { key: 'education', label: 'Education', icon: Icons['graduation-cap'] },
   { key: 'certificates', label: 'Certificates', icon: Icons.award },
+  { key: 'cv', label: 'CV / Resume', icon: Icons['file-text'] },
   { key: 'languages', label: 'Languages', icon: Icons.globe },
 ];
 
@@ -27,17 +28,19 @@ export default function ResumeManagement() {
   const [experiences, setExperiences] = useState([]);
   const [education, setEducation] = useState([]);
   const [certificates, setCertificates] = useState([]);
+  const [settings, setSettings] = useState(null);
 
   const [saving, setSaving] = useState(false);
   const [editModal, setEditModal] = useState(null);
   const [editForm, setEditForm] = useState({});
+  const cvInputRef = useRef(null);
 
   useEffect(() => { fetchAll(); }, []);
 
   const fetchAll = async () => {
     setLoading(true);
     try {
-      const [heroRes, aboutRes, skillsRes, expRes, eduRes, certRes, analyticsRes] = await Promise.all([
+      const [heroRes, aboutRes, skillsRes, expRes, eduRes, certRes, analyticsRes, settingsRes] = await Promise.all([
         adminApi.getHero().catch(() => ({ data: { data: null } })),
         adminApi.getAbout().catch(() => ({ data: { data: null } })),
         adminApi.getSkills().catch(() => ({ data: { data: [] } })),
@@ -45,6 +48,7 @@ export default function ResumeManagement() {
         adminApi.getEducation().catch(() => ({ data: { data: [] } })),
         adminApi.getCertificates().catch(() => ({ data: { data: [] } })),
         adminApi.getResumeAnalytics().catch(() => ({ data: { data: null } })),
+        adminApi.getSettings().catch(() => ({ data: { data: {} } })),
       ]);
       setHero(heroRes.data.data || heroRes.data);
       setAbout(aboutRes.data.data || aboutRes.data);
@@ -53,10 +57,37 @@ export default function ResumeManagement() {
       setEducation(eduRes.data.data || []);
       setCertificates(certRes.data.data || []);
       setAnalytics(analyticsRes.data.data || null);
+      setSettings(settingsRes.data.data || settingsRes.data || {});
     } catch {
       toast.error('Failed to load resume data');
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleCvUpload = async (file) => {
+    const fd = new FormData();
+    fd.append('cv', file);
+    try {
+      await adminApi.updateSettings(fd);
+      const { data } = await adminApi.getSettings();
+      const s = data.data || data || {};
+      setSettings(s);
+      toast.success('CV uploaded successfully');
+    } catch {
+      toast.error('CV upload failed');
+    }
+  };
+
+  const handleCvRemove = async () => {
+    const fd = new FormData();
+    fd.append('cvUrl', '');
+    try {
+      await adminApi.updateSettings(fd);
+      setSettings(prev => ({ ...prev, cvUrl: '' }));
+      toast.success('CV removed');
+    } catch {
+      toast.error('Failed to remove CV');
     }
   };
 
@@ -168,6 +199,8 @@ export default function ResumeManagement() {
         return education.length > 0 ? `${education.length} entries` : 'No education added';
       case 'certificates':
         return certificates.length > 0 ? `${certificates.length} certificates` : 'No certificates added';
+      case 'cv':
+        return settings?.cvUrl ? 'CV uploaded' : 'No CV uploaded';
       case 'languages':
         return 'Languages section';
       default:
@@ -285,6 +318,41 @@ export default function ResumeManagement() {
                             <br /><span style={{ color: 'var(--color-text-tertiary)', fontSize: '0.8rem' }}>{cert.date ? new Date(cert.date).toLocaleDateString() : ''}</span>
                           </div>
                         )) : <p style={{ color: 'var(--color-text-tertiary)' }}>No certificates added yet.</p>
+                      )}
+                      {section.key === 'cv' && (
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+                          <p style={{ fontSize: '0.85rem', color: 'var(--color-text-secondary)' }}>
+                            Upload your CV/resume file (PDF, DOC, DOCX). It will be available for visitors to view and download.
+                          </p>
+                          <div style={{ display: 'flex', gap: '0.75rem', alignItems: 'center' }}>
+                            {settings?.cvUrl ? (
+                              <>
+                                <a href={imageUrl(settings.cvUrl)} target="_blank" rel="noopener noreferrer" className="btn btn-ghost btn-sm">
+                                  <Icon path={Icons['external-link']} size={14} /> View CV
+                                </a>
+                                <button className="btn btn-ghost btn-sm" onClick={() => {
+                                  const a = document.createElement('a');
+                                  a.href = imageUrl(settings.cvUrl);
+                                  a.download = 'cv.pdf';
+                                  document.body.appendChild(a);
+                                  a.click();
+                                  document.body.removeChild(a);
+                                }}>
+                                  <Icon path={Icons.download} size={14} /> Download
+                                </button>
+                                <button className="btn btn-ghost btn-sm" onClick={handleCvRemove} style={{ color: 'var(--color-danger)' }}>
+                                  <Icon path={Icons.trash2} size={14} /> Remove
+                                </button>
+                              </>
+                            ) : (
+                              <span style={{ fontSize: '0.85rem', color: 'var(--color-text-tertiary)' }}>No CV uploaded</span>
+                            )}
+                            <button className="btn btn-primary btn-sm" onClick={() => cvInputRef.current?.click()}>
+                              <Icon path={Icons.upload} size={14} /> Upload CV
+                            </button>
+                            <input ref={cvInputRef} type="file" accept=".pdf,.doc,.docx" style={{ display: 'none' }} onChange={(e) => e.target.files?.[0] && handleCvUpload(e.target.files[0])} />
+                          </div>
+                        </div>
                       )}
                       {section.key === 'languages' && (
                         <p style={{ color: 'var(--color-text-tertiary)' }}>Languages can be managed in the Skills section.</p>
